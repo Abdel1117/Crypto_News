@@ -97,7 +97,7 @@ export default function TeamMember() {
               a type specimen book. It has survived not only five centuries.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 px-1 sm:px-10 lg:px-5 xl:px-0">
             {personaData?.map((val: PersonaInterface, index: number) => (
               <Persona
                 key={index}
@@ -124,7 +124,7 @@ export default function TeamMember() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 px-1 sm:px-10 lg:px-0">
             {personaDataAdvisor?.map((val: PersonaInterface, index: number) => (
               <Persona
                 key={index}

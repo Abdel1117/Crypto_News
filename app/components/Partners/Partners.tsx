@@ -64,31 +64,36 @@ export default function Partners() {
   ];
 
   return (
-    <div className="container max-w-7xl mx-auto">
-      <div className="text-center">
-        <small className="text-base text-foreground uppercase">
-          Executive Partners
-        </small>
-        <h2 className="text-2xl font-semibold md:text-6xl pb-[15px]">
-          Partners & Supporters
-        </h2>
-        <p className="text-base text-foreground mb-4">
-          Lorem Ipsum is simply dummy text ever sincehar the 1500s, when an
-          unknownshil printer took a galley of type and scrambled it to make a
-          type specimen book. It has survived not only five centuries.
-        </p>
+    <>
+      <div className="container max-w-7xl mx-auto">
+        <div className="text-center">
+          <small className="text-base text-foreground uppercase">
+            Executive Partners
+          </small>
+          <h2 className="text-2xl font-semibold md:text-6xl pb-[15px]">
+            Partners & Supporters
+          </h2>
+          <p className="text-base text-foreground mb-4">
+            Lorem Ipsum is simply dummy text ever sincehar the 1500s, when an
+            unknownshil printer took a galley of type and scrambled it to make a
+            type specimen book. It has survived not only five centuries.
+          </p>
+        </div>
       </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-x-5 gap-y-10 mt-[60px]">
-        {DummyLogoArray?.map((val: logoInterface, index: number) => (
-          <div
-            className="w-full h-auto flex items-center justify-center lg:justify-start"
-            key={index}
-          >
-            <Image src={val.image} width={130} height={130} alt={val.alt} />
+      <div className="max-w-full bg-[#000411] py-10 mt-[60px]">
+        <div className="mx-auto container">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-x-5 gap-y-10">
+            {DummyLogoArray?.map((val: logoInterface, index: number) => (
+              <div
+                className="w-full h-auto flex items-center justify-center lg:justify-start"
+                key={index}
+              >
+                <Image src={val.image} width={130} height={130} alt={val.alt} />
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
