@@ -1,26 +1,36 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --ab-body-bg: #ffffff;
+  --ab-body-secondary: #f7f7f7;
+  --ab-card-primary: #f7f7f7;
+  --ab-primary: #f9b707;
+  --ab-secondary: #fe9500;
+  --ab-title-text: #000411;
+  --ab-body-text: #848484;
+  --ab-button-validate: #1aa053;
+  --ab-button-cancel: #020716;
+
+  --color-background: var(--ab-body-bg);
+  --color-surface: var(--ab-body-secondary);
+  --color-card: var(--ab-card-primary);
+
+  --color-primary: var(--ab-primary);
+  --color-secondary: var(--ab-secondary);
+
+  --color-foreground: var(--ab-title-text);
+  --color-muted: var(--ab-body-text);
+
+  --color-success: var(--ab-button-validate);
+  --color-danger: var(--ab-button-cancel);
+
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark {
+  --ab-body-bg: #000411;
+  --ab-body-secondary: #020716;
+  --ab-card-primary: #050c21;
+  --ab-title-text: #ffffff;
+  --ab-body-text: #b3b3c0;
 }
