@@ -1,11 +1,14 @@
-import BlockCTA from "./components/BlockCTA/BlockCTA";
-import Hero from "./components/Hero/Hero";
-import ProductDescription from "./components/ProductDescription/ProductDescription";
+import BlockCTA from "../components/BlockCTA/BlockCTA";
+import Hero from "../components/Hero/Hero";
+import ProductDescription from "../components/ProductDescription/ProductDescription";
 import heroImage from "@/public/images/01.png";
 import secondHeroImage from "@/public/images/02.png";
-import TeamMember from "./components/TeamMembers/TeamMember";
-import Partners from "./components/Partners/Partners";
-import { ContactForm } from "./components/ContactForm/ContactForm";
+import TeamMember from "../components/TeamMembers/TeamMember";
+import Partners from "../components/Partners/Partners";
+import PartnersSwiper from "../components/PartnersSwiper/PartnersSwiper";
+import { ContactForm } from "../components/ContactForm/ContactForm";
+import { FAQ } from "../components/FAQ/FAQ";
+import RoadMap from "../components/RoadMap/RoadMap";
 
 export default function Home() {
   const BlockCTAText = {
@@ -20,6 +23,7 @@ export default function Home() {
     boutonText: "Buy Token",
     boutonHref: "/buytoken",
   };
+
   const SecondBlockCTAText = {
     imageSrc: secondHeroImage,
     captionTitle: " wow Awesome ",
@@ -32,9 +36,15 @@ export default function Home() {
     boutonText: "Buy Token",
     boutonHref: "/buytoken",
   };
+
   return (
     <main>
-      <Hero />
+      <section className="pb-[100px]">
+        <Hero />
+      </section>
+      <section className="pb-[100px]">
+        <PartnersSwiper />
+      </section>
       <section className="pb-[100px]">
         <BlockCTA
           imageSrc={BlockCTAText?.imageSrc}
@@ -67,10 +77,16 @@ export default function Home() {
         <ProductDescription />
       </section>
       <section className="pb-[100px]">
+        <RoadMap />
+      </section>
+      <section className="pb-[100px]">
         <TeamMember />
       </section>
       <section className="pb-[100px]">
         <Partners />
+      </section>
+      <section className="pb-[100px]">
+        <FAQ />
       </section>
       <section className="pb-[100px]">
         <ContactForm />

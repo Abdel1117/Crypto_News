@@ -1,4 +1,3 @@
-import { CountDown } from "@/app/components/CountDown/CountDown";
 import Image, { StaticImageData } from "next/image";
 
 import visaLogo from "@/public/images/payment_icons/logo-visa.png";
@@ -6,6 +5,7 @@ import paypalLogo from "@/public/images/payment_icons/pay-pal.png";
 import cardLogo from "@/public/images/payment_icons/contactless.png";
 import bitCoinLogo from "@/public/images/payment_icons/bitcoin.png";
 import ProgresSale from "../ProgresSale/ProgresSale";
+import { HeroCountDown } from "./HeroCountDown";
 
 interface logoType {
   src: StaticImageData;
@@ -32,7 +32,7 @@ const iconsList: logoType[] = [
 ];
 export default function Hero() {
   return (
-    <section id="section_hero">
+    <div id="section_hero">
       <div className="container max-w-7xl mx-auto px-1 lg:px-0 min-h-[400px] grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Text Block */}
         <div className="lg:col-span-2  self-center text-center lg:text-left ">
@@ -50,26 +50,21 @@ export default function Hero() {
           </p>
 
           <div className="flex items-center  gap-2.5">
-            <button className="flex items-center justify-center rounded-full bg-primary p-4 w-[65px] h-[65px] mr-4 hover:animate-pulse hover:cursor-pointer">
+            <button className="flex items-center justify-center rounded-full  bg-primary   p-4 w-[65px] h-[65px] mr-4 hover:animate-pulse hover:cursor-pointer">
               <svg
-                version="1.1"
-                id="Layer_1"
-                x="0px"
-                y="0px"
                 viewBox="0 0 330 330"
-                style={
-                  { enableBackground: "new 0 0 330 330" } as React.CSSProperties
-                }
+                className="h-5 w-5 text-foreground"
+                aria-hidden="true"
               >
                 <path
-                  id="XMLID_308_"
                   d="M37.728,328.12c2.266,1.256,4.77,1.88,7.272,1.88c2.763,0,5.522-0.763,7.95-2.28l240-149.999
-	c4.386-2.741,7.05-7.548,7.05-12.72c0-5.172-2.664-9.979-7.05-12.72L52.95,2.28c-4.625-2.891-10.453-3.043-15.222-0.4
-	C32.959,4.524,30,9.547,30,15v300C30,320.453,32.959,325.476,37.728,328.12z"
+    c4.386-2.741,7.05-7.548,7.05-12.72c0-5.172-2.664-9.979-7.05-12.72L52.95,2.28c-4.625-2.891-10.453-3.043-15.222-0.4
+    C32.959,4.524,30,9.547,30,15v300C30,320.453,32.959,325.476,37.728,328.12z"
+                  fill="currentColor"
                 />
               </svg>
             </button>
-            <button className="rounded-lg bg-white text-black py-4 px-8 hover:animate-pulse hover:cursor-pointer">
+            <button className="rounded-lg bg-primary text-foreground font-bold py-4 px-8 hover:animate-pulse hover:cursor-pointer">
               White Paper
             </button>
           </div>
@@ -84,13 +79,7 @@ export default function Hero() {
             </h2>
 
             <div className="mt-8 mb-12">
-              <CountDown
-                target={Date?.now() + 80_000}
-                className="gap-3"
-                unitClassName="bg-black/30"
-                valueClassName="text-5xl"
-                labelClassName="text-[10px]"
-              />
+              <HeroCountDown />
             </div>
             <div className="my-8">
               <ProgresSale
@@ -102,7 +91,7 @@ export default function Hero() {
             </div>
 
             <div>
-              <button className="px-8 py-4 bg-primary dark:bg-[#ffffff] rounded-lg text-black font-semibold">
+              <button className="px-8 py-4 bg-blue-700 dark:bg-[#ffffff] rounded-lg text-white dark:text-black font-semibold hover:cursor-pointer shadow-lg">
                 Sign Up & Buy Token Now
               </button>
             </div>
@@ -121,6 +110,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

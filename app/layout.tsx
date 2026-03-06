@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/app/components/Header/Header";
-import Footer from "@/app/components/Footer/Footer";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
 
@@ -46,11 +44,7 @@ export default function RootLayout({
           "antialiased bg-background text-foreground",
         ].join(" ")}
       >
-        <Providers>
-          <Header />
-          {children}
-          <Footer />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

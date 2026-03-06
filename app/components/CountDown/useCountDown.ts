@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CountDownParts } from "./types";
 import { getCountDownParts, toTimestampMs } from "./time";
 
@@ -9,20 +9,33 @@ type UseCountDownArgs = {
   clampToZero: boolean;
   onComplete?: () => void;
   nowProvider?: () => number;
+  initialNowMs?: number;
 };
 
 export function useCountDown({
   target,
   clampToZero,
   onComplete,
-  nowProvider = () => Date.now(),
+  nowProvider,
+  initialNowMs,
 }: UseCountDownArgs): {
   parts: CountDownParts;
   isComplete: boolean;
   diffMs: number;
 } {
+  const defaultNowProvider = useCallback(() => Date.now(), []);
+  const effectiveNowProvider = nowProvider ?? defaultNowProvider;
+
   const targetMs = useMemo(() => toTimestampMs(target), [target]);
-  const [nowMs, setNowMs] = useState<number>(() => nowProvider());
+  const [nowMs, setNowMs] = useState<number>(() => {
+    if (typeof initialNowMs === "number" && Number.isFinite(initialNowMs)) {
+      return initialNowMs;
+    }
+
+    // Valeur déterministe pour que le SSR et le premier rendu client matchent.
+    // Le vrai temps est appliqué dès le montage via useEffect.
+    return Number.isFinite(targetMs) ? targetMs : 0;
+  });
   const completedRef = useRef(false);
 
   useEffect(() => {
@@ -32,12 +45,16 @@ export function useCountDown({
   useEffect(() => {
     if (!Number.isFinite(targetMs)) return;
 
+    // Applique immédiatement l'heure réelle après hydration.
+    // (évite un "flash" à 0 si initialNowMs n'est pas fourni)
+    setNowMs(effectiveNowProvider());
+
     let intervalId: number | undefined;
 
-    const tick = () => setNowMs(nowProvider());
+    const tick = () => setNowMs(effectiveNowProvider());
 
     // Aligner sur la prochaine seconde (animation + précision visuelle)
-    const msToNextSecond = 1000 - (nowProvider() % 1000);
+    const msToNextSecond = 1000 - (effectiveNowProvider() % 1000);
 
     const timeoutId = window.setTimeout(() => {
       tick();
@@ -48,7 +65,7 @@ export function useCountDown({
       if (timeoutId) window.clearTimeout(timeoutId);
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, [targetMs, nowProvider]);
+  }, [targetMs, effectiveNowProvider]);
 
   const diffMs = targetMs - nowMs;
 

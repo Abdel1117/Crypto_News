@@ -85,10 +85,16 @@ export default function Partners() {
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-x-5 gap-y-10">
             {DummyLogoArray?.map((val: logoInterface, index: number) => (
               <div
-                className="w-full h-auto flex items-center justify-center lg:justify-start"
+                className="w-full h-auto flex items-center justify-center xl:justify-start"
                 key={index}
               >
-                <Image src={val.image} width={130} height={130} alt={val.alt} />
+                <Image
+                  className="block mx-auto"
+                  src={val.image}
+                  width={130}
+                  height={130}
+                  alt={val.alt}
+                />
               </div>
             ))}
           </div>

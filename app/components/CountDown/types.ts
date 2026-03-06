@@ -10,6 +10,13 @@ export type CountDownProps = {
   /** Date cible (Date, timestamp en ms, ou string parseable par Date) */
   target: Date | number | string;
 
+  /**
+   * Snapshot du temps courant (en ms) calculé côté serveur.
+   * Permet d'éviter les erreurs d'hydration quand le rendu SSR et le client
+   * n'ont pas la même valeur initiale de Date.now().
+   */
+  initialNowMs?: number;
+
   /** Appelé une seule fois quand le compte à rebours atteint 0 */
   onComplete?: () => void;
 

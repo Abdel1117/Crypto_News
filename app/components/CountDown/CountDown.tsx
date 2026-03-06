@@ -8,6 +8,7 @@ import { AnimatedNumber } from "./AnimatedNumber";
 
 export function CountDown({
   target,
+  initialNowMs,
   onComplete,
   units = ["days", "hours", "minutes", "seconds"],
   labels,
@@ -25,6 +26,7 @@ export function CountDown({
     clampToZero,
     onComplete,
     nowProvider,
+    initialNowMs,
   });
 
   const resolvedLabels = useMemo(() => {

@@ -1,10 +1,7 @@
 "use client";
-import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
-import Close from "@/public/icons/svg/close-menu.svg";
-import HamburgerMenu from "@/public/icons/svg/mobile-menu.svg";
 
 type NavItem = {
   label: string;
@@ -12,7 +9,7 @@ type NavItem = {
 };
 
 const NAV_LINKS: NavItem[] = [
-  { label: "About", href: "#about" },
+  { label: "DashBoard", href: "/dashboard" },
   { label: "Blogs", href: "#blog" },
   { label: "Contact", href: "#contact" },
   { label: "Projects", href: "#projects" },
@@ -93,10 +90,11 @@ export default function Header() {
               <NavLinks className="text-base text-color-foreground hover:text-purple-600" />
 
               <ThemeButton />
-
-              <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
-                Login
-              </button>
+              <Link href={"/login"}>
+                <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
+                  Login
+                </button>
+              </Link>
             </div>
 
             {/* Tablet/Mobile actions (<lg): Theme + Menu + Login */}
@@ -105,28 +103,57 @@ export default function Header() {
               data-testid="mobile-actions"
             >
               <ThemeButton />
-
-              <button className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-green-500 text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
+              <Link
+                className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-green-500 text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
+                href={"/login"}
+              >
                 Login
-              </button>
+              </Link>
 
               <button
-                className="p-2 text-white rounded-md outline-none focus:border-gray-400 focus:border"
+                className="p-2 rounded-md outline-none focus:border-gray-400 focus:border text-foreground hover:cursor-pointer"
                 onClick={toggleNavbar}
-                aria-label="Toggle navigation"
+                aria-label={navbar ? "Close navigation" : "Open navigation"}
                 aria-expanded={navbar}
                 aria-controls="mobile-menu"
                 data-testid="menu-toggle"
               >
                 {navbar ? (
-                  <Image src={Close} width={30} height={30} alt="close" />
+                  // Close (X)
+                  <svg
+                    width="30"
+                    height="30"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="block"
+                  >
+                    <path
+                      d="M18 6L6 18M6 6l12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 ) : (
-                  <Image
-                    src={HamburgerMenu}
-                    width={30}
-                    height={30}
-                    alt="menu"
-                  />
+                  // Hamburger
+                  <svg
+                    width="30"
+                    height="30"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="block"
+                  >
+                    <path
+                      d="M4 6h16M4 12h16M4 18h16"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 )}
               </button>
             </div>
@@ -146,14 +173,13 @@ export default function Header() {
           data-testid="mobile-menu"
         >
           <div className="lg:px-28">
-            <div className="bg-red-900 p-6">
+            <div className="bg-surface p-6">
               <div className="flex flex-col gap-4">
                 <NavLinks
                   onNavigate={closeNavbar}
-                  className="text-base text-foreground"
+                  className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                 />
 
-                {/* Login uniquement sur xs (comme tu fais déjà) */}
                 <div className="visible sm:hidden">
                   <Link
                     className="text-base text-foreground"
