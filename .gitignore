@@ -1,0 +1,36 @@
+env
+backend/env
+frontend/env
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node.js / Next.js
+node_modules/
+.next/
+.turbo/
+.cache/
+dist/
+build/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Others
+*.env
+.env.*
+pycache/
+node_modules
+.next/
