@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+httpx
+sqlmodel
+asyncpg
+alembic
+apscheduler
+redis
+celery
+python-jose
+passlib[bcrypt]
