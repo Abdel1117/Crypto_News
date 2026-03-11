@@ -1,0 +1,105 @@
+"use client";
+import React from "react";
+import Link from "next/link";
+import {
+  AuthIcon,
+  HomeIcon,
+  SpecialPageIcon,
+  UserIcon,
+  UtilitiesIcon,
+  ArrowLeft,
+  ArrowRight,
+} from "@/app/components/Icons";
+import { useSidebar } from "@/app/context/SideBar/SideBareContext";
+
+export default function SideBar() {
+  const { isCollapsed, toggle } = useSidebar();
+  const navItems = [
+    { label: "Dashboard", href: "/dashboard", Icon: HomeIcon },
+    { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
+    { label: "Authentification", href: "/login", Icon: AuthIcon },
+    { label: "Utilisateur", href: "/settinngs", Icon: UserIcon },
+    { label: "Utilitaires", href: "/utilities", Icon: UtilitiesIcon },
+  ] as const;
+
+  return (
+    <aside
+      className={[
+        "top-0 left-0 h-screen",
+        "bg-surface border-foreground/10",
+        // < xl: overlay; animate by width (expand/collapse)
+        "fixed z-60",
+        "transition-[width] duration-300 ease-in-out",
+        isCollapsed
+          ? "w-0 border-r-0 overflow-hidden pointer-events-none"
+          : "w-64 border-r",
+        // >= xl: in-flow rail that pushes content
+        "xl:sticky xl:z-auto xl:shrink-0",
+        isCollapsed ? "xl:w-20" : "xl:w-64",
+        "xl:border-r xl:overflow-hidden xl:pointer-events-auto",
+      ].join(" ")}
+    >
+      <div
+        className={[
+          "px-5 py-8 border-b border-foreground",
+          isCollapsed ? "xl:px-3" : "",
+        ].join(" ")}
+      >
+        <div className="relative flex items-center justify-between">
+          <div
+            className={[
+              "flex items-center gap-2",
+              isCollapsed ? "xl:w-full xl:justify-center" : "",
+            ].join(" ")}
+          >
+            <p
+              className={[
+                "text-sm text-foreground",
+                isCollapsed ? "xl:hidden" : "",
+              ].join(" ")}
+            >
+              App
+            </p>
+            <h2
+              className={[
+                "text-lg font-semibold",
+                isCollapsed ? "xl:hidden" : "",
+              ].join(" ")}
+            >
+              Crypto News
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            className={[
+              "bg-primary p-1.5 rounded-lg hover:cursor-pointer",
+              "absolute right-2",
+            ].join(" ")}
+            onClick={toggle}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isCollapsed ? <ArrowRight /> : <ArrowLeft />}
+          </button>
+        </div>
+      </div>
+
+      <nav className="mt-4 px-2 pb-4 flex flex-col gap-2">
+        {navItems.map(({ label, href, Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className={[
+              "text-sm rounded-lg px-3 py-2 text-foreground/80 hover:outline-1 hover:outline-primary",
+              "flex items-center",
+              isCollapsed ? "xl:justify-center xl:px-2" : "gap-4",
+            ].join(" ")}
+          >
+            <Icon className="h-6 w-6" aria-hidden="true" focusable="false" />
+            <span className={isCollapsed ? "xl:hidden" : ""}>{label}</span>
+          </Link>
+        ))}
+      </nav>
+    </aside>
+  );
+}
