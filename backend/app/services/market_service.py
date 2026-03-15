@@ -9,6 +9,9 @@ class MarketService:
         self, currency: str, order: str, per_page: int, page: int
     ):
         data = await self.client.fetch_markets(currency, order, per_page, page)
+        print("*" * 50)
+        print(data)
+        print("*" * 50)
         return [
             {
                 "id": coin["id"],
