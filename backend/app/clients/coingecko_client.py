@@ -20,3 +20,13 @@ class CoinGeckoClient:
             )
             response.raise_for_status()
             return response.json()
+
+    async def fetch_symbols(self, include_platform: bool):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/coins/list?inlcude_platform={include_platform}"
+            )
+
+            response.raise_for_status()
+
+            return response.json()

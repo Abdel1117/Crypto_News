@@ -1,12 +1,24 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { CandlestickSeries, createChart } from "lightweight-charts";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  CandlestickSeries,
+  createChart,
+  IChartApi,
+  ISeriesApi,
+} from "lightweight-charts";
 import { CrosshairMode } from "lightweight-charts";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
-
+import { getCssVar } from "@/app/utils/StyleFunctions/getCssVar";
+import SymbolDropdown from "@/app/ui/SymbolDropdown/SymbolDropdown";
+import RadioTimeMarket from "@/app/components/RadioTimeMarket/RadiotTimeMarket";
+import {
+  MarketViewState,
+  setSelectedSymbol,
+  setSelectedTimeframe,
+} from "@/app/lib/features/marketView/marketViewSlice";
 // Mock data OHLC pour test
 const mockOhlc = [
   { time: 1710000000, open: 62000, high: 62500, low: 61500, close: 62200 },
@@ -17,19 +29,41 @@ const mockOhlc = [
   { time: 1710018000, open: 62700, high: 62900, low: 62600, close: 62850 },
 ];
 
+const mockTimeFrame: MarketViewState["selectedTimeframe"][] = [
+  "1h",
+  "1d",
+  "1w",
+  "1m",
+  "1y",
+];
+
 export default function CandleStickGraph() {
   const { currency, setCurrency } = useCurrency();
   const dispatch = useAppDispatch();
-  const coins = useAppSelector((state) => state.prices.coins);
-  const loading = useAppSelector((state) => state.prices.loading);
+  const { coins, loading } = useAppSelector((state) => state.prices);
+
+  const { symbols, loading: loadingSymbol } = useAppSelector(
+    (state) => state.symbols,
+  );
+
+  const { selectedSymbol, selectedTimeframe } = useAppSelector(
+    (state) => state.marketView,
+  );
+
+  /* Local State */
+  /* ======== */
+  /* For CandleStick Element   */
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<any>(null);
-  const seriesRef = useRef<any>(null);
+  const chartRef = useRef<IChartApi>(null);
+  const seriesRef = useRef<ISeriesApi>(null);
+
+  /* For the style of the candle light */
+  const backgroundColor = getCssVar("--color-background");
+  const textColor = getCssVar("--color-foreground");
 
   // Charger les prix à chaque changement de monnaie
   useEffect(() => {
     dispatch(getPrices(currency));
-    console.log(coins);
   }, [currency, dispatch]);
 
   // Créer et mettre à jour le graphique
@@ -46,8 +80,11 @@ export default function CandleStickGraph() {
     chartRef.current = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth || 600,
       height: 350,
-      layout: { background: { color: "#fff" }, textColor: "#222" },
-      grid: { vertLines: { color: "#eee" }, horzLines: { color: "#eee" } },
+      layout: { background: { color: backgroundColor }, textColor: textColor },
+      grid: {
+        vertLines: { color: textColor },
+        horzLines: { color: textColor },
+      },
     });
     // Appliquer l'option crosshair après la création
     chartRef.current.applyOptions({
@@ -70,23 +107,38 @@ export default function CandleStickGraph() {
 
   return (
     <div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginBottom: 16,
-        }}
-      >
-        <label htmlFor="currency-select">Monnaie :</label>
-        <select
-          id="currency-select"
-          value={currency}
-          onChange={(e) => setCurrency(e.target.value as "eur" | "usd")}
+      <div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 16,
+          }}
         >
-          <option value="eur">EUR</option>
-          <option value="usd">USD</option>
-        </select>
+          <label htmlFor="currency-select">Monnaie :</label>
+          <select
+            id="currency-select"
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as "eur" | "usd")}
+          >
+            <option value="eur">EUR</option>
+            <option value="usd">USD</option>
+          </select>
+        </div>
+        <SymbolDropdown
+          value={selectedSymbol}
+          options={symbols}
+          onChange={(id) => dispatch(setSelectedSymbol(id))}
+          label="Selectioner une Crypto"
+        />
+        <RadioTimeMarket
+          value={selectedTimeframe}
+          options={mockTimeFrame}
+          onChange={(timeFrame: MarketViewState["selectedTimeframe"]) =>
+            dispatch(setSelectedTimeframe(timeFrame))
+          }
+        />
       </div>
       <div
         style={{
