@@ -1,5 +1,4 @@
 import Image from "next/image";
-import React from "react";
 
 export interface SymbolOption {
   id: string;
@@ -25,13 +24,13 @@ export default function SymbolDropdown({
   label,
   disabled = false,
   placeholder = "Veuillez selectioner une crypto ...",
-  className = "",
+  className = "bg-card",
 }: SymbolDropdownProps) {
   return (
     <div className={className}>
       {label && <label className="block mb-1 font-medium">{label}</label>}
       <select
-        className="w-fit px-3 py-2 border rounded focus:outline-none focus:ring"
+        className="w-fit md:px-3 py-2  rounded focus:outline-none focus:ring"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

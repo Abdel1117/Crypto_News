@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <SideBar />
         <div className="flex flex-col w-full">
           <DashBoardHeader />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-1 md:p-6">{children}</main>
         </div>
       </div>
     </div>

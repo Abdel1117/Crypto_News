@@ -9,3 +9,8 @@ class MarketClient(Protocol):
 
     async def fetch_symbols(self, include_platform: bool) -> List[Dict]:
         pass
+
+    async def fetch_ohlc(
+        self, currency: str, selectedTimeFrame: str, cryptoId: str
+    ) -> List[Dict]:
+        pass

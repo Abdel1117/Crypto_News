@@ -12,6 +12,7 @@ import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
 import { getCssVar } from "@/app/utils/StyleFunctions/getCssVar";
+import { callOhlc } from "@/app/lib/api/crypto";
 import SymbolDropdown from "@/app/ui/SymbolDropdown/SymbolDropdown";
 import RadioTimeMarket from "@/app/components/RadioTimeMarket/RadiotTimeMarket";
 import {
@@ -19,6 +20,7 @@ import {
   setSelectedSymbol,
   setSelectedTimeframe,
 } from "@/app/lib/features/marketView/marketViewSlice";
+
 // Mock data OHLC pour test
 const mockOhlc = [
   { time: 1710000000, open: 62000, high: 62500, low: 61500, close: 62200 },
@@ -29,7 +31,7 @@ const mockOhlc = [
   { time: 1710018000, open: 62700, high: 62900, low: 62600, close: 62850 },
 ];
 
-const mockTimeFrame: MarketViewState["selectedTimeframe"][] = [
+const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
   "1h",
   "1d",
   "1w",
@@ -46,7 +48,8 @@ export default function CandleStickGraph() {
     (state) => state.symbols,
   );
 
-  const { selectedSymbol, selectedTimeframe } = useAppSelector(
+  const [containerWidth, setContainerWidth] = useState(600);
+  const { selectedSymbol, selectedTimeFrame } = useAppSelector(
     (state) => state.marketView,
   );
 
@@ -58,7 +61,6 @@ export default function CandleStickGraph() {
   const seriesRef = useRef<ISeriesApi>(null);
 
   /* For the style of the candle light */
-  const backgroundColor = getCssVar("--color-background");
   const textColor = getCssVar("--color-foreground");
 
   // Charger les prix à chaque changement de monnaie
@@ -80,23 +82,23 @@ export default function CandleStickGraph() {
     chartRef.current = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth || 600,
       height: 350,
-      layout: { background: { color: backgroundColor }, textColor: textColor },
+      layout: { background: { color: "transparent" }, textColor: textColor },
       grid: {
         vertLines: { color: textColor },
         horzLines: { color: textColor },
       },
     });
-    // Appliquer l'option crosshair après la création
-    chartRef.current.applyOptions({
-      crosshair: { mode: CrosshairMode.Normal },
-    });
+    width: (containerWidth,
+      chartRef.current.applyOptions({
+        crosshair: { mode: CrosshairMode.Normal },
+      }));
 
     seriesRef.current = chartRef.current.addSeries?.(CandlestickSeries, {});
 
     // Utilisation de mock data OHLC pour l'affichage
     seriesRef.current.setData(mockOhlc);
 
-    // Nettoyage
+    // Nettoyage&
     return () => {
       if (chartRef.current) {
         chartRef.current.remove();
@@ -105,56 +107,68 @@ export default function CandleStickGraph() {
     };
   }, [coins]);
 
+  useEffect(() => {
+    callOhlc();
+  }, [selectedTimeFrame, selectedSymbol]);
+
   return (
     <div>
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 16,
-          }}
-        >
-          <label htmlFor="currency-select">Monnaie :</label>
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-card p-4 rounded-t-lg border-b border-border">
+        {/* Bloc monnaie */}
+        <div className="flex items-center gap-2 mb-2 md:mb-0">
+          <label
+            htmlFor="currency-select"
+            className="text-sm font-semibold text-foreground/80"
+          >
+            Monnaie :
+          </label>
           <select
             id="currency-select"
             value={currency}
             onChange={(e) => setCurrency(e.target.value as "eur" | "usd")}
+            className="px-2 py-1 rounded border border-border bg-surface text-foreground focus:outline-none focus:ring focus:border-primary transition"
           >
             <option value="eur">EUR</option>
             <option value="usd">USD</option>
           </select>
         </div>
-        <SymbolDropdown
-          value={selectedSymbol}
-          options={symbols}
-          onChange={(id) => dispatch(setSelectedSymbol(id))}
-          label="Selectioner une Crypto"
-        />
-        <RadioTimeMarket
-          value={selectedTimeframe}
-          options={mockTimeFrame}
-          onChange={(timeFrame: MarketViewState["selectedTimeframe"]) =>
-            dispatch(setSelectedTimeframe(timeFrame))
-          }
-        />
+        {/* Bloc SymbolDropdown */}
+        <div className="flex  gap-2 w-full md:w-auto">
+          <SymbolDropdown
+            value={selectedSymbol}
+            options={symbols}
+            onChange={(id) => dispatch(setSelectedSymbol(id))}
+            label={undefined}
+            className="w-full md:w-auto"
+          />
+        </div>
+        {/* Bloc RadioTimeMarket */}
+        <div className="hidden md:flex items-center gap-2 w-full md:w-auto justify-end">
+          <RadioTimeMarket
+            value={selectedTimeFrame}
+            options={mockTimeFrame}
+            onChange={(timeFrame: MarketViewState["selectedTimeFrame"]) =>
+              dispatch(setSelectedTimeframe(timeFrame))
+            }
+            className="shadow-sm"
+          />
+        </div>
       </div>
-      <div
-        style={{
-          width: "100%",
-          minHeight: 350,
-          background: "#fff",
-          borderRadius: 8,
-          boxShadow: "0 2px 8px #0001",
-          padding: 8,
-        }}
-      >
+      <div className="w-full min-h-[350px] rounded-lg p-1 md:p-2 o">
         {loading ? (
           <p>Chargement du graphique…</p>
         ) : (
           <div ref={chartContainerRef} style={{ width: "100%", height: 350 }} />
         )}
+      </div>
+      <div className="visible md:hidden">
+        <RadioTimeMarket
+          value={selectedTimeFrame}
+          options={mockTimeFrame}
+          onChange={(timeFrame: MarketViewState["selectedTimeFrame"]) =>
+            dispatch(setSelectedTimeframe(timeFrame))
+          }
+        />
       </div>
     </div>
   );

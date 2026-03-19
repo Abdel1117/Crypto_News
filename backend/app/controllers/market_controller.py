@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from app.services.market_service import MarketService
 from app.clients.coingecko_client import CoinGeckoClient
 from app.services.ws_manager import manager
+from app.utils.mapping_values import convert_Time_Frame
 
 router = APIRouter(prefix="/markets", tags=["markets"])
 
@@ -23,6 +24,19 @@ async def get_markets(
     service: MarketService = Depends(get_market_service),
 ):
     return await service.get_top_markets(currency, order, per_page, page)
+
+
+@router.get("/get_ohlc")
+async def get_ohlc(
+    currency: str = "eur",
+    selectedTimeFrame: str = "1d",
+    cryptoId: str = "bitcoin",
+    service: MarketService = Depends(get_market_service),
+):
+
+    converted_time_frame = convert_Time_Frame(selectedTimeFrame)
+    print(converted_time_frame)
+    return await service.get_ohlc(currency, converted_time_frame, cryptoId)
 
 
 @router.websocket("/ws")

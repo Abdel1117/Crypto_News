@@ -22,3 +22,8 @@ class MarketService:
             }
             for coin in data
         ]
+
+    async def get_ohlc(self, currency: str, selectedTimeFrame: str, cryptoId: str):
+        data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
+        print(data)
+        return [{"Greeting": "Hello World"}]

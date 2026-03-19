@@ -1,13 +1,20 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { fetchOhlcData } from "./marketViewThunk";
 
 export interface MarketViewState {
 	selectedSymbol: string;
-	selectedTimeframe: "1h" | "1d" | "1w" | "1m" | "1y";
+	selectedTimeFrame: "1h" | "1d" | "1w" | "1m" | "1y";
+	ohlc: any[];
+	ohlcLoading: boolean;
+	ohlcError?: string | null;
 }
 
 const initialState: MarketViewState = {
 	selectedSymbol: "bitcoin",
-	selectedTimeframe: "1d",
+	selectedTimeFrame: "1d",
+	ohlc: [],
+	ohlcLoading: false,
+	ohlcError: null,
 };
 
 const marketViewSlice = createSlice({
@@ -17,9 +24,25 @@ const marketViewSlice = createSlice({
 		setSelectedSymbol(state, action: PayloadAction<string>) {
 			state.selectedSymbol = action.payload;
 		},
-		setSelectedTimeframe(state, action: PayloadAction<MarketViewState["selectedTimeframe"]>) {
-			state.selectedTimeframe = action.payload;
+		setSelectedTimeframe(state, action: PayloadAction<MarketViewState["selectedTimeFrame"]>) {
+			state.selectedTimeFrame = action.payload;
 		},
+	},
+	extraReducers: (builder) => {
+		builder
+			.addCase(fetchOhlcData.pending, (state) => {
+				state.ohlcLoading = true;
+				state.ohlcError = null;
+			})
+			.addCase(fetchOhlcData.fulfilled, (state, action) => {
+				state.ohlcLoading = false;
+				state.ohlc = action.payload;
+			})
+			.addCase(fetchOhlcData.rejected, (state, action) => {
+				state.ohlcLoading = false;
+				state.ohlcError = action.payload as string || "Erreur lors du chargement des données OHLC";
+				state.ohlc = [];
+			});
 	},
 });
 
