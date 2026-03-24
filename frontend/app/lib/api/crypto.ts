@@ -28,10 +28,21 @@ export async function fetchSymbols(currency : string ) {
 
 
 
-export async function callOhlc(currency :string , selectedTimeFrame : MarketViewState["selectedTimeFrame"] , cryptoId : string ) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/symbols?currency=${encodeURIComponent(currency)}?selectedTimeFrame=${encodeURIComponent(selectedTimeFrame)}cryptoId=${encodeURIComponent(cryptoId)}`);
+export async function callOhlc(currency :string , selectedTimeFrame : MarketViewState["selectedTimeFrame"] , cryptoId : string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/markets/get_ohlc?currency=${encodeURIComponent(currency)}&selectedTimeFrame=${encodeURIComponent(selectedTimeFrame)}&cryptoId=${encodeURIComponent(cryptoId)}`);
   if(!res.ok){
     throw new Error("Failed to fetch Symbols")
+  }
+  return res.json()
+}
+
+
+
+export async function getMarketView(currency : string){
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/markets/markets_view?currency=${encodeURIComponent(currency)}`)
+
+  if(!res.ok){
+    throw new Error("Failed to fetch MarketView")
   }
   return res.json()
 }

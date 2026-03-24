@@ -22,6 +22,15 @@ class CoinGeckoClient:
             response.raise_for_status()
             return response.json()
 
+    async def fetch_markets_view(self, currency: str = "eur"):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/global",
+                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def fetch_symbols(self, include_platform: bool):
         async with httpx.AsyncClient() as client:
             response = await client.get(
@@ -33,7 +42,10 @@ class CoinGeckoClient:
             return response.json()
 
     async def fetch_ohlc(
-        self, currency: str, selectedTimeFrame: str, cryptoId: str
+        self,
+        currency: str,
+        selectedTimeFrame: str,
+        cryptoId: str,
     ) -> List[Dict]:
         async with httpx.AsyncClient() as client:
             print("=" * 60)

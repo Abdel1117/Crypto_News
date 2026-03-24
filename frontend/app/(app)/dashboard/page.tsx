@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { useDispatch } from "react-redux";
 import { getSymbols } from "@/app/lib/features/symbol/symbolThunks";
+import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
 
 export default function DashboardPage() {
   const { currency } = useCurrency();
@@ -31,7 +32,8 @@ export default function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <h1 className="text-3xl font-semibold">Dashboard</h1>
+      <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
+      <MarketOverView />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading
           ? Array.from({ length: preferedNumberOfCrypto }).map((_, i) => (
@@ -41,7 +43,6 @@ export default function DashboardPage() {
               <CryptoInfoCard key={coin.id} coin={coin} />
             ))}
       </div>
-
       <CandleStickGraph />
     </section>
   );

@@ -3,7 +3,7 @@ import { fetchOhlcData } from "./marketViewThunk";
 
 export interface MarketViewState {
 	selectedSymbol: string;
-	selectedTimeFrame: "1h" | "1d" | "1w" | "1m" | "1y";
+	selectedTimeFrame:  "1d" | "1w" | "1m" | "1y";
 	ohlc: any[];
 	ohlcLoading: boolean;
 	ohlcError?: string | null;
@@ -36,6 +36,7 @@ const marketViewSlice = createSlice({
 			})
 			.addCase(fetchOhlcData.fulfilled, (state, action) => {
 				state.ohlcLoading = false;
+				console.log(action.payload)
 				state.ohlc = action.payload;
 			})
 			.addCase(fetchOhlcData.rejected, (state, action) => {

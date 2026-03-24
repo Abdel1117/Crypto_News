@@ -26,6 +26,14 @@ async def get_markets(
     return await service.get_top_markets(currency, order, per_page, page)
 
 
+@router.get("/markets_view")
+async def getMarketView(
+    currency: str = "eur", service: MarketService = Depends(get_market_service)
+):
+
+    return await service.get_market_view(currency)
+
+
 @router.get("/get_ohlc")
 async def get_ohlc(
     currency: str = "eur",
@@ -33,9 +41,10 @@ async def get_ohlc(
     cryptoId: str = "bitcoin",
     service: MarketService = Depends(get_market_service),
 ):
-
     converted_time_frame = convert_Time_Frame(selectedTimeFrame)
     print(converted_time_frame)
+    print(currency)
+    print(cryptoId)
     return await service.get_ohlc(currency, converted_time_frame, cryptoId)
 
 

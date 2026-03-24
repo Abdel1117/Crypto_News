@@ -23,7 +23,27 @@ class MarketService:
             for coin in data
         ]
 
-    async def get_ohlc(self, currency: str, selectedTimeFrame: str, cryptoId: str):
+    async def get_market_view(self, currency: str):
+        data = await self.client.fetch_markets_view(currency)
+        return {
+            "total_market_cap": data["data"]["total_market_cap"].get(currency, None),
+            "total_volume": data["data"]["total_volume"].get(currency, None),
+            "market_cap_percentage": data["data"]["market_cap_percentage"].get(
+                "btc", None
+            ),
+            "market_cap_change_percentage_24h": data["data"].get(
+                f"market_cap_change_percentage_24h_usd", None
+            ),
+            "volume_change_percentage_24h": data["data"].get(
+                f"volume_change_percentage_24h_usd", None
+            ),
+        }
+
+    async def get_ohlc(
+        self,
+        currency: str,
+        selectedTimeFrame: str,
+        cryptoId: str,
+    ):
         data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
-        print(data)
-        return [{"Greeting": "Hello World"}]
+        return data

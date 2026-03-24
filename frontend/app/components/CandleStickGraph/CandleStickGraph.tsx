@@ -20,19 +20,9 @@ import {
   setSelectedSymbol,
   setSelectedTimeframe,
 } from "@/app/lib/features/marketView/marketViewSlice";
-
-// Mock data OHLC pour test
-const mockOhlc = [
-  { time: 1710000000, open: 62000, high: 62500, low: 61500, close: 62200 },
-  { time: 1710003600, open: 62200, high: 62400, low: 61800, close: 62050 },
-  { time: 1710007200, open: 62050, high: 62300, low: 61900, close: 62100 },
-  { time: 1710010800, open: 62100, high: 62600, low: 62000, close: 62500 },
-  { time: 1710014400, open: 62500, high: 62800, low: 62400, close: 62700 },
-  { time: 1710018000, open: 62700, high: 62900, low: 62600, close: 62850 },
-];
+import { fetchOhlcData } from "@/app/lib/features/marketView/marketViewThunk";
 
 const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
-  "1h",
   "1d",
   "1w",
   "1m",
@@ -43,24 +33,20 @@ export default function CandleStickGraph() {
   const { currency, setCurrency } = useCurrency();
   const dispatch = useAppDispatch();
   const { coins, loading } = useAppSelector((state) => state.prices);
-
   const { symbols, loading: loadingSymbol } = useAppSelector(
     (state) => state.symbols,
   );
-
   const [containerWidth, setContainerWidth] = useState(600);
-  const { selectedSymbol, selectedTimeFrame } = useAppSelector(
-    (state) => state.marketView,
-  );
+  const {
+    ohlc: rawohlc,
+    selectedSymbol,
+    selectedTimeFrame,
+  } = useAppSelector((state) => state.marketView);
 
-  /* Local State */
-  /* ======== */
   /* For CandleStick Element   */
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi>(null);
   const seriesRef = useRef<ISeriesApi>(null);
-
-  /* For the style of the candle light */
   const textColor = getCssVar("--color-foreground");
 
   // Charger les prix à chaque changement de monnaie
@@ -71,14 +57,10 @@ export default function CandleStickGraph() {
   // Créer et mettre à jour le graphique
   useEffect(() => {
     if (!chartContainerRef.current) return;
-
-    // Détruire l'ancien graphique si existant
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current = null;
     }
-
-    // Créer le graphique
     chartRef.current = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth || 600,
       height: 350,
@@ -88,28 +70,43 @@ export default function CandleStickGraph() {
         horzLines: { color: textColor },
       },
     });
-    width: (containerWidth,
-      chartRef.current.applyOptions({
-        crosshair: { mode: CrosshairMode.Normal },
-      }));
-
+    width: chartRef.current.applyOptions({
+      crosshair: { mode: CrosshairMode.Normal },
+    });
     seriesRef.current = chartRef.current.addSeries?.(CandlestickSeries, {});
-
-    // Utilisation de mock data OHLC pour l'affichage
-    seriesRef.current.setData(mockOhlc);
-
-    // Nettoyage&
+    const ohlc = rawohlc.map((item) => ({
+      time: Math.floor(item[0] / 1000),
+      open: item[1],
+      high: item[2],
+      low: item[3],
+      close: item[4],
+    }));
+    console.log("Nombre de bougies OHLC:", rawohlc.length, rawohlc);
+    seriesRef.current.setData(ohlc);
+    if (chartRef.current && ohlc.length > 0) {
+      const logicalRange = {
+        from: 0,
+        to: ohlc.length - 1,
+      };
+      chartRef.current.timeScale().setVisibleLogicalRange(logicalRange);
+    }
     return () => {
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
       }
     };
-  }, [coins]);
+  }, [coins, symbols, rawohlc, containerWidth]);
 
   useEffect(() => {
-    callOhlc();
-  }, [selectedTimeFrame, selectedSymbol]);
+    dispatch(
+      fetchOhlcData({
+        currency,
+        selectedTimeFrame,
+        cryptoId: selectedSymbol,
+      }),
+    );
+  }, [currency, selectedTimeFrame, selectedSymbol]);
 
   return (
     <div>
@@ -155,7 +152,7 @@ export default function CandleStickGraph() {
         </div>
       </div>
       <div className="w-full min-h-[350px] rounded-lg p-1 md:p-2 o">
-        {loading ? (
+        {loading || !rawohlc || rawohlc.length === 0 ? (
           <p>Chargement du graphique…</p>
         ) : (
           <div ref={chartContainerRef} style={{ width: "100%", height: 350 }} />
