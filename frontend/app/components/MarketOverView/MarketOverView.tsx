@@ -2,14 +2,27 @@
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import React, { useEffect, useState } from "react";
 import { getMarketView } from "@/app/lib/api/crypto";
+import {
+  formatPercentValue,
+  getPercentColor,
+} from "@/app/utils/Format/FormatPercent/FormatPercent";
+
+import {
+  CURRENCY_SYMBOLS,
+  QUOTE_CURRENCY_SYMBOLS,
+} from "@/app/utils/constants/currency";
 
 export default function MarketOverView() {
-  const [totalMarketCap, setTotalMarketCap] = useState(null);
-  const [totalVolume, setTotalVolume] = useState(null);
-  const [marketCapPercentage, setMarketCapPercentage] = useState(null);
-  const [marketCapChange, setMarketCapChange] = useState(null);
-  const [volumeChange, setVolumeChange] = useState(null);
+  const [totalMarketCap, setTotalMarketCap] = useState<null | number>(null);
+  const [totalVolume, setTotalVolume] = useState<null | number>(null);
+  const [marketCapPercentage, setMarketCapPercentage] = useState<null | number>(
+    null,
+  );
+  const [marketCapChange, setMarketCapChange] = useState<null | number>(null);
+  const [volumeChange, setVolumeChange] = useState<null | number>(null);
   const { currency } = useCurrency();
+  const symbol = CURRENCY_SYMBOLS[currency];
+  const currency_quote = QUOTE_CURRENCY_SYMBOLS[currency];
 
   useEffect(() => {
     const getDataMarkerView = async () => {
@@ -27,70 +40,70 @@ export default function MarketOverView() {
     getDataMarkerView();
   }, [currency]);
 
-  const isPositive = true;
-  const isNegative = false;
   return (
     <section className=" ">
       <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
+        {/* Market Cap */}
         <div className="bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px] w-full">
           <h2 className="text-foreground font-semibold text-sm mb-3">
             Market Cap
           </h2>
           <p className="text-foreground text-xl font-bold mb-2">
             {totalMarketCap}
-            {currency}
+            {symbol}
           </p>
           <span
-            className={
-              isPositive
-                ? "text-success"
-                : isNegative
-                  ? "text-red-500"
-                  : "text-danger"
-            }
+            className={getPercentColor(
+              marketCapChange,
+              "text-success",
+              "text-red-500",
+              "text-neutral-500",
+            )}
           >
-            <p>+2.1%</p>
+            <p>{formatPercentValue(marketCapChange)}</p>
           </span>
         </div>
+        {/* =========================== */}
 
+        {/* 24H Volumes */}
         <div className="bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px] w-full">
           <h2 className="text-foreground font-semibold text-sm mb-3">
             24h Volume
           </h2>
           <p className="text-foreground text-xl font-bold mb-2">
             {totalVolume}
-            {currency}
+            {symbol}
           </p>
           <span
-            className={
-              isPositive
-                ? "text-success"
-                : isNegative
-                  ? "text-red-500"
-                  : "text-danger"
-            }
+            className={getPercentColor(
+              volumeChange,
+              "text-success",
+              "text-red-500",
+              "text-neutral-500",
+            )}
           >
-            <p>-5.4%</p>
+            <p>{formatPercentValue(volumeChange)}</p>
           </span>
         </div>
+        {/* ====================================== */}
 
+        {/* BTC Dominance */}
         <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col flex-1 bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px]  w-full">
           <h2 className="text-foreground font-semibold text-sm mb-3">
             BTC Dominance
           </h2>
-          <p className="text-foreground text-xl font-bold mb-2">52.3%</p>
           <span
-            className={
-              isPositive
-                ? "text-success"
-                : isNegative
-                  ? "text-red-500"
-                  : "text-danger"
-            }
+            className={getPercentColor(
+              marketCapPercentage,
+              "text-success",
+              "text-red-500",
+              "text-neutral-500",
+            )}
           >
-            <p>{marketCapPercentage} %</p>
+            <p>{formatPercentValue(marketCapPercentage ?? 0)}</p>
           </span>
         </div>
+        {/* ====================================== */}
       </div>
     </section>
   );

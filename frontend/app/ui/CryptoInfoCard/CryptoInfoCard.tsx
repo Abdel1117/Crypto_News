@@ -1,16 +1,11 @@
 import { Currency, useCurrency } from "@/app/context/Curency/CurrencyContext";
 import Image from "next/image";
 import React from "react";
-
-const CURRENCY_SYMBOLS: Record<Currency, string> = {
-  usd: "$",
-  eur: "€",
-};
-
-const QUOTE_CURRENCY_SYMBOLS: Record<Currency, string> = {
-  usd: "USDT",
-  eur: "EUR",
-};
+import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
+import {
+  CURRENCY_SYMBOLS,
+  QUOTE_CURRENCY_SYMBOLS,
+} from "@/app/utils/constants/currency";
 export interface CryptoMarketData {
   id: string;
   symbol: string;
@@ -23,12 +18,6 @@ export interface CryptoMarketData {
 
 interface CryptoInfoCardProps {
   coin: CryptoMarketData;
-}
-
-function formatPrice(price: number, currency: string) {
-  const [int, dec] = price.toFixed(2).split(".");
-  const formatted = int.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-  return `${formatted},${dec}${currency}`;
 }
 
 export default function CryptoInfoCard({ coin }: CryptoInfoCardProps) {
@@ -92,7 +81,7 @@ export default function CryptoInfoCard({ coin }: CryptoInfoCardProps) {
 
       {/* Price */}
       <p className="text-foreground text-xl font-bold mb-2">
-        {formatPrice(coin.price, symbol)}
+        {formatPrice(coin.price, 2, symbol)}
       </p>
 
       {/* Change + pair */}
