@@ -6,6 +6,8 @@ import {
   CURRENCY_SYMBOLS,
   QUOTE_CURRENCY_SYMBOLS,
 } from "@/app/utils/constants/currency";
+import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
+import { toggleWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 export interface CryptoMarketData {
   id: string;
   symbol: string;
@@ -18,16 +20,36 @@ export interface CryptoMarketData {
 
 interface CryptoInfoCardProps {
   coin: CryptoMarketData;
+  selected: boolean;
+  onSelect: () => void;
 }
 
-export default function CryptoInfoCard({ coin }: CryptoInfoCardProps) {
+export default function CryptoInfoCard({
+  coin,
+  selected,
+  onSelect,
+}: CryptoInfoCardProps) {
   const isPositive = coin.change_24h > 0;
   const isNegative = coin?.change_24h < 0;
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const currency_quote = QUOTE_CURRENCY_SYMBOLS[currency];
+  const dispatch = useAppDispatch();
+  const watchlistIds = useAppSelector((state) => state.watchlist.ids);
+  const isInWatchlist = watchlistIds.includes(coin.id);
+
+  const handleToggleWatchlist = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    dispatch(toggleWatchlist(coin.id));
+  };
+
   return (
-    <div className="bg-card border-l-3 border-primary rounded-lg p-4 min-w-[220px]">
+    <div
+      className={`bg-card  rounded-lg p-4 min-w-[220px] cursor-pointer transition-shadow ${
+        selected ? "ring-2 ring-primary" : ""
+      }`}
+      onClick={onSelect}
+    >
       {/* Header: icon + name + sparkline + menu */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -43,8 +65,37 @@ export default function CryptoInfoCard({ coin }: CryptoInfoCardProps) {
           <span className="text-foreground font-semibold text-sm">
             {coin.name}
           </span>
+          {isInWatchlist && (
+            <span className="text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+              Dans vos favoris
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Star toggle */}
+          <button
+            onClick={handleToggleWatchlist}
+            className="transition-colors hover:scale-110"
+            aria-label={
+              isInWatchlist ? "Remove from watchlist" : "Add to watchlist"
+            }
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill={isInWatchlist ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              className={
+                isInWatchlist
+                  ? "text-yellow-400"
+                  : "text-muted-foreground hover:text-yellow-400"
+              }
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
           {/* Mini sparkline icon */}
           <svg
             width="24"
@@ -56,11 +107,15 @@ export default function CryptoInfoCard({ coin }: CryptoInfoCardProps) {
                 ? "text-success"
                 : isNegative
                   ? "text-red-600"
-                  : "text-black"
+                  : "text-muted-foreground"
             }
           >
             <polyline
-              points="0,12 4,10 8,7 12,9 16,4 20,6 24,2"
+              points={
+                isPositive
+                  ? "0,12 4,10 8,7 12,9 16,4 20,6 24,2"
+                  : "0,2 4,4 8,7 12,5 16,10 20,8 24,12"
+              }
               stroke="currentColor"
               strokeWidth="2"
               fill="none"

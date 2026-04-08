@@ -42,10 +42,21 @@ async def get_ohlc(
     service: MarketService = Depends(get_market_service),
 ):
     converted_time_frame = convert_Time_Frame(selectedTimeFrame)
-    print(converted_time_frame)
-    print(currency)
-    print(cryptoId)
     return await service.get_ohlc(currency, converted_time_frame, cryptoId)
+
+
+@router.get("/get_top_winners_losers")
+async def get_top_winners_losers(
+    currency: str = "eur",
+    duration: str = "1d",
+    price_change_percentage: str = "1d",
+    top_coins: str = 300,
+    service: MarketService = Depends(get_market_service),
+):
+
+    return await service.get_top_gainers_losers(
+        currency, duration, price_change_percentage, top_coins
+    )
 
 
 @router.websocket("/ws")

@@ -11,15 +11,14 @@ import {
   CURRENCY_SYMBOLS,
   QUOTE_CURRENCY_SYMBOLS,
 } from "@/app/utils/constants/currency";
+import { formatNumberToCurrency } from "@/app/utils/Format/NumberFormat/NumberFormat";
 
 export default function MarketOverView() {
-  const [totalMarketCap, setTotalMarketCap] = useState<null | number>(null);
-  const [totalVolume, setTotalVolume] = useState<null | number>(null);
-  const [marketCapPercentage, setMarketCapPercentage] = useState<null | number>(
-    null,
-  );
-  const [marketCapChange, setMarketCapChange] = useState<null | number>(null);
-  const [volumeChange, setVolumeChange] = useState<null | number>(null);
+  const [totalMarketCap, setTotalMarketCap] = useState<number>(0);
+  const [totalVolume, setTotalVolume] = useState<number>(0);
+  const [marketCapPercentage, setMarketCapPercentage] = useState<number>(0);
+  const [marketCapChange, setMarketCapChange] = useState<number>(0);
+  const [volumeChange, setVolumeChange] = useState<number>(0);
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const currency_quote = QUOTE_CURRENCY_SYMBOLS[currency];
@@ -41,69 +40,64 @@ export default function MarketOverView() {
   }, [currency]);
 
   return (
-    <section className=" ">
-      <div className=" grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
+    <section className="w-full border-b border-white/5 bg-card">
+      <div className="px-2 py-2 flex flex-wrap items-center gap-6 text-sm text-foreground">
         {/* Market Cap */}
-        <div className="bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px] w-full">
-          <h2 className="text-foreground font-semibold text-sm mb-3">
-            Market Cap
-          </h2>
-          <p className="text-foreground text-xl font-bold mb-2">
-            {totalMarketCap}
+        <div className="flex items-center gap-2">
+          <span>Market Cap</span>
+          <span className="text-foreground font-medium">
+            {formatNumberToCurrency(totalMarketCap)}
             {symbol}
-          </p>
+          </span>
           <span
             className={getPercentColor(
               marketCapChange,
-              "text-success",
+              "text-green-500",
               "text-red-500",
-              "text-neutral-500",
+              "text-gray-500",
             )}
           >
-            <p>{formatPercentValue(marketCapChange)}</p>
+            {formatPercentValue(marketCapChange)}
           </span>
         </div>
-        {/* =========================== */}
 
-        {/* 24H Volumes */}
-        <div className="bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px] w-full">
-          <h2 className="text-foreground font-semibold text-sm mb-3">
-            24h Volume
-          </h2>
-          <p className="text-foreground text-xl font-bold mb-2">
-            {totalVolume}
+        <span className="text-muted">•</span>
+
+        {/* 24h Volume */}
+        <div className="flex items-center gap-2">
+          <span>24h Volume</span>
+          <span className="text-foreground font-medium">
+            {formatNumberToCurrency(totalVolume)}
             {symbol}
-          </p>
+          </span>
           <span
             className={getPercentColor(
               volumeChange,
-              "text-success",
+              "text-green-500",
               "text-red-500",
-              "text-neutral-500",
+              "text-gray-500",
             )}
           >
-            <p>{formatPercentValue(volumeChange)}</p>
+            {formatPercentValue(volumeChange)}
           </span>
         </div>
-        {/* ====================================== */}
+
+        <span className="text-muted">•</span>
 
         {/* BTC Dominance */}
-        <div className="col-span-1 sm:col-span-2 md:col-span-1 flex flex-col flex-1 bg-card border-l-3 border-primary rounded-lg p-4 md:min-w-[220px]  w-full">
-          <h2 className="text-foreground font-semibold text-sm mb-3">
-            BTC Dominance
-          </h2>
+        <div className="flex items-center gap-2">
+          <span>BTC Dominance</span>
           <span
-            className={getPercentColor(
+            className={`font-medium ${getPercentColor(
               marketCapPercentage,
-              "text-success",
+              "text-green-500",
               "text-red-500",
-              "text-neutral-500",
-            )}
+              "text-gray-500",
+            )}`}
           >
-            <p>{formatPercentValue(marketCapPercentage ?? 0)}</p>
+            {formatPercentValue(marketCapPercentage ?? 0)}
           </span>
         </div>
-        {/* ====================================== */}
       </div>
     </section>
   );

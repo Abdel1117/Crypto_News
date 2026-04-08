@@ -7,7 +7,14 @@ class CoinGeckoClient:
 
     BASE_URL = "https://api.coingecko.com/api/v3"
 
-    async def fetch_markets(self, currency: str, order: str, per_page: int, page: int):
+    async def fetch_markets(
+        self,
+        currency: str,
+        order: str,
+        per_page: int,
+        page: int,
+        sparkline: bool = False,
+    ):
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.BASE_URL}/coins/markets",
@@ -16,6 +23,7 @@ class CoinGeckoClient:
                     "order": order,
                     "per_page": per_page,
                     "page": page,
+                    "sparkline": str(sparkline).lower(),
                 },
                 headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
             )
@@ -48,9 +56,6 @@ class CoinGeckoClient:
         cryptoId: str,
     ) -> List[Dict]:
         async with httpx.AsyncClient() as client:
-            print("=" * 60)
-            print(selectedTimeFrame)
-            print("=" * 60)
             response = await client.get(
                 f"{self.BASE_URL}/coins/{cryptoId}/ohlc",
                 params={
@@ -60,5 +65,14 @@ class CoinGeckoClient:
                 headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
             )
 
+            response.raise_for_status()
+            return response.json()
+
+    async def fetch_trending(self) -> List[Dict]:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/search/trending",
+                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+            )
             response.raise_for_status()
             return response.json()

@@ -19,6 +19,8 @@ export { SpecialPageIcon } from "./SpecialPageIcon";
 export { UtilitiesIcon } from "./UtilitiesIcon";
 export {ArrowLeft} from "./ArrowLeft"
 export {ArrowRight} from "./ArrowRight"
+export { SimulationIcon } from "./SimulationIcon"
+export {DashBoardIcon} from "./DashBoardIcon"
 
 /* Header DahsBoard Icon */
 export {MessageIcon} from "./MessageIcon"

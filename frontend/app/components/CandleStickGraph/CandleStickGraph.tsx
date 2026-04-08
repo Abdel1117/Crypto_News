@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   CandlestickSeries,
   createChart,
@@ -11,16 +11,15 @@ import { CrosshairMode } from "lightweight-charts";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
-import { getCssVar } from "@/app/utils/StyleFunctions/getCssVar";
-import { callOhlc } from "@/app/lib/api/crypto";
+import { getCssVar } from "@/app/utils/StyleFunctions/GetCssVar";
 import SymbolDropdown from "@/app/ui/SymbolDropdown/SymbolDropdown";
 import RadioTimeMarket from "@/app/components/RadioTimeMarket/RadiotTimeMarket";
 import {
   MarketViewState,
-  setSelectedSymbol,
   setSelectedTimeframe,
 } from "@/app/lib/features/marketView/marketViewSlice";
 import { fetchOhlcData } from "@/app/lib/features/marketView/marketViewThunk";
+import CandleStickSkeleton from "@/app/ui/Skeleton/CandleStickSkeleton/CandleStickSkeleton";
 
 const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
   "1d",
@@ -29,15 +28,19 @@ const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
   "1y",
 ];
 
-export default function CandleStickGraph() {
+interface CandleStickGraphProps {
+  onSymbolChange: (symbolId: string) => void;
+}
+
+export default function CandleStickGraph({
+  onSymbolChange,
+}: CandleStickGraphProps) {
   const { currency, setCurrency } = useCurrency();
   const dispatch = useAppDispatch();
   const { coins, loading } = useAppSelector((state) => state.prices);
-  const { symbols, loading: loadingSymbol } = useAppSelector(
-    (state) => state.symbols,
-  );
-  const [containerWidth, setContainerWidth] = useState(600);
+  const { symbols } = useAppSelector((state) => state.symbols);
   const {
+    ohlcLoading,
     ohlc: rawohlc,
     selectedSymbol,
     selectedTimeFrame,
@@ -46,7 +49,7 @@ export default function CandleStickGraph() {
   /* For CandleStick Element   */
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi>(null);
-  const seriesRef = useRef<ISeriesApi>(null);
+  const seriesRef = useRef<ISeriesApi<"Candlestick">>(null);
   const textColor = getCssVar("--color-foreground");
 
   // Charger les prix à chaque changement de monnaie
@@ -66,8 +69,8 @@ export default function CandleStickGraph() {
       height: 350,
       layout: { background: { color: "transparent" }, textColor: textColor },
       grid: {
-        vertLines: { color: textColor },
-        horzLines: { color: textColor },
+        vertLines: { color: "transparent" },
+        horzLines: { color: "transparent" },
       },
     });
     width: chartRef.current.applyOptions({
@@ -75,13 +78,14 @@ export default function CandleStickGraph() {
     });
     seriesRef.current = chartRef.current.addSeries?.(CandlestickSeries, {});
     const ohlc = rawohlc.map((item) => ({
-      time: Math.floor(item[0] / 1000),
+      time: Math.floor(
+        item[0] / 1000,
+      ) as unknown as import("lightweight-charts").Time,
       open: item[1],
       high: item[2],
       low: item[3],
       close: item[4],
     }));
-    console.log("Nombre de bougies OHLC:", rawohlc.length, rawohlc);
     seriesRef.current.setData(ohlc);
     if (chartRef.current && ohlc.length > 0) {
       const logicalRange = {
@@ -96,7 +100,7 @@ export default function CandleStickGraph() {
         chartRef.current = null;
       }
     };
-  }, [coins, symbols, rawohlc, containerWidth]);
+  }, [coins, symbols, rawohlc, textColor]);
 
   useEffect(() => {
     dispatch(
@@ -106,7 +110,7 @@ export default function CandleStickGraph() {
         cryptoId: selectedSymbol,
       }),
     );
-  }, [currency, selectedTimeFrame, selectedSymbol]);
+  }, [currency, selectedTimeFrame, selectedSymbol, dispatch]);
 
   return (
     <div>
@@ -134,7 +138,7 @@ export default function CandleStickGraph() {
           <SymbolDropdown
             value={selectedSymbol}
             options={symbols}
-            onChange={(id) => dispatch(setSelectedSymbol(id))}
+            onChange={onSymbolChange}
             label={undefined}
             className="w-full md:w-auto"
           />
@@ -151,9 +155,9 @@ export default function CandleStickGraph() {
           />
         </div>
       </div>
-      <div className="w-full min-h-[350px] rounded-lg p-1 md:p-2 o">
-        {loading || !rawohlc || rawohlc.length === 0 ? (
-          <p>Chargement du graphique…</p>
+      <div className="w-full min-h-87.5 rounded-lg p-1 md:p-2 ">
+        {ohlcLoading || loading || !rawohlc || rawohlc.length === 0 ? (
+          <CandleStickSkeleton />
         ) : (
           <div ref={chartContainerRef} style={{ width: "100%", height: 350 }} />
         )}

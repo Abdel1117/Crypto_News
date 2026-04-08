@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
+import TopLoader from "./components/TopLoader/TopLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,7 +45,10 @@ export default function RootLayout({
           "antialiased bg-background text-foreground",
         ].join(" ")}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <TopLoader />
+          {children}
+        </Providers>
       </body>
     </html>
   );

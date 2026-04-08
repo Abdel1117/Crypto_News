@@ -46,3 +46,27 @@ export async function getMarketView(currency : string){
   }
   return res.json()
 }
+
+
+export async function fetchTopWinnersLosers(currency: string, topCoins: number = 300) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BACK_END}/markets/get_top_winners_losers?currency=${encodeURIComponent(currency)}&top_coins=${topCoins}`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch top winners/losers");
+  }
+  return res.json();
+}
+
+
+export async function fetchTrending() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BACK_END}/trending`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch trending coins");
+  }
+  return res.json();
+}

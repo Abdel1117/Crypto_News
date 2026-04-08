@@ -47,3 +47,38 @@ class MarketService:
     ):
         data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
         return data
+
+    async def get_top_gainers_losers(
+        self,
+        currency: str,
+        duration: str,
+        price_change_percentage: str,
+        top_coins: str,
+    ):
+        data = await self.client.fetch_markets(
+            currency, "market_cap_desc", int(top_coins), 1, sparkline=True
+        )
+
+        change_key = "price_change_percentage_24h"
+
+        valid = [c for c in data if c.get(change_key) is not None]
+
+        sorted_desc = sorted(valid, key=lambda c: c[change_key], reverse=True)
+        sorted_asc = sorted(valid, key=lambda c: c[change_key])
+
+        def map_coin(coin: dict) -> dict:
+            return {
+                "id": coin.get("id"),
+                "symbol": coin.get("symbol", "").upper(),
+                "name": coin.get("name"),
+                "image": coin.get("image"),
+                "price": coin.get("current_price"),
+                "market_cap": coin.get("market_cap"),
+                "price_change_percentage": coin.get(change_key),
+                "sparkline": coin.get("sparkline_in_7d", {}).get("price", []),
+            }
+
+        return {
+            "top_gainers": [map_coin(c) for c in sorted_desc[:10]],
+            "top_losers": [map_coin(c) for c in sorted_asc[:10]],
+        }

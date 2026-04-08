@@ -4,18 +4,22 @@ import Link from "next/link";
 import {
   AuthIcon,
   HomeIcon,
+  SimulationIcon,
   SpecialPageIcon,
   UserIcon,
   UtilitiesIcon,
   ArrowLeft,
   ArrowRight,
+  DashBoardIcon,
 } from "@/app/components/Icons";
 import { useSidebar } from "@/app/context/SideBar/SideBareContext";
 
 export default function SideBar() {
   const { isCollapsed, toggle } = useSidebar();
   const navItems = [
-    { label: "Dashboard", href: "/dashboard", Icon: HomeIcon },
+    { label: "Accueil", href: "/", Icon: HomeIcon },
+    { label: "Dashboard", href: "/dashboard", Icon: DashBoardIcon },
+    { label: "Simulation", href: "/simulation", Icon: SimulationIcon },
     { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
     { label: "Authentification", href: "/login", Icon: AuthIcon },
     { label: "Utilisateur", href: "/settinngs", Icon: UserIcon },

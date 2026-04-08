@@ -2,13 +2,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { getSymbols } from "./symbolThunks"
 
-interface SymbolData {
+export interface SymbolData {
 	id: string;
+	image : string;
 	symbol: string;
 	name: string;
 }
 
-interface SymbolState {
+export interface SymbolState {
 	symbols: SymbolData[];
 	loading: boolean;
 	connected: boolean;
@@ -34,6 +35,12 @@ const symbolSlice = createSlice({
 		setConnected(state, action: PayloadAction<boolean>) {
 			state.connected = action.payload
 		},
+		addSymbolIfMissing(state, action: PayloadAction<SymbolData>) {
+			const exists = state.symbols.some(s => s.id === action.payload.id);
+			if (!exists) {
+				state.symbols.push(action.payload);
+			}
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -50,5 +57,5 @@ const symbolSlice = createSlice({
 	}
 })
 
-export const { setSymbols, setLoading, setConnected } = symbolSlice.actions
+export const { setSymbols, setLoading, setConnected, addSymbolIfMissing } = symbolSlice.actions
 export default symbolSlice.reducer

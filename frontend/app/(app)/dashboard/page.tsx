@@ -3,18 +3,29 @@
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import CryptoInfoCard from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
 import CandleStickGraph from "@/app/components/CandleStickGraph/CandleStickGraph";
+import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
 import Loading from "./loading";
 import { send } from "@/app/lib/ws/socket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { useDispatch } from "react-redux";
 import { getSymbols } from "@/app/lib/features/symbol/symbolThunks";
 import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
+import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
+import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
+import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 
 export default function DashboardPage() {
   const { currency } = useCurrency();
   const dispatch = useAppDispatch();
   const { coins, loading } = useAppSelector((state) => state.prices);
+  const { symbols } = useAppSelector((state) => state.symbols);
+  const { topGainers, topLosers } = useAppSelector(
+    (state) => state.topGainersLosers,
+  );
+  const { coins: trendingCoins } = useAppSelector((state) => state.trending);
+  const watchlistIds = useAppSelector((state) => state.watchlist.ids);
+
+  const [selectedId, setSelectedId] = useState<string | number | null>(null);
 
   const preferedNumberOfCrypto = 6;
 
@@ -26,13 +37,76 @@ export default function DashboardPage() {
     dispatch(getSymbols(currency));
   }, [dispatch, currency]);
 
+  useEffect(() => {
+    dispatch(initWatchlist());
+  }, [dispatch]);
+
   const topCrypto = Array.isArray(coins)
     ? coins.slice(0, preferedNumberOfCrypto)
     : [];
 
+  const watchlistCoins = Array.isArray(coins)
+    ? coins.filter((c) => watchlistIds.includes(c.id))
+    : [];
+
+  const handleSymbolChange = (symbolId: string) => {
+    setSelectedId(symbolId);
+    dispatch(setSelectedSymbol(symbolId));
+
+    if (!symbols.some((s) => s.id === symbolId)) {
+      const allCoins = [
+        ...coins.map((c) => ({
+          id: c.id,
+          name: c.name,
+          symbol: c.symbol,
+          image: c.image,
+        })),
+        ...topGainers.map((c) => ({
+          id: c.id,
+          name: c.name,
+          symbol: c.symbol,
+          image: c.image,
+        })),
+        ...topLosers.map((c) => ({
+          id: c.id,
+          name: c.name,
+          symbol: c.symbol,
+          image: c.image,
+        })),
+        ...trendingCoins.map((c) => ({
+          id: c.id,
+          name: c.name,
+          symbol: c.symbol,
+          image: c.image,
+        })),
+      ];
+      const coin = allCoins.find((c) => c.id === symbolId);
+      if (coin) {
+        dispatch(addSymbolIfMissing(coin));
+      }
+    }
+  };
+
   return (
     <section className="space-y-6">
       <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
+      {watchlistCoins.length > 0 && (
+        <div>
+          <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
+            <span className="text-yellow-400">⭐</span> Your Watchlist
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {watchlistCoins.map((coin) => (
+              <CryptoInfoCard
+                key={coin.id}
+                coin={coin}
+                selected={selectedId === coin.id}
+                onSelect={() => handleSymbolChange(coin.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
       <MarketOverView />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {loading
@@ -40,10 +114,16 @@ export default function DashboardPage() {
               <Loading key={i} />
             ))
           : topCrypto.map((coin) => (
-              <CryptoInfoCard key={coin.id} coin={coin} />
+              <CryptoInfoCard
+                key={coin.id}
+                coin={coin}
+                selected={selectedId === coin.id}
+                onSelect={() => handleSymbolChange(coin.id)}
+              />
             ))}
       </div>
-      <CandleStickGraph />
+      <CandleStickGraph onSymbolChange={handleSymbolChange} />
+      <TopGainersLosers onSymbolChange={handleSymbolChange} />
     </section>
   );
 }
