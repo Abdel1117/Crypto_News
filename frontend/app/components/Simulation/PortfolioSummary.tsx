@@ -5,6 +5,7 @@ import { useAppSelector } from "@/app/lib/hooks";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { CURRENCY_SYMBOLS } from "@/app/utils/constants/currency";
 import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
+import InfoCard from "@/app/ui/InfoCard/InfoCard";
 import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
 import Image from "next/image";
 
@@ -15,9 +16,8 @@ interface PortfolioSummaryProps {
 export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
-  const { balance, initialBalance, holdings } = useAppSelector(
-    (state) => state.simulation,
-  );
+  const { balance, initialBalance, holdings, realizedPnl } = useAppSelector((state) => state.simulation);
+  const loading = useAppSelector((state) => state.prices.loading);
 
   const holdingsValue = holdings.reduce((sum, h) => {
     const coin = coins.find((c) => c.id === h.coinId);
@@ -26,6 +26,11 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   }, 0);
 
   const totalValue = balance + holdingsValue;
+  const unrealizedPnl = holdings.reduce((sum, h) => {
+    const coin = coins.find((c) => c.id === h.coinId);
+    const price = coin?.price ?? h.avgBuyPrice;
+    return sum + (price - h.avgBuyPrice) * h.amount;
+  }, 0);
   const pnl = totalValue - initialBalance;
   const pnlPercent = initialBalance > 0 ? (pnl / initialBalance) * 100 : 0;
   const isPositive = pnl >= 0;
@@ -33,26 +38,33 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-card rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">Solde disponible</p>
-          <p className="text-2xl font-bold text-foreground">
-            {formatPrice(balance, 2, symbol)}
-          </p>
-        </div>
-        <div className="bg-card rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">Valeur du portefeuille</p>
-          <p className="text-2xl font-bold text-foreground">
-            {formatPrice(totalValue, 2, symbol)}
-          </p>
-        </div>
+        <InfoCard value={balance} symbol={symbol} label="Solde disponible" loading={loading} />
+        <InfoCard value={totalValue} symbol={symbol} label="Valeur du portefeuille" loading={loading} />
         <div className="bg-card rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Profit / Perte</p>
-          <p
-            className={`text-2xl font-bold ${isPositive ? "text-success" : "text-red-500"}`}
-          >
+          <p className={`text-2xl font-bold ${isPositive ? "text-success" : "text-red-500"}`}>
             {isPositive ? "+" : ""}
             {formatPrice(pnl, 2, symbol)} ({pnlPercent.toFixed(2)}%)
           </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-card rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">PnL non réalisé</p>
+          <p className={`text-xl font-bold ${unrealizedPnl >= 0 ? "text-success" : "text-red-500"}`}>
+            {unrealizedPnl >= 0 ? "+" : ""}
+            {formatPrice(unrealizedPnl, 2, symbol)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Positions ouvertes</p>
+        </div>
+        <div className="bg-card rounded-lg p-4">
+          <p className="text-sm text-muted-foreground">PnL réalisé</p>
+          <p className={`text-xl font-bold ${realizedPnl >= 0 ? "text-success" : "text-red-500"}`}>
+            {realizedPnl >= 0 ? "+" : ""}
+            {formatPrice(realizedPnl, 2, symbol)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">Positions clôturées</p>
         </div>
       </div>
 

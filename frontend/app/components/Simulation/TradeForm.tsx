@@ -60,7 +60,7 @@ export default function TradeForm({ coins }: TradeFormProps) {
         <button
           type="button"
           onClick={() => setTradeType("buy")}
-          className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+          className={`flex-1 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
             tradeType === "buy"
               ? "bg-success text-white"
               : "bg-surface text-muted-foreground hover:bg-surface/80"
@@ -71,7 +71,7 @@ export default function TradeForm({ coins }: TradeFormProps) {
         <button
           type="button"
           onClick={() => setTradeType("sell")}
-          className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
+          className={`flex-1 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
             tradeType === "sell"
               ? "bg-red-500 text-white"
               : "bg-surface text-muted-foreground hover:bg-surface/80"

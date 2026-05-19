@@ -24,11 +24,18 @@ export interface Holding {
   avgBuyPrice: number;
 }
 
+export interface PortfolioSnapshot {
+  date: string;
+  value: number;
+}
+
 export interface SimulationState {
   balance: number;
   initialBalance: number;
   holdings: Holding[];
   trades: Trade[];
+  realizedPnl: number;
+  portfolioSnapshots: PortfolioSnapshot[];
 }
 
 const DEFAULT_BALANCE = 10000;
@@ -49,6 +56,8 @@ function getDefaultState(): SimulationState {
     initialBalance: DEFAULT_BALANCE,
     holdings: [],
     trades: [],
+    realizedPnl: 0,
+    portfolioSnapshots: [{ date: new Date().toISOString(), value: DEFAULT_BALANCE }],
   };
 }
 
@@ -68,6 +77,8 @@ const simulationSlice = createSlice({
       state.initialBalance = saved.initialBalance;
       state.holdings = saved.holdings;
       state.trades = saved.trades;
+      state.realizedPnl = saved.realizedPnl ?? 0;
+      state.portfolioSnapshots = saved.portfolioSnapshots ?? [{ date: new Date().toISOString(), value: saved.initialBalance }];
     },
     resetSimulation(state) {
       const fresh = getDefaultState();
@@ -75,6 +86,8 @@ const simulationSlice = createSlice({
       state.initialBalance = fresh.initialBalance;
       state.holdings = fresh.holdings;
       state.trades = fresh.trades;
+      state.realizedPnl = fresh.realizedPnl;
+      state.portfolioSnapshots = fresh.portfolioSnapshots;
       saveState(fresh);
     },
     executeTrade(
@@ -117,6 +130,7 @@ const simulationSlice = createSlice({
         const existing = state.holdings.find((h) => h.coinId === coinId);
         if (!existing || existing.amount < amount) return;
         state.balance += total;
+        state.realizedPnl += (price - existing.avgBuyPrice) * amount;
         existing.amount -= amount;
         if (existing.amount <= 0) {
           state.holdings = state.holdings.filter((h) => h.coinId !== coinId);
@@ -136,11 +150,22 @@ const simulationSlice = createSlice({
         date: new Date().toISOString(),
       });
 
+      const holdingsValue = state.holdings.reduce(
+        (sum, h) => sum + h.amount * (h.coinId === coinId ? price : h.avgBuyPrice),
+        0,
+      );
+      state.portfolioSnapshots.push({
+        date: new Date().toISOString(),
+        value: state.balance + holdingsValue,
+      });
+
       saveState({
         balance: state.balance,
         initialBalance: state.initialBalance,
         holdings: state.holdings,
         trades: state.trades,
+        realizedPnl: state.realizedPnl,
+        portfolioSnapshots: state.portfolioSnapshots,
       });
     },
   },

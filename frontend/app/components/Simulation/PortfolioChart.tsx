@@ -45,9 +45,7 @@ export default function PortfolioChart({ coins }: PortfolioChartProps) {
       const pct = (seg.value / total) * 100;
       const start = acc.cum;
       const end = acc.cum + pct;
-      acc.parts.push(
-        `${COLORS[i % COLORS.length]} ${start}% ${end}%`,
-      );
+      acc.parts.push(`${COLORS[i % COLORS.length]} ${start}% ${end}%`);
       return { parts: acc.parts, cum: end };
     },
     { parts: [], cum: 0 },
