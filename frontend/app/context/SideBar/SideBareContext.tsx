@@ -14,7 +14,7 @@ const SidebarContext = createContext<SidebarCtx | null>(null);
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   // `isCollapsed` drives 2 behaviors:
   // - < xl: sidebar slides off-canvas (overlay)
-  // - >= xl: sidebar collapses to an icon-only rail (pushes content)
+  // - >= xl: sidebar collapses to an icon-only rail (push content)
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
 
   const value = useMemo(

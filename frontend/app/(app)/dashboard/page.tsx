@@ -95,7 +95,7 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
             <span className="text-yellow-400">⭐</span> Your Watchlist
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
             {watchlistCoins.map((coin) => (
               <CryptoInfoCard
                 key={coin.id}
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         </div>
       )}
       <MarketOverView />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
         {loading
           ? Array.from({ length: preferedNumberOfCrypto }).map((_, i) => (
               <Loading key={i} />
