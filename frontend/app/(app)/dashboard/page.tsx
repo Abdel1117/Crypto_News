@@ -45,9 +45,40 @@ export default function DashboardPage() {
     ? coins.slice(0, preferedNumberOfCrypto)
     : [];
 
-  const watchlistCoins = Array.isArray(coins)
-    ? coins.filter((c) => watchlistIds.includes(c.id))
-    : [];
+  const priceMap = Array.isArray(coins)
+    ? Object.fromEntries(coins.map((coin) => [coin.id, coin]))
+    : {};
+  const symbolMap = Object.fromEntries(
+    symbols.map((symbol) => [symbol.id, symbol]),
+  );
+
+  const watchlistCoins = watchlistIds.reduce<
+    Array<{
+      id: string;
+      symbol: string;
+      name: string;
+      image?: string;
+      price?: number;
+      market_cap?: number;
+      change_24h?: number;
+    }>
+  >((acc, id) => {
+    const coin = priceMap[id] ?? symbolMap[id];
+    if (coin) {
+      acc.push(
+        coin as {
+          id: string;
+          symbol: string;
+          name: string;
+          image?: string;
+          price?: number;
+          market_cap?: number;
+          change_24h?: number;
+        },
+      );
+    }
+    return acc;
+  }, []);
 
   const handleSymbolChange = (symbolId: string) => {
     setSelectedId(symbolId);
@@ -88,7 +119,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <section className="min-w-0 space-y-6 space-y-6">
+    <section className="min-w-0 space-y-6">
       <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
       {watchlistCoins.length > 0 && (
         <div>

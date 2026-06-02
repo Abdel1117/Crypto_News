@@ -23,3 +23,15 @@ class SymbolesService:
             }
             for coin in data
         ]
+
+    async def search_symbols(self, query: str, per_page: int = 10):
+        data = await self.client.fetch_search(query)
+        return [
+            {
+                "id": coin["id"],
+                "symbol": coin["symbol"],
+                "name": coin["name"],
+                "image": coin.get("large") or coin.get("thumb") or "",
+            }
+            for coin in data[:per_page]
+        ]

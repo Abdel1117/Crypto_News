@@ -58,6 +58,17 @@ async def get_top_winners_losers(
         currency, duration, price_change_percentage, top_coins
     )
 
+@router.get("/coin")
+async def get_market_coin(
+    currency: str = "eur",
+    cryptoId: str = "bitcoin",
+    service: MarketService = Depends(get_market_service),
+):
+    result = await service.get_market_by_id(currency, cryptoId)
+    if result is None:
+        return {}
+    return result
+
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

@@ -1,16 +1,19 @@
 
-import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { createSlice, PayloadAction, createEntityAdapter } from "@reduxjs/toolkit"
 import { getSymbols } from "./symbolThunks"
 
 export interface SymbolData {
 	id: string;
-	image : string;
+	image?: string;
 	symbol: string;
 	name: string;
+	origin?: "trending" | "search" | "api";
 }
 
+const adapter = createEntityAdapter<SymbolData>({ selectId: (s) => s.id });
+
 export interface SymbolState {
-	symbols: SymbolData[];
+	symbols: SymbolData[]; // legacy array kept for compatibility
 	loading: boolean;
 	connected: boolean;
 }
@@ -23,11 +26,12 @@ const initialState: SymbolState = {
 
 const symbolSlice = createSlice({
 	name: "symbols",
-	initialState,
+	initialState: adapter.getInitialState(initialState),
 	reducers: {
 		setSymbols(state, action: PayloadAction<SymbolData[]>) {
-			state.symbols = action.payload
-			state.loading = false
+			adapter.setAll(state, action.payload);
+			state.loading = false;
+			state.symbols = action.payload;
 		},
 		setLoading(state, action: PayloadAction<boolean>) {
 			state.loading = action.payload
@@ -36,9 +40,11 @@ const symbolSlice = createSlice({
 			state.connected = action.payload
 		},
 		addSymbolIfMissing(state, action: PayloadAction<SymbolData>) {
-			const exists = state.symbols.some(s => s.id === action.payload.id);
-			if (!exists) {
-				state.symbols.push(action.payload);
+			const id = action.payload.id;
+			if (!state.ids.includes(id)) {
+				adapter.addOne(state, action.payload);
+				// sync legacy array
+				state.symbols = state.ids.map((i) => state.entities[i] as SymbolData);
 			}
 		},
 	},
@@ -49,7 +55,8 @@ const symbolSlice = createSlice({
 			})
 			.addCase(getSymbols.fulfilled, (state, action) => {
 				state.loading = false
-				state.symbols = action.payload
+				adapter.setAll(state, action.payload);
+				state.symbols = action.payload;
 			})
 			.addCase(getSymbols.rejected, (state) => {
 				state.loading = false

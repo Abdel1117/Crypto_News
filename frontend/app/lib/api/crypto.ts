@@ -25,6 +25,26 @@ export async function fetchSymbols(currency : string ) {
   return res.json()
 }
 
+export async function searchSymbols(query: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/symbols/search?query=${encodeURIComponent(query)}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to search symbols");
+  }
+  return res.json();
+}
+
+export async function fetchMarketCoin(currency: string, cryptoId: string) {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BACK_END}/markets/coin?currency=${encodeURIComponent(currency)}&cryptoId=${encodeURIComponent(cryptoId)}`,
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch market coin");
+  }
+  return res.json();
+}
+
 
 
 

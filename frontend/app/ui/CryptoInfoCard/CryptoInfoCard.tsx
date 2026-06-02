@@ -18,8 +18,18 @@ export interface CryptoMarketData {
   change_24h: number;
 }
 
+export interface CryptoInfoCardData {
+  id: string;
+  symbol: string;
+  name: string;
+  image?: string;
+  price?: number;
+  market_cap?: number;
+  change_24h?: number;
+}
+
 interface CryptoInfoCardProps {
-  coin: CryptoMarketData;
+  coin: CryptoInfoCardData;
   selected: boolean;
   onSelect: () => void;
 }
@@ -29,8 +39,10 @@ export default function CryptoInfoCard({
   selected,
   onSelect,
 }: CryptoInfoCardProps) {
-  const isPositive = coin.change_24h > 0;
-  const isNegative = coin?.change_24h < 0;
+  const hasChange = typeof coin.change_24h === "number";
+  const changeValue = coin.change_24h ?? 0;
+  const isPositive = hasChange && changeValue > 0;
+  const isNegative = hasChange && changeValue < 0;
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const currency_quote = QUOTE_CURRENCY_SYMBOLS[currency];
@@ -45,7 +57,7 @@ export default function CryptoInfoCard({
 
   return (
     <div
-      className={`bg-card  rounded-lg p-4 min-w-[220px] cursor-pointer transition-shadow ${
+      className={`bg-card rounded-lg p-4 min-w-55 cursor-pointer transition-shadow ${
         selected ? "ring-2 ring-primary" : ""
       }`}
       onClick={onSelect}
@@ -136,7 +148,9 @@ export default function CryptoInfoCard({
 
       {/* Price */}
       <p className="text-foreground text-xl font-bold mb-2">
-        {formatPrice(coin.price, 2, symbol)}
+        {typeof coin.price === "number"
+          ? formatPrice(coin.price, 2, symbol)
+          : "N/A"}
       </p>
 
       {/* Change + pair */}
@@ -150,8 +164,9 @@ export default function CryptoInfoCard({
                 : "text-danger"
           }
         >
-          {isPositive ? "+" : ""}
-          {coin.change_24h.toFixed(1)}%
+          {hasChange
+            ? `${isPositive ? "+" : ""}${changeValue.toFixed(1)}%`
+            : "—"}
         </span>
         <span className="text-muted">
           ({coin.symbol}/{currency_quote})

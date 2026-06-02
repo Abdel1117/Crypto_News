@@ -1,9 +1,9 @@
-from typing import Protocol, List, Dict
+from typing import Protocol, Optional, List, Dict
 
 
 class MarketClient(Protocol):
     async def fetch_markets(
-        self, currency: str, order: str, per_page: int, page: int
+        self, currency: str, order: str, per_page: int, page: int, ids: Optional[str] = None
     ) -> List[Dict]:
         pass
 
@@ -19,4 +19,7 @@ class MarketClient(Protocol):
         selectedTimeFrame: str,
         cryptoId: str,
     ) -> List[Dict]:
+        pass
+
+    async def fetch_search(self, query: str) -> List[Dict]:
         pass

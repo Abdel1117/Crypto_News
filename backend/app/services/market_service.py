@@ -23,6 +23,21 @@ class MarketService:
             for coin in data
         ]
 
+    async def get_market_by_id(self, currency: str, crypto_id: str):
+        data = await self.client.fetch_markets(currency, "market_cap_desc", 1, 1, False, ids=crypto_id)
+        if not data:
+            return None
+        coin = data[0]
+        return {
+            "id": coin["id"],
+            "symbol": coin["symbol"].upper(),
+            "name": coin["name"],
+            "image": coin["image"],
+            "price": coin["current_price"],
+            "market_cap": coin["market_cap"],
+            "change_24h": coin["price_change_percentage_24h"],
+        }
+
     async def get_market_view(self, currency: str):
         data = await self.client.fetch_markets_view(currency)
         return {

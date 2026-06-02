@@ -1,6 +1,6 @@
 import httpx
 from app.core.config import settings
-from typing import Protocol, List, Dict
+from typing import Protocol, Optional, List, Dict
 
 
 class CoinGeckoClient:
@@ -14,17 +14,22 @@ class CoinGeckoClient:
         per_page: int,
         page: int,
         sparkline: bool = False,
+        ids: Optional[str] = None,
     ):
+        params = {
+            "vs_currency": currency,
+            "order": order,
+            "per_page": per_page,
+            "page": page,
+            "sparkline": str(sparkline).lower(),
+        }
+        if ids:
+            params["ids"] = ids
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.BASE_URL}/coins/markets",
-                params={
-                    "vs_currency": currency,
-                    "order": order,
-                    "per_page": per_page,
-                    "page": page,
-                    "sparkline": str(sparkline).lower(),
-                },
+                params=params,
                 headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
             )
             response.raise_for_status()
@@ -76,3 +81,13 @@ class CoinGeckoClient:
             )
             response.raise_for_status()
             return response.json()
+
+    async def fetch_search(self, query: str) -> List[Dict]:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/search",
+                params={"query": query},
+                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+            )
+            response.raise_for_status()
+            return response.json().get("coins", [])
