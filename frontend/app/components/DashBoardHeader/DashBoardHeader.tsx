@@ -38,7 +38,7 @@ export default function DashBoardHeader() {
         {/* Mobile menu button */}
         <div className="block lg:hidden">
           <button
-            className="border rounded-lg p-1 hover:cursor-pointer"
+            className="rounded-lg p-1 hover:cursor-pointer"
             onClick={() => setToogleMobileMenu((old) => !old)}
             aria-label={toogleMobileMenu ? "Close menu" : "Open menu"}
           >

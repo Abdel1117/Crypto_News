@@ -88,7 +88,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <section className="space-y-6">
+    <section className="min-w-0 space-y-6 space-y-6">
       <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
       {watchlistCoins.length > 0 && (
         <div>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         </div>
       )}
       <MarketOverView />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
+      <div className="grid min-w-0  grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
         {loading
           ? Array.from({ length: preferedNumberOfCrypto }).map((_, i) => (
               <Loading key={i} />

@@ -59,24 +59,44 @@ export default function CandleStickGraph({
 
   // Créer et mettre à jour le graphique
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (
+      ohlcLoading ||
+      loading ||
+      !rawohlc ||
+      rawohlc.length === 0 ||
+      !chartContainerRef.current
+    ) {
+      return;
+    }
+
+    const container = chartContainerRef.current;
+
     if (chartRef.current) {
       chartRef.current.remove();
       chartRef.current = null;
     }
-    chartRef.current = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth || 600,
-      height: 350,
-      layout: { background: { color: "transparent" }, textColor: textColor },
+
+    const chart = createChart(container, {
+      width: container.clientWidth,
+      height: container.clientHeight || 350,
+      layout: {
+        background: { color: "transparent" },
+        textColor,
+      },
       grid: {
         vertLines: { color: "transparent" },
         horzLines: { color: "transparent" },
       },
+      crosshair: {
+        mode: CrosshairMode.Normal,
+      },
     });
-    width: chartRef.current.applyOptions({
-      crosshair: { mode: CrosshairMode.Normal },
-    });
-    seriesRef.current = chartRef.current.addSeries?.(CandlestickSeries, {});
+
+    chartRef.current = chart;
+
+    const series = chart.addSeries(CandlestickSeries, {});
+    seriesRef.current = series;
+
     const ohlc = rawohlc.map((item) => ({
       time: Math.floor(
         item[0] / 1000,
@@ -86,21 +106,30 @@ export default function CandleStickGraph({
       low: item[3],
       close: item[4],
     }));
-    seriesRef.current.setData(ohlc);
-    if (chartRef.current && ohlc.length > 0) {
-      const logicalRange = {
-        from: 0,
-        to: ohlc.length - 1,
-      };
-      chartRef.current.timeScale().setVisibleLogicalRange(logicalRange);
-    }
+
+    series.setData(ohlc);
+
+    chart.timeScale().setVisibleLogicalRange({
+      from: 0,
+      to: ohlc.length - 1,
+    });
+
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+
+      chart.resize(width, height || 350);
+    });
+
+    resizeObserver.observe(container);
+
     return () => {
-      if (chartRef.current) {
-        chartRef.current.remove();
-        chartRef.current = null;
-      }
+      resizeObserver.disconnect();
+      chart.remove();
+      chartRef.current = null;
+      seriesRef.current = null;
     };
-  }, [coins, symbols, rawohlc, textColor]);
+  }, [ohlcLoading, loading, rawohlc, textColor]);
+  /* ===================================================== */
 
   useEffect(() => {
     dispatch(
@@ -134,7 +163,7 @@ export default function CandleStickGraph({
           </select>
         </div>
         {/* Bloc SymbolDropdown */}
-        <div className="flex  gap-2 w-full md:w-auto">
+        <div className="flex gap-2 w-full md:w-auto">
           <SymbolDropdown
             value={selectedSymbol}
             options={symbols}
@@ -155,12 +184,14 @@ export default function CandleStickGraph({
           />
         </div>
       </div>
-      <div className="w-full min-h-87.5 rounded-lg p-1 md:p-2 overflow-hidden">
-        {ohlcLoading || loading || !rawohlc || rawohlc.length === 0 ? (
-          <CandleStickSkeleton />
-        ) : (
-          <div ref={chartContainerRef} style={{ width: "100%", height: 350 }} />
-        )}
+      <div className="w-full min-w-0 rounded-lg p-1 md:p-2 overflow-hidden">
+        <div className="h-[350px] w-full min-w-0 overflow-hidden">
+          {ohlcLoading || loading || !rawohlc || rawohlc.length === 0 ? (
+            <CandleStickSkeleton />
+          ) : (
+            <div ref={chartContainerRef} className="w-full h-full" />
+          )}
+        </div>
       </div>
       <div className="visible md:hidden">
         <RadioTimeMarket
