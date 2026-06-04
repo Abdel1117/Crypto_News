@@ -58,6 +58,7 @@ async def get_top_winners_losers(
         currency, duration, price_change_percentage, top_coins
     )
 
+
 @router.get("/coin")
 async def get_market_coin(
     currency: str = "eur",

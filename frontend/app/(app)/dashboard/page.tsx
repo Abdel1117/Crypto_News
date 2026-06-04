@@ -6,12 +6,17 @@ import CandleStickGraph from "@/app/components/CandleStickGraph/CandleStickGraph
 import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
 import Loading from "./loading";
 import { send } from "@/app/lib/ws/socket";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { getSymbols } from "@/app/lib/features/symbol/symbolThunks";
+import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
 import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
 import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
-import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
+import {
+  addSymbolIfMissing,
+  readLocalSymbols,
+  setSymbols as setSymbolsAction,
+} from "@/app/lib/features/symbol/symbolSlice";
 import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 
 export default function DashboardPage() {
@@ -29,6 +34,18 @@ export default function DashboardPage() {
 
   const preferedNumberOfCrypto = 6;
 
+  const priceMap = useMemo(
+    () =>
+      Array.isArray(coins)
+        ? Object.fromEntries(coins.map((coin) => [coin.id, coin]))
+        : {},
+    [coins],
+  );
+  const symbolMap = useMemo(
+    () => Object.fromEntries(symbols.map((symbol) => [symbol.id, symbol])),
+    [symbols],
+  );
+
   useEffect(() => {
     send({ currency });
   }, [currency]);
@@ -41,16 +58,22 @@ export default function DashboardPage() {
     dispatch(initWatchlist());
   }, [dispatch]);
 
+  useEffect(() => {
+    // load any locally persisted symbols added via the search UX
+    const persisted = readLocalSymbols();
+    if (persisted && persisted.length > 0) {
+      dispatch(setSymbolsAction(persisted));
+
+      const missingWatchlistIds = watchlistIds.filter((id) => !priceMap[id]);
+      missingWatchlistIds.forEach((id) => {
+        dispatch(getMarketCoin({ currency, cryptoId: id }));
+      });
+    }
+  }, [dispatch, currency, watchlistIds, priceMap]);
+
   const topCrypto = Array.isArray(coins)
     ? coins.slice(0, preferedNumberOfCrypto)
     : [];
-
-  const priceMap = Array.isArray(coins)
-    ? Object.fromEntries(coins.map((coin) => [coin.id, coin]))
-    : {};
-  const symbolMap = Object.fromEntries(
-    symbols.map((symbol) => [symbol.id, symbol]),
-  );
 
   const watchlistCoins = watchlistIds.reduce<
     Array<{

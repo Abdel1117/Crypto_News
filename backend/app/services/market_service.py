@@ -24,7 +24,9 @@ class MarketService:
         ]
 
     async def get_market_by_id(self, currency: str, crypto_id: str):
-        data = await self.client.fetch_markets(currency, "market_cap_desc", 1, 1, False, ids=crypto_id)
+        data = await self.client.fetch_markets(
+            currency, "market_cap_desc", 1, 1, False, ids=crypto_id
+        )
         if not data:
             return None
         coin = data[0]

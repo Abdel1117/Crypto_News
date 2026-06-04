@@ -3,7 +3,12 @@ from typing import Protocol, Optional, List, Dict
 
 class MarketClient(Protocol):
     async def fetch_markets(
-        self, currency: str, order: str, per_page: int, page: int, ids: Optional[str] = None
+        self,
+        currency: str,
+        order: str,
+        per_page: int,
+        page: int,
+        ids: Optional[str] = None,
     ) -> List[Dict]:
         pass
 
