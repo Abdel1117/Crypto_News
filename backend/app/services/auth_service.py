@@ -23,7 +23,7 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Un compte existe déjà pour cette adresse e-mail.",
             )
-
+        
         hashed_password = self.password_hasher.hash(registration_data.password)
         user = User(
             full_name=registration_data.full_name,

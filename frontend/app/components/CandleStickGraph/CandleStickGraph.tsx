@@ -97,7 +97,7 @@ export default function CandleStickGraph({
     const series = chart.addSeries(CandlestickSeries, {});
     seriesRef.current = series;
 
-    const ohlc = rawohlc.map((item) => ({
+    const ohlc = rawohlc?.map((item) => ({
       time: Math.floor(
         item[0] / 1000,
       ) as unknown as import("lightweight-charts").Time,
