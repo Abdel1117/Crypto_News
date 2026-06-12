@@ -6,9 +6,11 @@ import topGainersLosersReducer from "./features/topGainersLosers/topGainersLoser
 import trendingReducer from "./features/trending/trendingSlice"
 import watchlistReducer from "./features/watchlist/watchlistSlice"
 import simulationReducer from "./features/simulation/simulationSlice"
+import authReducer from "./features/auth/authSlice"
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     prices: priceReducer,
     symbols: symbolsReducer,
     marketView : marketViewReducer,

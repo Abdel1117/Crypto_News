@@ -104,7 +104,7 @@ export default function Header() {
             >
               <ThemeButton />
               <Link
-                className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-green-500 text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
+                className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-primary text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
                 href={"/login"}
               >
                 Login

@@ -19,3 +19,8 @@ class AuthRegistrationResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str

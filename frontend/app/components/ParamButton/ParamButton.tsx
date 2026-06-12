@@ -6,7 +6,7 @@ import { ParamIcons } from "../Icons/index";
 
 const currencies: { value: Currency; label: string }[] = [
   { value: "eur", label: "EUR €" },
-  { value: "usd", label: "usd $" },
+  { value: "usd", label: "USD $" },
 ];
 
 export function ParamButton() {
