@@ -42,7 +42,9 @@ class AuthService:
     async def authenticate_user(self, email: str, password: str) -> User:
         normalized_email = email.lower()
         user = await self.user_repository.get_by_email(normalized_email)
-
+        print("="*50)
+        print(user)
+        print("="*50)
         if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -65,8 +67,8 @@ class AuthService:
 
         user = await self.authenticate_user(email, password)
 
-        access_token = self.token_service.create_access_token(str(user.id), user.email)
-        refresh_token = self.token_service.create_refresh_token(str(user.id), user.email)
+        access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
+        refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
 
         return TokenResponse(
             access_token=access_token,
@@ -103,8 +105,8 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        new_access_token = self.token_service.create_access_token(str(user.id), user.email)
-        new_refresh_token = self.token_service.create_refresh_token(str(user.id), user.email)
+        new_access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
+        new_refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
 
         return TokenResponse(
             access_token=new_access_token,

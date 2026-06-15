@@ -13,8 +13,8 @@ class SQLUserRepository(UserRepositoryProtocol):
 
     async def get_by_email(self, email: str) -> Optional[User]:
         statement = select(User).where(User.email == email)
-        result = await self.session.exec(statement)
-        return result.one_or_none()
+        result = await self.session.execute(statement)
+        return result.scalars().one_or_none()
 
     async def create(self, user: User) -> User:
         self.session.add(user)

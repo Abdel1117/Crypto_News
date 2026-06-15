@@ -13,18 +13,22 @@ import {
   DashBoardIcon,
 } from "@/app/components/Icons";
 import { useSidebar } from "@/app/context/SideBar/SideBareContext";
+import { useAppSelector } from "@/app/lib/hooks";
 
 export default function SideBar() {
   const { isCollapsed, toggle } = useSidebar();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
   const navItems = [
     { label: "Accueil", href: "/", Icon: HomeIcon },
     { label: "Dashboard", href: "/dashboard", Icon: DashBoardIcon },
     { label: "Simulation", href: "/simulation", Icon: SimulationIcon },
-    { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
-    { label: "Authentification", href: "/login", Icon: AuthIcon },
-    { label: "Utilisateur", href: "/settinngs", Icon: UserIcon },
+    isAuthenticated
+      ? { label: "Utilisateur", href: "/profil", Icon: UserIcon }
+      : { label: "Authentification", href: "/login", Icon: AuthIcon },
     { label: "Utilitaires", href: "/utilities", Icon: UtilitiesIcon },
-  ] as const;
+    { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
+  ];
 
   return (
     <aside

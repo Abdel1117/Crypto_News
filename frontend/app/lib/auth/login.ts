@@ -3,6 +3,13 @@ export type LoginData = {
   password: string;
 };
 
+export type SubscribeData = {
+  fullname : string; 
+  email : string;
+  password: string; 
+  confirmPassword : string;
+}
+
 export type LoginFieldErrors = Partial<Record<keyof LoginData, string>>;
 
 export type LoginResult = {

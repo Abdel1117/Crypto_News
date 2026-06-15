@@ -142,7 +142,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
           </Link>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="">
+          <Link className="px-2" href="/login">
             <UserIcon width={30} height={30} />
           </Link>
         </li>

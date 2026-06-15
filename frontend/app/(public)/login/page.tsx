@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRegistration } from "../../hooks/useRegistration";
 import { useLogin } from "../../hooks/useLogin";
 import { RegistrationData } from "../../lib/auth/registration";
 import { LoginData } from "../../lib/auth/login";
+import { useAppSelector } from "@/app/lib/hooks";
 
 const tabs = ["Connexion", "Inscription"] as const;
 
@@ -16,8 +17,14 @@ const inputClass =
 
 export default function Login() {
   const router = useRouter();
-  const { register, loading: registerLoading, result: registerResult } = useRegistration();
+  const {
+    register,
+    loading: registerLoading,
+    result: registerResult,
+  } = useRegistration();
   const { login, loading: loginLoading, result: loginResult } = useLogin();
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState<Tab>("Connexion");
   const [formData, setFormData] = useState({
@@ -70,6 +77,9 @@ export default function Login() {
       ? loginResult?.fieldErrors
       : registerResult?.fieldErrors;
 
+  useEffect(() => {
+    isAuthenticated ? router.push("/profil") : null;
+  }, []);
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
@@ -83,7 +93,7 @@ export default function Login() {
                 Connectez-vous ou créez votre compte
               </h1>
               <p className="max-w-md text-sm leading-7 text-muted">
-                Profitez de l'expérience Crypto News avec une page d'accès
+                Profitez de l&lsquo;expérience Crypto News avec une page d'accès
                 élégante et claire
               </p>
 
@@ -166,7 +176,9 @@ export default function Login() {
                     onChange={onChange("fullname")}
                   />
                   {fieldErrors?.fullname && (
-                    <p className="text-sm text-red-500">{fieldErrors.fullname}</p>
+                    <p className="text-sm text-red-500">
+                      {fieldErrors.fullname}
+                    </p>
                   )}
                 </div>
               )}

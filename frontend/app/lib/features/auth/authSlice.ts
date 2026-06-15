@@ -4,6 +4,7 @@ import { tokenStorage } from "../../auth/tokenStorage";
 type AuthUser = {
   id: string;
   email: string;
+  fullName: string | null;
 };
 
 type AuthState = {
@@ -12,7 +13,7 @@ type AuthState = {
   isAuthenticated: boolean;
 };
 
-function decodeJwtPayload(token: string): { sub: string; email: string } | null {
+function decodeJwtPayload(token: string): { sub: string; email: string; full_name?: string | null } | null {
   try {
     const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     return JSON.parse(atob(base64));
@@ -48,7 +49,7 @@ const authSlice = createSlice({
       const decoded = decodeJwtPayload(accessToken);
       state.accessToken = accessToken;
       state.isAuthenticated = true;
-      state.user = decoded ? { id: decoded.sub, email: decoded.email } : null;
+      state.user = decoded ? { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null } : null;
       tokenStorage.setTokens(accessToken, refreshToken);
     },
 
@@ -59,7 +60,7 @@ const authSlice = createSlice({
       const { accessToken, refreshToken } = action.payload;
       const decoded = decodeJwtPayload(accessToken);
       state.accessToken = accessToken;
-      state.user = decoded ? { id: decoded.sub, email: decoded.email } : null;
+      state.user = decoded ? { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null } : null;
       tokenStorage.setTokens(accessToken, refreshToken);
     },
 

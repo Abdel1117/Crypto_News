@@ -2,6 +2,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
+import { useAppSelector } from "@/app/lib/hooks";
 
 type NavItem = {
   label: string;
@@ -42,6 +43,8 @@ function NavLinks({
 export default function Header() {
   const [navbar, setNavbar] = useState(false);
   const [isSticky, setIsSticky] = useState(false);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? "?";
 
   const STICKY_OFFSET = 25;
 
@@ -90,11 +93,19 @@ export default function Header() {
               <NavLinks className="text-base text-color-foreground hover:text-purple-600" />
 
               <ThemeButton />
-              <Link href={"/login"}>
-                <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
-                  Login
-                </button>
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/settings">
+                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
+                    {avatarLetter}
+                  </div>
+                </Link>
+              ) : (
+                <Link href="/login">
+                  <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
+                    Login
+                  </button>
+                </Link>
+              )}
             </div>
 
             {/* Tablet/Mobile actions (<lg): Theme + Menu + Login */}
@@ -103,12 +114,20 @@ export default function Header() {
               data-testid="mobile-actions"
             >
               <ThemeButton />
-              <Link
-                className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-primary text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
-                href={"/login"}
-              >
-                Login
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/settings" className="hidden sm:inline-flex">
+                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
+                    {avatarLetter}
+                  </div>
+                </Link>
+              ) : (
+                <Link
+                  className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-primary text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
+                  href="/login"
+                >
+                  Login
+                </Link>
+              )}
 
               <button
                 className="p-2 rounded-md outline-none focus:border-gray-400 focus:border text-foreground hover:cursor-pointer"
@@ -181,14 +200,25 @@ export default function Header() {
                 />
 
                 <div className="visible sm:hidden">
-                  <Link
-                    className="text-base text-foreground"
-                    href="/login"
-                    onClick={closeNavbar}
-                    data-testid="nav-link-login"
-                  >
-                    Login
-                  </Link>
+                  {isAuthenticated ? (
+                    <Link
+                      className="text-base text-foreground"
+                      href="/profil"
+                      onClick={closeNavbar}
+                      data-testid="nav-link-profile"
+                    >
+                      Profile
+                    </Link>
+                  ) : (
+                    <Link
+                      className="text-base text-foreground"
+                      href="/login"
+                      onClick={closeNavbar}
+                      data-testid="nav-link-login"
+                    >
+                      Login
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

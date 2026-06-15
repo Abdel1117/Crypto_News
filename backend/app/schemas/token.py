@@ -31,6 +31,7 @@ class TokenPayload(BaseModel):
 
     sub: str = Field(..., description="Subject (user ID)")
     email: str = Field(..., description="User email")
+    full_name: str | None = Field(default=None, description="User full name")
     token_type: str = Field(..., description="Token type (access or refresh)")
     exp: int = Field(..., description="Expiration timestamp")
     iat: int = Field(..., description="Issued at timestamp")

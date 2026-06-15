@@ -21,7 +21,7 @@ export function useRegistration() {
 
     setLoading(true);
     try {
-      const response = await registerUser(validation.payload!);
+      const response  = await registerUser(validation.payload!);
       const successResult: RegistrationResult = {
         success: true,
         message: response?.message ?? "Inscription réussie.",

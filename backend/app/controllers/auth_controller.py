@@ -4,7 +4,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
-from app.repositories.users.user_repository import SQLUserRepository
+from app.repositories.users.user_sql_repo import SQLUserRepository
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, LoginRequest
 from app.schemas.token import RefreshTokenRequest, TokenResponse
 from app.services.auth_service import AuthService
