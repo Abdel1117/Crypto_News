@@ -6,6 +6,7 @@ import cardLogo from "@/public/images/payment_icons/contactless.png";
 import bitCoinLogo from "@/public/images/payment_icons/bitcoin.png";
 import ProgresSale from "../ProgresSale/ProgresSale";
 import { HeroCountDown } from "./HeroCountDown";
+import Link from "next/link";
 
 interface logoType {
   src: StaticImageData;
@@ -49,8 +50,8 @@ export default function Hero() {
             scrambled it to make a type specimen book.
           </p>
 
-          <div className="flex items-center  gap-2.5">
-            <button className="flex items-center justify-center rounded-full  bg-primary   p-4 w-[65px] h-[65px] mr-4 hover:animate-pulse hover:cursor-pointer">
+          <div className="flex justify-center lg:justify-start items-center  gap-2.5">
+            <button className="flex items-center justify-center rounded-full  bg-primary p-4 w-[65px] h-[65px] mr-4 hover:animate-pulse hover:cursor-pointer">
               <svg
                 viewBox="0 0 330 330"
                 className="h-5 w-5 text-foreground"
@@ -91,9 +92,11 @@ export default function Hero() {
             </div>
 
             <div>
-              <button className="px-8 py-4 bg-blue-700 dark:bg-[#ffffff] rounded-lg text-white dark:text-black font-semibold hover:cursor-pointer shadow-lg">
-                Sign Up & Buy Token Now
-              </button>
+              <Link href={"/login"}>
+                <button className="px-8 py-4 bg-blue-700 dark:bg-[#ffffff] rounded-lg text-white dark:text-black font-semibold hover:cursor-pointer shadow-lg">
+                  Sign Up & Buy Token Now
+                </button>
+              </Link>
             </div>
             <div className="mt-4 flex gap-2.5 flex-wrap justify-center items-center">
               {iconsList.map((val, index) => (

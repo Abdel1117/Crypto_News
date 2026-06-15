@@ -7,6 +7,7 @@ import {
   ContactResult,
   validateContact,
 } from "../lib/contact/contact";
+import { sendContactForm } from "../lib/contact/api";
 
 const EMPTY_FIELDS: ContactData = { name: "", email: "", phone: "", message: "" };
 
@@ -36,10 +37,17 @@ export function useContactForm() {
 
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 1200));
+      await sendContactForm(fields);
       const success: ContactResult = { success: true, message: validation.message };
       setResult(success);
       return success;
+    } catch {
+      const failure: ContactResult = {
+        success: false,
+        message: "Erreur lors de l'envoi. Veuillez réessayer.",
+      };
+      setResult(failure);
+      return failure;
     } finally {
       setLoading(false);
     }

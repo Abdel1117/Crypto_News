@@ -54,11 +54,10 @@ export default function DashBoardHeader() {
           "fixed top-20 right-0 z-70",
           "w-full",
           "bg-surface",
-          "overflow-hidden",
           "transition-[max-height,opacity,transform] duration-300 ease-in-out",
           toogleMobileMenu
-            ? "max-h-24 opacity-100 translate-y-0 pointer-events-auto"
-            : "max-h-0 opacity-0 -translate-y-2 pointer-events-none",
+            ? "max-h-60 opacity-100 translate-y-0 pointer-events-auto overflow-visible"
+            : "max-h-0 opacity-0 -translate-y-2 pointer-events-none overflow-hidden",
         ].join(" ")}
       >
         <div className="w-full px-4 py-3">

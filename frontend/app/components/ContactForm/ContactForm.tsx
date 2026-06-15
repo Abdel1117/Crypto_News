@@ -95,7 +95,15 @@ export const ContactForm = () => {
     { label: "GitHub", Icon: GithubIcon },
   ] as const;
 
-  const { fields, fieldErrors: errors, loading, sent, onChange, submit, reset: handleReset } = useContactForm();
+  const {
+    fields,
+    fieldErrors: errors,
+    loading,
+    sent,
+    onChange,
+    submit,
+    reset: handleReset,
+  } = useContactForm();
 
   const handleSubmit = async (e: { preventDefault(): void }) => {
     e.preventDefault();
@@ -104,6 +112,7 @@ export const ContactForm = () => {
 
   return (
     <div
+      id="contact"
       className="container max-w-7xl mx-auto p-1 lg:p-0"
       aria-labelledby="contact-title"
       data-testid="contact_form_section"
@@ -130,11 +139,11 @@ export const ContactForm = () => {
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary">
                 <IconCheck className="h-7 w-7 text-background" />
               </div>
-              <p className="text-lg font-semibold text-foreground">
+              <p className="text-lg font-semibold text-success">
                 Message envoyé !
               </p>
               <p className="text-sm text-muted">
-                Merci{" "}
+                Merci
                 <span className="font-medium text-foreground">
                   {fields.name}
                 </span>
@@ -312,7 +321,7 @@ export const ContactForm = () => {
                   className="text-sm text-muted hover:text-primary transition"
                   href="mailto:hello@crypto.com"
                 >
-                  hello@crypto.com
+                  dummy@gmail.fr
                 </a>
               </div>
             </div>

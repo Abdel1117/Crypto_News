@@ -12,7 +12,7 @@ type NavItem = {
 
 const NAV_LINKS: NavItem[] = [
   { label: "Dash board", href: "/dashboard" },
-  { label: "Blogs", href: "#blog" },
+  { label: "Blogs", href: "/blog" },
   { label: "Contact", href: "#contact" },
   { label: "Projects", href: "#projects" },
 ];
@@ -24,6 +24,20 @@ function NavLinks({
   onNavigate?: () => void;
   className?: string;
 }) {
+  const handleClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (!href.startsWith("#")) return;
+    e.preventDefault();
+    const el = document.getElementById(href.slice(1));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", href);
+    }
+    onNavigate?.();
+  };
+
   return (
     <>
       {NAV_LINKS.map((item) => (
@@ -31,7 +45,7 @@ function NavLinks({
           key={item.href}
           className={className}
           href={item.href}
-          onClick={onNavigate}
+          onClick={(e) => handleClick(e, item.href)}
           data-testid={`nav-link-${item.label.toLowerCase()}`}
         >
           {item.label}
@@ -200,27 +214,25 @@ export default function Header() {
                   className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                 />
 
-                <div className="visible sm:hidden">
-                  {isAuthenticated ? (
-                    <Link
-                      className="text-base text-foreground"
-                      href="/profil"
-                      onClick={closeNavbar}
-                      data-testid="nav-link-profile"
-                    >
-                      Profile
-                    </Link>
-                  ) : (
-                    <Link
-                      className="text-base text-foreground"
-                      href="/login"
-                      onClick={closeNavbar}
-                      data-testid="nav-link-login"
-                    >
-                      Login
-                    </Link>
-                  )}
-                </div>
+                {isAuthenticated ? (
+                  <Link
+                    className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
+                    href="/profil"
+                    onClick={closeNavbar}
+                    data-testid="nav-link-profile"
+                  >
+                    Profile
+                  </Link>
+                ) : (
+                  <Link
+                    className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
+                    href="/login"
+                    onClick={closeNavbar}
+                    data-testid="nav-link-login"
+                  >
+                    Login
+                  </Link>
+                )}
               </div>
             </div>
           </div>

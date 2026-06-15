@@ -120,7 +120,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
 
   return (
     <div className={className || "w-full relative"}>
-      <ul className="flex justify-end items-center gap-5">
+      <ul className="flex justify-between xs:justify-end items-center flex-wrap gap-5">
         <li className="pr-6">
           <button
             type="button"
