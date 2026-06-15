@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   FacebookIcon,
@@ -8,6 +9,7 @@ import {
   XIcon,
   YoutubeIcon,
 } from "@/app/components/Icons";
+import { useContactForm } from "@/app/hooks/useContactForm";
 
 function IconPin(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -62,6 +64,26 @@ function IconMail(props: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+function IconCheck(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+const inputClass =
+  "w-full rounded-2xl border border-foreground/10 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
+
 export const ContactForm = () => {
   const socialIcons = [
     { label: "Facebook", Icon: FacebookIcon },
@@ -73,8 +95,12 @@ export const ContactForm = () => {
     { label: "GitHub", Icon: GithubIcon },
   ] as const;
 
-  const inputClassName =
-    "w-full rounded-lg border border-foreground/20 bg-background px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary";
+  const { fields, fieldErrors: errors, loading, sent, onChange, submit, reset: handleReset } = useContactForm();
+
+  const handleSubmit = async (e: { preventDefault(): void }) => {
+    e.preventDefault();
+    await submit();
+  };
 
   return (
     <div
@@ -92,130 +118,183 @@ export const ContactForm = () => {
             id="contact-title"
             className="mt-3 text-3xl font-semibold text-foreground sm:text-5xl"
           >
-            Send us a message
+            Envoyez-nous un message
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-foreground">
-            Fill the form and we’ll get back to you as soon as possible.
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            Remplissez le formulaire et nous vous répondrons dans les plus brefs
+            délais.
           </p>
 
-          <form className="mt-8 space-y-5" action="#" method="post">
-            <div>
-              <label
-                className="block text-sm font-medium text-foreground"
-                htmlFor="name"
+          {sent ? (
+            <div className="mt-8 flex flex-col items-center gap-4 rounded-2xl border border-primary/20 bg-primary/10 p-8 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary">
+                <IconCheck className="h-7 w-7 text-background" />
+              </div>
+              <p className="text-lg font-semibold text-foreground">
+                Message envoyé !
+              </p>
+              <p className="text-sm text-muted">
+                Merci{" "}
+                <span className="font-medium text-foreground">
+                  {fields.name}
+                </span>
+                . Nous vous répondrons à{" "}
+                <span className="font-medium text-foreground">
+                  {fields.email}
+                </span>
+                .
+              </p>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="mt-2 rounded-2xl bg-primary px-5 py-2.5 text-sm font-semibold text-foreground transition hover:bg-secondary hover:cursor-pointer"
               >
-                Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                className={inputClassName}
-                placeholder="Your name"
-                required
-              />
+                Envoyer un autre message
+              </button>
             </div>
-
-            <div className="grid gap-5 sm:grid-cols-2">
+          ) : (
+            <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
               <div>
                 <label
-                  className="block text-sm font-medium text-foreground"
-                  htmlFor="email"
+                  className="block text-sm font-medium text-foreground/90 mb-1.5"
+                  htmlFor="name"
                 >
-                  Email
+                  Nom complet <span className="text-red-500">*</span>
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  className={inputClassName}
-                  placeholder="you@email.com"
-                  required
+                  id="name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  className={[
+                    inputClass,
+                    errors.name ? "border-danger focus:ring-danger/20" : "",
+                  ].join(" ")}
+                  placeholder="Votre nom"
+                  value={fields.name}
+                  onChange={onChange("name")}
                 />
+                {errors.name && (
+                  <p className="mt-1 text-xs text-red-500">{errors.name}</p>
+                )}
+              </div>
+
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label
+                    className="block text-sm font-medium text-foreground/90 mb-1.5"
+                    htmlFor="email"
+                  >
+                    Adresse e-mail <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className={[
+                      inputClass,
+                      errors.email ? "border-danger focus:ring-danger/20" : "",
+                    ].join(" ")}
+                    placeholder="vous@exemple.com"
+                    value={fields.email}
+                    onChange={onChange("email")}
+                  />
+                  {errors.email && (
+                    <p className="mt-1 text-xs text-red-500">{errors.email}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    className="block text-sm font-medium text-foreground/90 mb-1.5"
+                    htmlFor="phone"
+                  >
+                    Téléphone
+                  </label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    autoComplete="tel"
+                    className={inputClass}
+                    placeholder="+33 6 00 00 00 00"
+                    value={fields.phone}
+                    onChange={onChange("phone")}
+                  />
+                </div>
               </div>
 
               <div>
                 <label
-                  className="block text-sm font-medium text-foreground"
-                  htmlFor="phone"
+                  className="block text-sm font-medium text-foreground/90 mb-1.5"
+                  htmlFor="message"
                 >
-                  Phone
+                  Message <span className="text-red-500">*</span>
                 </label>
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  className={inputClassName}
-                  placeholder="+33 6 00 00 00 00"
+                <textarea
+                  id="message"
+                  name="message"
+                  rows={5}
+                  className={[
+                    inputClass,
+                    "resize-none min-h-35 leading-relaxed",
+                    errors.message ? "border-danger focus:ring-danger/20" : "",
+                  ].join(" ")}
+                  placeholder="Dites-nous ce dont vous avez besoin..."
+                  value={fields.message}
+                  onChange={onChange("message")}
                 />
+                {errors.message && (
+                  <p className="mt-1 text-xs text-red-500">{errors.message}</p>
+                )}
               </div>
-            </div>
 
-            <div>
-              <label
-                className="block text-sm font-medium text-foreground"
-                htmlFor="message"
+              <button
+                type="submit"
+                disabled={loading}
+                className="hover:cursor-pointer w-full rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-foreground transition hover:bg-secondary disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Comment
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                rows={5}
-                className={
-                  inputClassName + " resize-none min-h-35 leading-relaxed"
-                }
-                placeholder="Tell us what you need..."
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="hover:cursor-pointer px-5 py-3 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
-            >
-              Send message
-            </button>
-          </form>
+                {loading ? "Envoi en cours..." : "Envoyer le message"}
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Right: Info */}
         <div className="bg-surface rounded-3xl p-6 sm:p-8">
           <h3 className="text-base font-medium uppercase tracking-wide text-muted">
-            Get in touch
+            Nous contacter
           </h3>
           <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-5xl">
-            We’d love to hear from you
+            Nous serions ravis de vous entendre
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-foreground">
-            You can reach us through the details below. We usually respond
-            within 24 hours.
+          <p className="mt-4 text-sm leading-relaxed text-muted">
+            Retrouvez-nous via les coordonnées ci-dessous. Nous répondons
+            généralement sous 24 heures.
           </p>
 
           <div className="mt-8 space-y-5">
             <div className="flex items-center gap-4">
-              <div className="shrink-0">
-                <IconPin className="h-20 w-20 text-primary" />
+              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <IconPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Address</p>
-                <p className="text-base text-foreground">
+                <p className="text-sm font-medium text-foreground">Adresse</p>
+                <p className="text-sm text-muted">
                   10 Rue de la Crypto, 75000 Paris
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="shrink-0">
-                <IconPhone className="h-20 w-20 text-primary" />
+              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <IconPhone className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Phone</p>
+                <p className="text-sm font-medium text-foreground">Téléphone</p>
                 <a
-                  className="text-base text-foreground hover:underline"
+                  className="text-sm text-muted hover:text-primary transition"
                   href="tel:+33600000000"
                 >
                   +33 6 00 00 00 00
@@ -224,13 +303,13 @@ export const ContactForm = () => {
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="shrink-0">
-                <IconMail className="h-20 w-20 text-primary" />
+              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <IconMail className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">Email</p>
                 <a
-                  className="text-base text-foreground hover:underline"
+                  className="text-sm text-muted hover:text-primary transition"
                   href="mailto:hello@crypto.com"
                 >
                   hello@crypto.com
@@ -238,16 +317,20 @@ export const ContactForm = () => {
               </div>
             </div>
           </div>
+
           <div className="mt-10">
-            <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p className="text-sm font-medium text-foreground mb-4">
+              Réseaux sociaux
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
               {socialIcons.map(({ label, Icon }) => (
                 <a
                   key={label}
                   href="#"
                   aria-label={label}
-                  className="inline-flex h-12 w-12 p-2 items-center justify-center rounded-full border border-foreground/15 bg-background/40 hover:bg-primary transition"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 bg-background/40 hover:bg-primary hover:border-primary transition"
                 >
-                  <Icon className="h-7 w-7 text-foreground" />
+                  <Icon className="h-5 w-5 text-foreground" />
                 </a>
               ))}
             </div>

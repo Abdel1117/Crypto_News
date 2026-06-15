@@ -3,6 +3,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
 import { useAppSelector } from "@/app/lib/hooks";
+import { CryptoLogo } from "../Icons/CryptoLogo";
 
 type NavItem = {
   label: string;
@@ -83,7 +84,7 @@ export default function Header() {
               href="/"
               onClick={closeNavbar}
             >
-              <h2 className="text-2xl text-cyan-600 font-bold">LOGO</h2>
+              <CryptoLogo />
             </Link>
 
             <div
@@ -94,7 +95,7 @@ export default function Header() {
 
               <ThemeButton />
               {isAuthenticated ? (
-                <Link href="/settings">
+                <Link href="/profil">
                   <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
                     {avatarLetter}
                   </div>
@@ -115,7 +116,7 @@ export default function Header() {
             >
               <ThemeButton />
               {isAuthenticated ? (
-                <Link href="/settings" className="hidden sm:inline-flex">
+                <Link href="/profil" className="hidden sm:inline-flex">
                   <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
                     {avatarLetter}
                   </div>

@@ -93,8 +93,8 @@ export default function Login() {
                 Connectez-vous ou créez votre compte
               </h1>
               <p className="max-w-md text-sm leading-7 text-muted">
-                Profitez de l&lsquo;expérience Crypto News avec une page d'accès
-                élégante et claire
+                Profitez de l&lsquo;expérience Crypto News avec une page
+                d&apos;accès élégante et claire
               </p>
 
               {notice && (
