@@ -30,7 +30,7 @@ export default function SymbolDropdown({
     <div className={className}>
       {label && <label className="block mb-1 font-medium">{label}</label>}
       <select
-        className="w-fit md:px-3 py-2  rounded focus:outline-none focus:ring"
+        className="w-full md:px-3 py-2  rounded focus:outline-none focus:ring"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

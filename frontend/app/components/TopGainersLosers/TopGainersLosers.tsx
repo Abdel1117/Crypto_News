@@ -74,14 +74,20 @@ function CoinTable({
       <table className="w-full text-sm text-left table-fixed">
         <thead className="text-xs uppercase text-muted-foreground border-b border-white/10">
           <tr>
-            <th className="px-4 py-3  w-[50px]">#</th>
-            <th className="px-4 py-3">Nom</th>
-            <th className="px-4 py-3 text-right">Prix {currencySymbol} </th>
-            <th className="px-4 py-3 text-right">Variation 24h</th>
-            <th className="px-4 py-3 text-right hidden sm:table-cell">
+            <th className="px-2 py-1.5 md:px-4 md:py-3 w-[30px] md:w-[50px]">
+              #
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 w-[32%]">Nom</th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right">
+              Prix {currencySymbol}{" "}
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right">
+              Variation 24h
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden sm:table-cell">
               Capitalisation
             </th>
-            <th className="px-4 py-3 text-right hidden md:table-cell">
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden md:table-cell">
               7 jours
             </th>
           </tr>
@@ -93,8 +99,10 @@ function CoinTable({
               onClick={() => onCoinSelect(coin.id)}
               className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer "
             >
-              <td className="px-4 py-3 text-muted-foreground ">{index + 1}</td>
-              <td className="px-4 py-3 ">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-muted-foreground ">
+                {index + 1}
+              </td>
+              <td className="px-2 py-1.5 md:px-4 md:py-3 ">
                 <div className="flex items-center gap-2">
                   {coin.image && (
                     <Image
@@ -105,7 +113,7 @@ function CoinTable({
                       className="w-6 h-6 shrink-0"
                     />
                   )}
-                  <span className="font-medium text-foreground">
+                  <span className="hidden sm:visible font-medium text-foreground">
                     {coin.name}
                   </span>
                   <span className="text-muted-foreground font-semibold">
@@ -113,18 +121,18 @@ function CoinTable({
                   </span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-right text-foreground ">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right text-foreground ">
                 {formatPrice(coin.price, 2, currencySymbol)}
               </td>
               <td
-                className={`px-4 py-3 text-right font-medium ${getPercentColor(coin.price_change_percentage)}`}
+                className={`px-2 py-1.5 md:px-4 md:py-3 text-right font-medium ${getPercentColor(coin.price_change_percentage)}`}
               >
                 {formatPercentValue(coin.price_change_percentage)}
               </td>
-              <td className="px-4 py-3 text-right text-foreground hidden sm:table-cell ">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right text-foreground hidden sm:table-cell ">
                 {coin.market_cap?.toLocaleString()} {currencySymbol}
               </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden md:table-cell">
                 <MiniSparkline
                   data={coin.sparkline}
                   positive={coin.price_change_percentage >= 0}
@@ -152,14 +160,20 @@ function TrendingTable({
       <table className="w-full text-sm text-left table-fixed">
         <thead className="text-xs uppercase text-muted-foreground border-b border-white/10">
           <tr>
-            <th className="px-4 py-3 w-[50px]">#</th>
-            <th className="px-4 py-3 w-[32%]">Nom</th>
-            <th className="px-4 py-3 text-right">Prix {currencySymbol} </th>
-            <th className="px-4 py-3 text-right">Variation 24h</th>
-            <th className="px-4 py-3 text-right hidden sm:table-cell">
+            <th className="px-2 py-1.5 md:px-4 md:py-3 w-[30px] md:w-[50px]">
+              #
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 w-[32%]">Nom</th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right">
+              Prix {currencySymbol}{" "}
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right">
+              Variation 24h
+            </th>
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden sm:table-cell">
               Capitalisation
             </th>
-            <th className="px-4 py-3 text-right hidden md:table-cell">
+            <th className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden md:table-cell">
               7 jours
             </th>
           </tr>
@@ -171,8 +185,10 @@ function TrendingTable({
               onClick={() => onCoinSelect(coin.id)}
               className="border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"
             >
-              <td className="px-4 py-3 text-muted-foreground">{index + 1}</td>
-              <td className="px-4 py-3 w-[32%]">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-muted-foreground">
+                {index + 1}
+              </td>
+              <td className="px-2 py-1.5 md:px-4 md:py-3 w-[32%]">
                 <div className="flex items-center gap-2">
                   {coin.image && (
                     <Image
@@ -183,19 +199,19 @@ function TrendingTable({
                       className="w-6 h-6 shrink-0"
                     />
                   )}
-                  <span className="font-medium text-foreground">
+                  <span className="hidden sm:visible font-medium text-foreground">
                     {coin.name}
                   </span>
                   <span className="text-muted-foreground">{coin.symbol}</span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-right text-foreground">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right text-foreground">
                 {typeof coin.price === "number"
-                  ? `$${coin.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`
+                  ? `$${coin.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 3 })}`
                   : "—"}
               </td>
               <td
-                className={`px-4 py-3 text-right font-medium ${
+                className={`px-2 py-1.5 md:px-4 md:py-3 text-right font-medium ${
                   coin.price_change_24h != null
                     ? getPercentColor(coin.price_change_24h)
                     : "text-muted-foreground"
@@ -205,10 +221,10 @@ function TrendingTable({
                   ? formatPercentValue(coin.price_change_24h)
                   : "—"}
               </td>
-              <td className="px-4 py-3 text-right text-foreground hidden sm:table-cell">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right text-foreground hidden sm:table-cell">
                 {coin.market_cap ?? "—"}
               </td>
-              <td className="px-4 py-3 text-right hidden md:table-cell">
+              <td className="px-2 py-1.5 md:px-4 md:py-3 text-right hidden md:table-cell">
                 {coin.sparkline &&
                 Array.isArray(coin.sparkline) &&
                 coin.sparkline.length > 1 ? (
@@ -258,8 +274,8 @@ export default function TopGainersLosers({
   const gainersLosersCoins = activeTab === "gainers" ? topGainers : topLosers;
 
   return (
-    <div className="bg-card rounded-lg p-4">
-      <div className="flex items-center gap-4 mb-4">
+    <div className="bg-card rounded-lg p-1 sm:p-4">
+      <div className="flex flex-wrap items-center gap-4 mb-4">
         <h2 className="text-lg font-semibold text-foreground">
           Gagnants, Perdants & Tendance
         </h2>

@@ -22,7 +22,7 @@ export function HeroCard({
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="relative z-10 p-5">
         <CategoryBadge category={article.category} />
-        <h3 className="mt-2 text-white font-bold leading-snug group-hover:text-primary transition-colors line-clamp-3">
+        <h3 className="mt-2 text-sm text-white font-bold leading-snug group-hover:text-primary transition-colors line-clamp-3">
           {article.title}
         </h3>
         <AuthorChip

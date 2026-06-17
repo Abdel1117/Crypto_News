@@ -13,28 +13,28 @@ import RoadMap from "../components/RoadMap/RoadMap";
 export default function Home() {
   const BlockCTAText = {
     imageSrc: heroImage,
-    captionTitle: " wow Awesome ",
-    title: "ICO Launching Page for",
-    underTitle: "Your COINEX.",
+    captionTitle: "Comprendre le marché",
+    title: "Des données en temps réel,",
+    underTitle: "sans la complexité.",
     firstParma:
-      "Here is 3 Easy Steps to Busy & Sell Bitcoin. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+      "CoinxEX agrège les cours des principales cryptomonnaies et les présente dans un tableau de bord lisible — variations, volumes, capitalisation — accessible en quelques secondes.",
     secondParam:
-      "Here is 3 Easy Steps to Busy & Sell Bitcoin. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ",
-    boutonText: "Buy Token",
-    boutonHref: "/buytoken",
+      "Ajoutez les actifs qui vous intéressent à votre watchlist personnelle et suivez leur évolution sans quitter votre espace de travail.",
+    boutonText: "Accéder au dashboard",
+    boutonHref: "/dashboard",
   };
 
   const SecondBlockCTAText = {
     imageSrc: secondHeroImage,
-    captionTitle: " wow Awesome ",
-    title: "ICO Launching Page for",
-    underTitle: "Your COINEX.",
+    captionTitle: "Simuler avant d'investir",
+    title: "Testez vos stratégies",
+    underTitle: "sans risque réel.",
     firstParma:
-      "Here is 3 Easy Steps to Busy & Sell Bitcoin. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.",
+      "La simulation de portefeuille vous permet d'acheter et de vendre des cryptomonnaies aux prix réels du marché, avec un capital virtuel. Analysez vos résultats, ajustez votre approche.",
     secondParam:
-      "Here is 3 Easy Steps to Busy & Sell Bitcoin. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. ",
-    boutonText: "Buy Token",
-    boutonHref: "/buytoken",
+      "Aucun compte broker, aucune mise de fonds. Juste un environnement fidèle au marché pour affiner votre stratégie avant de passer à l'acte.",
+    boutonText: "Lancer la simulation",
+    boutonHref: "/dashboard",
   };
 
   return (

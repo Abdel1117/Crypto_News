@@ -5,6 +5,9 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   test: {
+    coverage : {
+      provider : "istanbul"
+    },
     environment: 'jsdom',
         setupFiles: ["./vitest.setups.ts"],
     pool: "threads", 

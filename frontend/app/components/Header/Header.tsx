@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
 import { useAppSelector } from "@/app/lib/hooks";
 import { CryptoLogo } from "../Icons/CryptoLogo";
+import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 
 type NavItem = {
   label: string;
@@ -13,8 +14,7 @@ type NavItem = {
 const NAV_LINKS: NavItem[] = [
   { label: "Accueil", href: "/" },
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Blog", href: "/blog" },
-
+  /*   { label: "Blog", href: "/blog" },*/
   { label: "Contact", href: "/#contact" },
 ];
 
@@ -57,10 +57,10 @@ function NavLinks({
 }
 
 export default function Header() {
-  const [navbar, setNavbar] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
-  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? "?";
+  const [navbar, setNavbar] = useState<boolean>(false);
+  const [isSticky, setIsSticky] = useState<boolean>(false);
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const STICKY_OFFSET = 25;
 
@@ -75,7 +75,6 @@ export default function Header() {
 
   const toggleNavbar = () => setNavbar((v) => !v);
   const closeNavbar = () => setNavbar(false);
-
   return (
     <>
       <nav
@@ -110,11 +109,7 @@ export default function Header() {
 
               <ThemeButton />
               {isAuthenticated ? (
-                <Link href="/profil">
-                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
-                    {avatarLetter}
-                  </div>
-                </Link>
+                <ProfileDropdown />
               ) : (
                 <Link href="/login">
                   <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
@@ -131,11 +126,7 @@ export default function Header() {
             >
               <ThemeButton />
               {isAuthenticated ? (
-                <Link href="/profil" className="hidden sm:inline-flex">
-                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl">
-                    {avatarLetter}
-                  </div>
-                </Link>
+                <ProfileDropdown />
               ) : (
                 <Link
                   className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-primary text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
@@ -215,16 +206,7 @@ export default function Header() {
                   className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                 />
 
-                {isAuthenticated ? (
-                  <Link
-                    className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
-                    href="/profil"
-                    onClick={closeNavbar}
-                    data-testid="nav-link-profile"
-                  >
-                    Profile
-                  </Link>
-                ) : (
+                {!isAuthenticated && (
                   <Link
                     className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                     href="/login"

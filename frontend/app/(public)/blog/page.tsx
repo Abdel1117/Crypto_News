@@ -60,7 +60,7 @@ export default function BlogPage() {
         </section>
 
         {/* ── Category pills ────────────────────────────────────── */}
-        <section className="mb-10 overflow-x-auto">
+        <section className="my-10 overflow-x-auto">
           <div className="flex gap-2 min-w-max pb-1">
             <button className="px-4 py-1.5 rounded-full bg-primary text-black text-xs font-bold">
               Tout
@@ -219,7 +219,7 @@ export default function BlogPage() {
           </div>
           <div className="text-center mt-8">
             <button className="px-8 py-3 rounded-xl border border-surface text-foreground text-sm font-semibold hover:border-primary hover:text-primary transition-colors">
-              Charger plus d'articles
+              Charger plus d&apos;articles
             </button>
           </div>
         </section>

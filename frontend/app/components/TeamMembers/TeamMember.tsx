@@ -1,141 +1,41 @@
 import React from "react";
-import { PersonaInterface } from "@/app/types/PersonaType/PersonaType";
-import { Persona } from "@/app/ui/Persona/Persona";
-import Nik from "@/public/images/Team/01.jpg";
-import Jd from "@/public/images/Team/02.jpg";
-import Haris from "@/public/images/Team/03.jpg";
-import Kips from "@/public/images/Team/04.jpg";
-import Williamson from "@/public/images/Team/05.jpg";
-import Leo from "@/public/images/Team/06.jpg";
-import Niks from "@/public/images/Team/07.jpg";
-
-const personaData: PersonaInterface[] = [
-  {
-    image: Nik,
-    altImageDesc: "Portrait de Nik",
-    name: "Nik",
-    role: "CEO",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-  {
-    image: Jd,
-    altImageDesc: "Portrait de JD",
-    name: "JD",
-    role: "CTO",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-  {
-    image: Haris,
-    altImageDesc: "Portrait de Haris",
-    name: "Haris",
-    role: "Lead Engineer",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-  {
-    image: Kips,
-    altImageDesc: "Portrait de Kips",
-    name: "Kips",
-    role: "Product Designer",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-];
-
-const personaDataAdvisor: PersonaInterface[] = [
-  {
-    image: Williamson,
-    altImageDesc: "Portrait de JD",
-    name: "JD",
-    role: "CTO",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-  {
-    image: Leo,
-    altImageDesc: "Portrait de Haris",
-    name: "Haris",
-    role: "Lead Engineer",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-  {
-    image: Niks,
-    altImageDesc: "Portrait de Kips",
-    name: "Kips",
-    role: "Product Designer",
-    introduction:
-      "when an unknownshil printer took a galley of type and scrambled it to make a type specimen book.",
-    socialMedia: [],
-  },
-];
 
 export default function TeamMember() {
   return (
     <div id="teams_section">
       <div className="container max-w-7xl mx-auto px-1 lg:px-0">
-        {/* First Row */}
-        <div className="text-center">
-          <div className="mt-4 mb-[60px]">
-            <small className="text-base uppercase text-foreground">
-              Executive team
-            </small>
-            <h2 className="mt-3 mb-[20px] text-3xl font-semibold text-foreground sm:text-5xl">
-              Team Members
-            </h2>
-            <p className="px-2 md:px-12 lg:px-25">
-              Lorem Ipsum is simply dummy text ever sincehar the 1500s, when an
-              unknownshil printer took a galley of type and scrambled it to make
-              a type specimen book. It has survived not only five centuries.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 px-1 sm:px-10 lg:px-5 xl:px-0">
-            {personaData?.map((val: PersonaInterface, index: number) => (
-              <Persona
-                key={index}
-                image={val?.image}
-                altImageDesc={val?.altImageDesc}
-                introduction={val?.introduction}
-                name={val?.name}
-                role={val?.role}
-                socialMedia={val?.socialMedia}
-              />
-            ))}
-          </div>
+        <div className="text-center mb-[60px]">
+          <small className="text-base uppercase text-foreground">
+            Derrière le projet
+          </small>
+          <h2 className="mt-3 mb-[20px] text-3xl font-semibold text-foreground sm:text-5xl">
+            Construit Indépendamment
+          </h2>
+          <p className="px-2 md:px-12 lg:px-25 text-muted">
+            CoinxEX est un projet personnel conçu et développé en solo — de
+            l&apos;architecture backend à l&apos;interface utilisateur.
+          </p>
         </div>
-        {/* Second Row */}
-        <div className="text-center mt-[60px]">
-          <div className="mb-[60px]">
-            <h2 className="mt-3 mb-[20px] text-3xl font-semibold text-foreground sm:text-5xl">
-              Executive Advisor
-            </h2>
-            <p className="px-2 md:px-12 lg:px-25">
-              Lorem Ipsum is simply dummy text ever sincehar the 1500s, when an
-              unknownshil printer took a galley of type and scrambled it to make
-              a type specimen book. It has survived not only five centuries.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 px-1 sm:px-10 lg:px-0">
-            {personaDataAdvisor?.map((val: PersonaInterface, index: number) => (
-              <Persona
-                key={index}
-                image={val?.image}
-                altImageDesc={val?.altImageDesc}
-                introduction={val?.introduction}
-                name={val?.name}
-                role={val?.role}
-                socialMedia={val?.socialMedia}
-              />
-            ))}
+        <div className="flex justify-center">
+          <div className="bg-surface rounded-3xl p-8 sm:p-12 max-w-md w-full text-center">
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-primary text-3xl font-bold text-background">
+              A
+            </div>
+            <h3 className="text-2xl font-semibold text-foreground">Abdel</h3>
+            <p className="mt-1 text-sm font-semibold text-primary uppercase tracking-wide">
+              Full Stack Developer
+            </p>
+            <p className="mt-4 text-base leading-relaxed text-muted">
+              Conception, développement et déploiement de CoinxEX — du backend
+              Next.js / PostgreSQL à l&apos;interface React / Redux, en passant
+              par l&apos;infrastructure Docker.
+            </p>
+            <div className="mt-6">
+              <span className="inline-block rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+                Ouvert aux collaborations
+              </span>
+            </div>
           </div>
         </div>
       </div>

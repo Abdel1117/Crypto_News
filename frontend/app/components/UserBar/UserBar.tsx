@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
 import { ParamButton } from "../ParamButton/ParamButton";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { useAppDispatch } from "@/app/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { toggleWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 import {
   SymbolData,
@@ -14,6 +14,7 @@ import {
 } from "@/app/lib/features/symbol/symbolSlice";
 import { searchSymbols } from "@/app/lib/api/crypto";
 import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
+import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 
 /**
  * UserBar component renders the top-right action bar with user controls.
@@ -22,13 +23,17 @@ import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
  */
 export default function UserBar({ className = "" }: { className?: string }) {
   const dispatch = useAppDispatch();
+
   const { currency } = useCurrency();
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SymbolData[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const debounceRef = useRef<number | null>(null);
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   /**
    * Toggle the crypto search panel open or closed.
@@ -141,16 +146,21 @@ export default function UserBar({ className = "" }: { className?: string }) {
             <MessageIcon width={30} height={30} />
           </Link>
         </li>
-        <li className="pr-6">
-          <Link className="px-2 cursor-pointer" href="/login">
-            <UserIcon width={30} height={30} />
-          </Link>
-        </li>
+
         <li className="pr-6">
           <ThemeButton />
         </li>
         <li className="pr-6">
           <ParamButton />
+        </li>
+        <li className="pr-6">
+          {isAuthenticated ? (
+            <ProfileDropdown />
+          ) : (
+            <Link className="px-2 cursor-pointer" href="/login">
+              <UserIcon width={30} height={30} />
+            </Link>
+          )}
         </li>
       </ul>
 

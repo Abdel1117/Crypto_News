@@ -13,34 +13,24 @@ export default function RoadMap() {
   const items = useMemo<RoadMapItem[]>(
     () => [
       {
-        year: "2018",
+        year: "Phase 1",
         description:
-          "Montée en charge, durcissement de la sécurité et extension progressive des services.",
+          "Fondations — architecture Next.js, authentification JWT, dashboard live avec cours en temps réel et premières pages publiques.",
       },
       {
-        year: "2017",
+        year: "Phase 2",
         description:
-          "Partenariats stratégiques et consolidation de la conformité (KYC/AML selon zones).",
+          "Profil & watchlist — gestion de compte utilisateur, liste de suivi persistée, simulation de portefeuille et historique des trades.",
       },
       {
-        year: "2016",
+        year: "Phase 3",
         description:
-          "Amélioration de l’expérience utilisateur, alertes et itérations sur les retours.",
+          "Analytique avancée — graphiques en chandeliers, indicateurs techniques, alertes de prix et connexion wallet externe.",
       },
       {
-        year: "2014",
+        year: "Phase 4",
         description:
-          "Mise en place des fondations techniques : sécurité, monitoring et performances.",
-      },
-      {
-        year: "2015",
-        description:
-          "Déploiement des premières fonctionnalités clés et ouverture de la bêta.",
-      },
-      {
-        year: "2012",
-        description:
-          "Lancement du projet et premières validations produit avec la communauté.",
+          "Open source & communauté — publication du code source, documentation publique, API ouverte et intégrations tierces.",
       },
     ],
     [],

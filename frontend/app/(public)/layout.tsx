@@ -1,5 +1,6 @@
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
+import { ParticlesBg } from "../components/ParticleBg/ParticleBG";
 
 export default function PublicLayout({
   children,
@@ -9,6 +10,8 @@ export default function PublicLayout({
   return (
     <>
       <Header />
+      <ParticlesBg />
+
       {children}
       <Footer />
     </>

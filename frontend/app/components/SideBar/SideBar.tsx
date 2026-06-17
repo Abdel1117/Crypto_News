@@ -32,6 +32,22 @@ export default function SideBar() {
   ];
 
   return (
+    <>
+      {/* Mobile-only fixed toggle — visible when sidebar is collapsed */}
+      <button
+        type="button"
+        className={[
+          "fixed top-4 left-4 z-70",
+          "bg-primary p-1.5 rounded-lg cursor-pointer",
+          "xl:hidden",
+          isCollapsed ? "flex" : "hidden",
+        ].join(" ")}
+        onClick={toggle}
+        aria-label="Expand sidebar"
+      >
+        <ArrowRight />
+      </button>
+
     <aside
       className={[
         "top-0 left-0 h-screen",
@@ -110,5 +126,6 @@ export default function SideBar() {
         ))}
       </nav>
     </aside>
+    </>
   );
 }

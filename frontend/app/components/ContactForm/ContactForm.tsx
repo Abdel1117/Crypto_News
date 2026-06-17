@@ -273,44 +273,17 @@ export const ContactForm = () => {
         {/* Right: Info */}
         <div className="bg-surface rounded-3xl p-6 sm:p-8">
           <h3 className="text-base font-medium uppercase tracking-wide text-muted">
-            Nous contacter
+            Me contacter
           </h3>
           <h2 className="mt-3 text-3xl font-semibold text-foreground sm:text-5xl">
-            Nous serions ravis de vous entendre
+            Une question ou une collaboration ?
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-muted">
-            Retrouvez-nous via les coordonnées ci-dessous. Nous répondons
-            généralement sous 24 heures.
+            Que ce soit pour un retour sur le projet, une opportunité freelance
+            ou simplement pour échanger — je lis tous les messages.
           </p>
 
           <div className="mt-8 space-y-5">
-            <div className="flex items-center gap-4">
-              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <IconPin className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Adresse</p>
-                <p className="text-sm text-muted">
-                  10 Rue de la Crypto, 75000 Paris
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <IconPhone className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Téléphone</p>
-                <a
-                  className="text-sm text-muted hover:text-primary transition"
-                  href="tel:+33600000000"
-                >
-                  +33 6 00 00 00 00
-                </a>
-              </div>
-            </div>
-
             <div className="flex items-center gap-4">
               <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
                 <IconMail className="h-5 w-5 text-primary" />
@@ -319,17 +292,43 @@ export const ContactForm = () => {
                 <p className="text-sm font-medium text-foreground">Email</p>
                 <a
                   className="text-sm text-muted hover:text-primary transition"
-                  href="mailto:hello@crypto.com"
+                  href="mailto:abdel.pp@gmail.com"
                 >
-                  dummy@gmail.fr
+                  abdel.pp@gmail.com
                 </a>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <IconPhone className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Délai de réponse
+                </p>
+                <p className="text-sm text-muted">Généralement sous 48h</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <IconPin className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Disponibilité
+                </p>
+                <p className="text-sm text-muted">
+                  Ouvert aux missions freelance &amp; collaborations — remote
+                </p>
               </div>
             </div>
           </div>
 
           <div className="mt-10">
             <p className="text-sm font-medium text-foreground mb-4">
-              Réseaux sociaux
+              Retrouvez-moi sur
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {socialIcons.map(({ label, Icon }) => (

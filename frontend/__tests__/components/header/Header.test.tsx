@@ -97,7 +97,8 @@ describe("Header", () => {
     const desktopNav = screen.getByTestId("desktop-nav");
     expect(within(desktopNav).getByTestId("nav-link-accueil")).toBeTruthy();
     expect(within(desktopNav).getByTestId("nav-link-dashboard")).toBeTruthy();
-    expect(within(desktopNav).getByTestId("nav-link-blog")).toBeTruthy();
+    /*     expect(within(desktopNav).getByTestId("nav-link-blog")).toBeTruthy();
+     */
     expect(within(desktopNav).getByTestId("nav-link-contact")).toBeTruthy();
 
     expect(
