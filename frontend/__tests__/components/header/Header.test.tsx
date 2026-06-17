@@ -69,6 +69,15 @@ vi.mock("../../../app/components/ThemeButton/ThemeButton", () => ({
   ThemeButton: () => <button type="button">Theme</button>,
 }));
 
+vi.mock("../../../app/components/Icons/CryptoLogo", () => ({
+  CryptoLogo: () => <span>LOGO</span>,
+}));
+
+vi.mock("@/app/lib/hooks", () => ({
+  useAppSelector: vi.fn(() => ({ isAuthenticated: false, user: null })),
+  useAppDispatch: vi.fn(() => () => {}),
+}));
+
 import Header from "../../../app/components/Header/Header";
 
 describe("Header", () => {
@@ -86,10 +95,10 @@ describe("Header", () => {
     expect(screen.getByText("LOGO")).toBeTruthy();
 
     const desktopNav = screen.getByTestId("desktop-nav");
-    expect(within(desktopNav).getByTestId("nav-link-dash board")).toBeTruthy();
-    expect(within(desktopNav).getByTestId("nav-link-blogs")).toBeTruthy();
+    expect(within(desktopNav).getByTestId("nav-link-accueil")).toBeTruthy();
+    expect(within(desktopNav).getByTestId("nav-link-dashboard")).toBeTruthy();
+    expect(within(desktopNav).getByTestId("nav-link-blog")).toBeTruthy();
     expect(within(desktopNav).getByTestId("nav-link-contact")).toBeTruthy();
-    expect(within(desktopNav).getByTestId("nav-link-projects")).toBeTruthy();
 
     expect(
       within(desktopNav).getByRole("button", { name: /login/i }),

@@ -14,6 +14,7 @@ import {
 } from "@/app/components/Icons";
 import { useSidebar } from "@/app/context/SideBar/SideBareContext";
 import { useAppSelector } from "@/app/lib/hooks";
+import { CryptoLogo } from "../Icons/CryptoLogo";
 
 export default function SideBar() {
   const { isCollapsed, toggle } = useSidebar();
@@ -27,7 +28,7 @@ export default function SideBar() {
       ? { label: "Utilisateur", href: "/profil", Icon: UserIcon }
       : { label: "Authentification", href: "/login", Icon: AuthIcon },
     { label: "Utilitaires", href: "/utilities", Icon: UtilitiesIcon },
-    { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
+    { label: "Page Speciales", href: "/specials", Icon: SpecialPageIcon },
   ];
 
   return (
@@ -66,7 +67,7 @@ export default function SideBar() {
                 isCollapsed ? "xl:hidden" : "",
               ].join(" ")}
             >
-              App
+              <CryptoLogo />
             </p>
             <h2
               className={[

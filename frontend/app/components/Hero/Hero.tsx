@@ -1,3 +1,4 @@
+"use client";
 import Image, { StaticImageData } from "next/image";
 
 import visaLogo from "@/public/images/payment_icons/logo-visa.png";
@@ -7,6 +8,7 @@ import bitCoinLogo from "@/public/images/payment_icons/bitcoin.png";
 import ProgresSale from "../ProgresSale/ProgresSale";
 import { HeroCountDown } from "./HeroCountDown";
 import Link from "next/link";
+import { useAppSelector } from "@/app/lib/hooks";
 
 interface logoType {
   src: StaticImageData;
@@ -32,6 +34,13 @@ const iconsList: logoType[] = [
   },
 ];
 export default function Hero() {
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+  const textForToken: string = isAuthenticated
+    ? "Achetez des token"
+    : "Inscrivez vous et achetez des token";
+  const linkForTokenButton: string = isAuthenticated ? "/dashboard" : "/login";
+
   return (
     <div id="section_hero">
       <div className="container max-w-7xl mx-auto px-1 lg:px-0 min-h-[400px] grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -92,9 +101,9 @@ export default function Hero() {
             </div>
 
             <div>
-              <Link href={"/login"}>
+              <Link href={linkForTokenButton}>
                 <button className="px-8 py-4 bg-blue-700 dark:bg-[#ffffff] rounded-lg text-white dark:text-black font-semibold hover:cursor-pointer shadow-lg">
-                  Sign Up & Buy Token Now
+                  {textForToken}
                 </button>
               </Link>
             </div>

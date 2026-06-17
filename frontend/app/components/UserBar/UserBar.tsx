@@ -125,24 +125,24 @@ export default function UserBar({ className = "" }: { className?: string }) {
           <button
             type="button"
             aria-label="Rechercher une crypto"
-            className="px-2"
+            className="px-2 cursor-pointer"
             onClick={handleToggleSearch}
           >
             <SearchIcon width={30} height={30} />
           </button>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="">
+          <Link className="px-2 cursor-pointer" href="">
             <RingIcon width={30} height={30} />
           </Link>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="">
+          <Link className="px-2 cursor-pointer" href="">
             <MessageIcon width={30} height={30} />
           </Link>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="/login">
+          <Link className="px-2 cursor-pointer" href="/login">
             <UserIcon width={30} height={30} />
           </Link>
         </li>
@@ -173,7 +173,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
               />
               <button
                 type="button"
-                className="rounded-2xl border border-border px-3 py-2 text-sm text-muted transition hover:bg-card"
+                className="rounded-2xl border border-border px-3 py-2 text-sm text-muted transition hover:bg-card hover:cursor-pointer"
                 onClick={() => setSearchOpen(false)}
               >
                 Fermer
@@ -211,7 +211,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
                       <button
                         type="button"
                         onClick={(event) => handleAddFromResults(event, coin)}
-                        className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
+                        className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90 hover:cursor-pointer"
                       >
                         Ajouter
                       </button>

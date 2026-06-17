@@ -11,10 +11,11 @@ type NavItem = {
 };
 
 const NAV_LINKS: NavItem[] = [
-  { label: "Dash board", href: "/dashboard" },
-  { label: "Blogs", href: "/blog" },
-  { label: "Contact", href: "#contact" },
-  { label: "Projects", href: "#projects" },
+  { label: "Accueil", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Blog", href: "/blog" },
+
+  { label: "Contact", href: "/#contact" },
 ];
 
 function NavLinks({

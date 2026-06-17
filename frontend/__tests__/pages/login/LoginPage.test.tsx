@@ -1,6 +1,23 @@
 import React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
+}));
+
+vi.mock("@/app/hooks/useRegistration", () => ({
+  useRegistration: () => ({ register: vi.fn(), loading: false, result: null }),
+}));
+
+vi.mock("@/app/hooks/useLogin", () => ({
+  useLogin: () => ({ login: vi.fn(), loading: false, result: null }),
+}));
+
+vi.mock("@/app/lib/hooks", () => ({
+  useAppSelector: vi.fn(() => ({ isAuthenticated: false, user: null })),
+  useAppDispatch: vi.fn(() => () => {}),
+}));
 
 import Login from "../../../app/(public)/login/page";
 

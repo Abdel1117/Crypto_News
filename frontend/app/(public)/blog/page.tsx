@@ -117,7 +117,7 @@ export default function BlogPage() {
               ))}
               <Link
                 href="#"
-                className="text-xs text-primary hover:underline font-medium pt-4"
+                className="text-xs text-primary hover:underline font-medium pb-4"
               >
                 Voir tous les articles DeFi →
               </Link>
@@ -204,7 +204,7 @@ export default function BlogPage() {
               href="#contact"
               className="shrink-0 px-6 py-3 bg-primary text-black font-bold rounded-xl hover:bg-secondary transition-colors text-sm"
             >
-              S'abonner gratuitement
+              S&apos;abonner gratuitement
             </Link>
           </div>
         </section>
