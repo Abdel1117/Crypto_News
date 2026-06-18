@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
-    "coverage": "npm test --coverage",
+    "coverage": "vitest run --coverage",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest"

@@ -1,11 +1,11 @@
-from jose import jwt
 from fastapi import HTTPException, status
+from jose import JWTError
 
 from app.core.jwt_config import JWT_EXPIRATION_HOURS, TOKEN_TYPE_REFRESH
 from app.models.user import User
 from app.repositories.users.user_repository import UserRepositoryProtocol
 from app.schemas.auth import AuthRegistrationRequest
-from app.schemas.token import TokenResponse
+from app.schemas.token import TokenPair
 from app.auth.token_service import TokenServiceProtocol
 from app.utils.security import PasswordHasher
 
@@ -42,9 +42,6 @@ class AuthService:
     async def authenticate_user(self, email: str, password: str) -> User:
         normalized_email = email.lower()
         user = await self.user_repository.get_by_email(normalized_email)
-        print("="*50)
-        print(user)
-        print("="*50)
         if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,7 +58,7 @@ class AuthService:
 
         return user
 
-    async def login(self, email: str, password: str) -> TokenResponse:
+    async def login(self, email: str, password: str) -> TokenPair:
         if self.token_service is None:
             raise RuntimeError("TokenService requis pour la connexion.")
 
@@ -70,20 +67,20 @@ class AuthService:
         access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
         refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
 
-        return TokenResponse(
+        return TokenPair(
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
             expires_in=JWT_EXPIRATION_HOURS * 3600,
         )
 
-    async def refresh_access_token(self, refresh_token: str) -> TokenResponse:
+    async def refresh_access_token(self, refresh_token: str) -> TokenPair:
         if self.token_service is None:
             raise RuntimeError("TokenService requis pour le rafraîchissement du token.")
 
         try:
             payload = self.token_service.verify_token(refresh_token)
-        except jwt.InvalidTokenError:
+        except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Refresh token invalide ou expiré.",
@@ -108,7 +105,7 @@ class AuthService:
         new_access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
         new_refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
 
-        return TokenResponse(
+        return TokenPair(
             access_token=new_access_token,
             refresh_token=new_refresh_token,
             token_type="bearer",

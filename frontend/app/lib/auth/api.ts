@@ -16,14 +16,21 @@ export async function loginUser(payload: LoginData): Promise<AuthTokens> {
   return fetchJson<AuthTokens>(`${API}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
 }
 
-export async function refreshToken(token: string): Promise<AuthTokens> {
+export async function refreshAccessToken(): Promise<AuthTokens> {
   return fetchJson<AuthTokens>(`${API}/auth/refresh`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: token }),
+    credentials: "include",
+  });
+}
+
+export async function logoutUser(): Promise<void> {
+  await fetchJson(`${API}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
   });
 }

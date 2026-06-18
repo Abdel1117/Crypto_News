@@ -26,7 +26,7 @@ export default function BlockCTA({
   notReversed = true,
   hidebutton = false,
 }: BlockCTAProps) {
-  const containerClassName = `container max-w-7xl mx-auto flex flex-col ${notReversed ? "lg:flex-row" : "lg:flex-row-reverse"} px-1 sm:px-0 relative z-50`;
+  const containerClassName = `container max-w-7xl mx-auto flex flex-col ${notReversed ? "lg:flex-row" : "lg:flex-row-reverse"} px-1 sm:px-0 `;
   return (
     <div aria-labelledby="block-cta-title">
       <div className={containerClassName}>

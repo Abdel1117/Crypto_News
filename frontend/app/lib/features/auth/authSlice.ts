@@ -28,7 +28,7 @@ function buildInitialState(): AuthState {
     const decoded = decodeJwtPayload(accessToken);
     if (decoded) {
       return {
-        user: { id: decoded.sub, email: decoded.email },
+        user: { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null },
         accessToken,
         isAuthenticated: true,
       };
@@ -41,27 +41,21 @@ const authSlice = createSlice({
   name: "auth",
   initialState: buildInitialState(),
   reducers: {
-    loginSuccess(
-      state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string }>,
-    ) {
-      const { accessToken, refreshToken } = action.payload;
+    loginSuccess(state, action: PayloadAction<{ accessToken: string }>) {
+      const { accessToken } = action.payload;
       const decoded = decodeJwtPayload(accessToken);
       state.accessToken = accessToken;
       state.isAuthenticated = true;
       state.user = decoded ? { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null } : null;
-      tokenStorage.setTokens(accessToken, refreshToken);
+      tokenStorage.setAccessToken(accessToken);
     },
 
-    tokenRefreshed(
-      state,
-      action: PayloadAction<{ accessToken: string; refreshToken: string }>,
-    ) {
-      const { accessToken, refreshToken } = action.payload;
+    tokenRefreshed(state, action: PayloadAction<{ accessToken: string }>) {
+      const { accessToken } = action.payload;
       const decoded = decodeJwtPayload(accessToken);
       state.accessToken = accessToken;
       state.user = decoded ? { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null } : null;
-      tokenStorage.setTokens(accessToken, refreshToken);
+      tokenStorage.setAccessToken(accessToken);
     },
 
     logout(state) {

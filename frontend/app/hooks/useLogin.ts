@@ -22,12 +22,7 @@ export function useLogin() {
     try {
       const tokens = await loginUser(validation.payload!);
 
-      dispatch(
-        loginSuccess({
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-        }),
-      );
+      dispatch(loginSuccess({ accessToken: tokens.access_token }));
 
       const successResult: LoginResult = {
         success: true,

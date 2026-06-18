@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import { logout } from "@/app/lib/features/auth/authSlice";
+import { logoutUser } from "@/app/lib/auth/api";
 import { useRouter } from "next/navigation";
 
 export default function ProfileDropdown() {
@@ -24,7 +25,8 @@ export default function ProfileDropdown() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [open]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await logoutUser(); } catch { /* cookie déjà expiré ou réseau */ }
     dispatch(logout());
     setOpen(false);
     router.push("/login");
