@@ -81,8 +81,8 @@ export default function Login() {
     isAuthenticated ? router.push("/profil") : null;
   }, []);
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background text-foreground ">
+      <section className="relative z-50 mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid w-full gap-6 overflow-hidden rounded-4xl border border-white/10 bg-surface/95 shadow-[0_30px_120px_rgba(15,23,42,0.18)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
           <div className="hidden flex-col justify-between gap-8 border-r border-white/10 bg-linear-to-b from-primary/10 to-transparent px-8 py-10 md:flex">
             <div className="space-y-6">

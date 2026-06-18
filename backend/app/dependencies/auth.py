@@ -1,4 +1,4 @@
-import jwt
+from jose import JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -26,7 +26,7 @@ async def get_current_user(
 
     try:
         payload = _token_service.verify_token(token)
-    except jwt.InvalidTokenError:
+    except JWTError:
         raise credentials_exception
 
     if payload.token_type != TOKEN_TYPE_ACCESS:

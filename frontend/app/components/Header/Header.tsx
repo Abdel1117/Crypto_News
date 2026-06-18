@@ -79,10 +79,10 @@ export default function Header() {
     <>
       <nav
         className={[
-          "w-full left-0 right-0 transition-colors duration-300",
+          "w-full left-0 right-0 transition-colors duration-300 ",
           isSticky
             ? "fixed top-0 z-60 bg-background shadow-md"
-            : "relative z-60 bg-transparent",
+            : "relative z-60 bg-background",
         ].join(" ")}
         data-testid="header-nav"
       >

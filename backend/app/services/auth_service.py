@@ -1,4 +1,4 @@
-import jwt
+from jose import jwt
 from fastapi import HTTPException, status
 
 from app.core.jwt_config import JWT_EXPIRATION_HOURS, TOKEN_TYPE_REFRESH
