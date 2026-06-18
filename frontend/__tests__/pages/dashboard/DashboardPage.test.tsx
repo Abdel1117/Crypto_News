@@ -85,7 +85,7 @@ describe("DashboardPage", () => {
     vi.clearAllMocks();
     vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector(defaultState),
+      selector(defaultState as any),
     );
   });
 
@@ -130,7 +130,7 @@ describe("DashboardPage", () => {
   describe("loading state", () => {
     it("shows 6 loading skeletons when prices.loading is true", () => {
       vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ ...defaultState, prices: { coins: [], loading: true } }),
+        selector({ ...defaultState, prices: { coins: [], loading: true } } as any),
       );
       const { container } = render(<DashboardPage />);
       expect(container.querySelectorAll(".animate-pulse").length).toBe(6);
@@ -148,7 +148,7 @@ describe("DashboardPage", () => {
         selector({
           ...defaultState,
           prices: { coins: [mockCoinA, mockCoinB], loading: false },
-        }),
+        } as any),
       );
       render(<DashboardPage />);
       expect(screen.getAllByTestId("crypto-info-card").length).toBe(2);
@@ -169,7 +169,7 @@ describe("DashboardPage", () => {
         selector({
           ...defaultState,
           prices: { coins: manyCoins, loading: false },
-        }),
+        } as any),
       );
       render(<DashboardPage />);
       expect(screen.getAllByTestId("crypto-info-card").length).toBe(6);
@@ -188,7 +188,7 @@ describe("DashboardPage", () => {
           ...defaultState,
           prices: { coins: [mockCoinA], loading: false },
           watchlist: { ids: ["bitcoin"] },
-        }),
+        } as any),
       );
       render(<DashboardPage />);
       expect(screen.getByText("Your Watchlist")).toBeTruthy();
@@ -200,7 +200,7 @@ describe("DashboardPage", () => {
           ...defaultState,
           prices: { coins: [mockCoinA, mockCoinB], loading: false },
           watchlist: { ids: ["bitcoin", "ethereum"] },
-        }),
+        } as any),
       );
       render(<DashboardPage />);
       // 2 watchlist cards + 2 top-crypto cards = 4
@@ -213,7 +213,7 @@ describe("DashboardPage", () => {
           ...defaultState,
           prices: { coins: [mockCoinA], loading: false },
           watchlist: { ids: ["bitcoin", "unknown-xyz"] },
-        }),
+        } as any),
       );
       render(<DashboardPage />);
       // 1 watchlist card (bitcoin) + 1 top-crypto card = 2

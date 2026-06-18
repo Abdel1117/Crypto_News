@@ -1,4 +1,32 @@
+import type { Metadata } from "next";
 import BlockCTA from "../components/BlockCTA/BlockCTA";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: "Crypto News – Actualité et marchés crypto en temps réel",
+  },
+  description:
+    "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
+  openGraph: {
+    title: "Crypto News – Actualité et marchés crypto en temps réel",
+    description:
+      "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
+    url: "/",
+    images: [
+      {
+        url: "/images/01.png",
+        width: 1200,
+        height: 630,
+        alt: "Crypto News – Accueil",
+      },
+    ],
+  },
+  twitter: {
+    title: "Crypto News – Actualité et marchés crypto en temps réel",
+    description:
+      "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies.",
+  },
+};
 import Hero from "../components/Hero/Hero";
 import ProductDescription from "../components/ProductDescription/ProductDescription";
 import heroImage from "@/public/images/01.png";

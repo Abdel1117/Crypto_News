@@ -12,6 +12,8 @@ export type SubscribeData = {
 
 export type LoginFieldErrors = Partial<Record<keyof LoginData, string>>;
 
+export type SubscribeDataErrors = Partial<Record<keyof SubscribeData, string >>; 
+
 export type LoginResult = {
   success: boolean;
   message: string;

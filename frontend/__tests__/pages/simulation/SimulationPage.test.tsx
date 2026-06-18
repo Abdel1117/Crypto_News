@@ -54,7 +54,7 @@ describe("SimulationPage", () => {
     vi.clearAllMocks();
     vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector({ prices: { coins: [] } }),
+      selector({ prices: { coins: [] } } as any),
     );
   });
 

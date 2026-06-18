@@ -4,7 +4,10 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRegistration } from "../../hooks/useRegistration";
 import { useLogin } from "../../hooks/useLogin";
-import { RegistrationData } from "../../lib/auth/registration";
+import {
+  RegistrationData,
+  RegistrationFieldErrors,
+} from "../../lib/auth/registration";
 import { LoginData } from "../../lib/auth/login";
 import { useAppSelector } from "@/app/lib/hooks";
 
@@ -72,7 +75,7 @@ export default function Login() {
     }
   };
 
-  const fieldErrors =
+  const fieldErrors: RegistrationFieldErrors | undefined =
     activeTab === "Connexion"
       ? loginResult?.fieldErrors
       : registerResult?.fieldErrors;

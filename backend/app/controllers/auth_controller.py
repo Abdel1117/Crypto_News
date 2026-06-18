@@ -10,11 +10,12 @@ from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, 
 from app.schemas.token import AccessTokenResponse
 from app.services.auth_service import AuthService
 from app.auth.jwt_token_service import JWTTokenService
-
+import os 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_COOKIE = "refresh_token"
 REFRESH_MAX_AGE = JWT_REFRESH_EXPIRATION_DAYS * 24 * 3600
+_IS_PROD = os.getenv("ENV") == "PROD"
 
 
 def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
@@ -29,8 +30,8 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
         key=REFRESH_COOKIE,
         value=refresh_token,
         httponly=True,
-        samesite="lax",
-        secure=False,   # passer à True en production (HTTPS)
+        samesite="strict",
+        secure=_IS_PROD,
         max_age=REFRESH_MAX_AGE,
         path="/auth",
     )

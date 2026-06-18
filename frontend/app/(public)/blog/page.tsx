@@ -1,4 +1,22 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Blog – Analyses et actualités crypto",
+  description:
+    "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies : Bitcoin, Ethereum, DeFi, NFT et bien plus.",
+  openGraph: {
+    title: "Blog Crypto News – Analyses et actualités crypto",
+    description:
+      "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies : Bitcoin, Ethereum, DeFi, NFT et bien plus.",
+    url: "/blog",
+  },
+  twitter: {
+    title: "Blog Crypto News – Analyses et actualités crypto",
+    description:
+      "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies.",
+  },
+};
 import { ARTICLES, CATEGORY_META } from "./data";
 import { HeroCard } from "@/app/ui/HeroCard/HeroCard";
 import { SmallCard } from "@/app/ui/SmallCard/SmallCard";

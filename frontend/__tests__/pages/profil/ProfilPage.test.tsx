@@ -48,7 +48,7 @@ describe("ProfilPage", () => {
       prefetch: vi.fn(),
     } as ReturnType<typeof useRouter>);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector({ auth: { user: mockUser } }),
+      selector({ auth: { user: mockUser } } as any),
     );
   });
 
@@ -132,7 +132,7 @@ describe("ProfilPage", () => {
   describe("with a single-word fullName", () => {
     beforeEach(() => {
       vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ auth: { user: { ...mockUser, fullName: "Alice" } } }),
+        selector({ auth: { user: { ...mockUser, fullName: "Alice" } } } as any),
       );
     });
 
@@ -152,7 +152,7 @@ describe("ProfilPage", () => {
   describe("with no authenticated user (user = null)", () => {
     beforeEach(() => {
       vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ auth: { user: null } }),
+        selector({ auth: { user: null } } as any),
       );
     });
 

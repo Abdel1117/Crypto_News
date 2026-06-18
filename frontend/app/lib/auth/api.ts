@@ -4,8 +4,8 @@ import { fetchJson } from "../api/fetchJson";
 
 const API = process.env.NEXT_PUBLIC_API_BACK_END;
 
-export async function registerUser(payload: RegistrationPayload) {
-  return fetchJson(`${API}/auth/register`, {
+export async function registerUser(payload: RegistrationPayload): Promise<{ message: string }> {
+  return fetchJson<{ message: string }>(`${API}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

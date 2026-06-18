@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
-export default function TopLoader() {
+function TopLoaderInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
@@ -28,4 +28,12 @@ export default function TopLoader() {
   if (state === "idle") return null;
 
   return <div className="top-loader" data-state={state} />;
+}
+
+export default function TopLoader() {
+  return (
+    <Suspense fallback={null}>
+      <TopLoaderInner />
+    </Suspense>
+  );
 }
