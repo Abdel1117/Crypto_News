@@ -81,8 +81,8 @@ export default function Header() {
         className={[
           "w-full left-0 right-0 transition-colors duration-300",
           isSticky
-            ? "fixed top-0 z-50 bg-background shadow-md"
-            : "relative z-10 bg-transparent",
+            ? "fixed top-0 z-60 bg-background shadow-md"
+            : "relative z-60 bg-transparent",
         ].join(" ")}
         data-testid="header-nav"
       >

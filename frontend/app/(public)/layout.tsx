@@ -9,9 +9,8 @@ export default function PublicLayout({
 }) {
   return (
     <>
-      <Header />
       <ParticlesBg />
-
+      <Header />
       {children}
       <Footer />
     </>

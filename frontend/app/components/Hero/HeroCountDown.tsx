@@ -12,7 +12,7 @@ export function HeroCountDown() {
   useEffect(() => {
     const now = Date.now();
     setInitialNowMs(now);
-    setTargetMs(now + 80_000);
+    setTargetMs(now + 8000000000);
   }, []);
 
   return (

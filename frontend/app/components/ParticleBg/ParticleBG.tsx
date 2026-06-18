@@ -1,59 +1,46 @@
 "use client";
-import { useMemo } from "react";
-import {
-  Particles,
-  ParticlesProvider,
-  useParticlesProvider,
-} from "@tsparticles/react";
-import { type Engine, type ISourceOptions, OutMode } from "@tsparticles/engine";
+import { useEffect, useState } from "react";
+import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import { useTheme } from "@/app/context/Theme/ThemeContext";
+import { type ISourceOptions, OutMode } from "@tsparticles/engine";
 
-const initEngine = async (engine: Engine) => {
-  await loadSlim(engine);
+export const ParticlesBg = () => {
+  const [init, setInit] = useState(false);
+
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadSlim(engine);
+    }).then(() => setInit(true));
+  }, []);
+
+  const particleColor = "#F9B707";
+
+  const options: ISourceOptions = {
+    fullScreen: { enable: true, zIndex: 1 },
+    fpsLimit: 60,
+    interactivity: {
+      events: { onHover: { enable: true, mode: "repulse" } },
+      modes: {
+        repulse: { distance: 200, duration: 0.4 },
+      },
+    },
+    particles: {
+      color: { value: particleColor },
+      move: {
+        enable: true,
+        speed: 1,
+        direction: "right",
+        straight: false,
+        outModes: { default: OutMode.out },
+      },
+      number: { value: 200, density: { enable: true } },
+      opacity: { value: 0.8 },
+      shape: { type: "circle" },
+      size: { value: { min: 1, max: 5 } },
+    },
+    detectRetina: true,
+  };
+
+  if (!init) return <></>;
+  return <Particles key={particleColor} id="tsparticles" options={options} />;
 };
-
-function ParticlesInner() {
-  const { loaded } = useParticlesProvider();
-  const { theme } = useTheme();
-
-  const options: ISourceOptions = useMemo(
-    () => ({
-      background: { color: { value: "" } },
-      fpsLimit: 60,
-      interactivity: {
-        events: { onHover: { enable: true, mode: "repulse" } },
-        modes: {
-          push: { quantity: 4 },
-          repulse: { distance: 200, duration: 0.4 },
-        },
-      },
-      particles: {
-        color: { value: theme === "light" ? "#07101E" : "#f0f0f0" },
-        move: {
-          direction: "right",
-          enable: true,
-          outModes: { default: OutMode.out },
-          random: false,
-          speed: 1,
-          straight: true,
-        },
-        number: { density: { enable: true }, value: 80 },
-        opacity: { value: 0.5 },
-        shape: { type: "circle" },
-        size: { value: { min: 1, max: 5 } },
-      },
-      detectRetina: true,
-    }),
-    [theme],
-  );
-
-  if (!loaded) return <></>;
-  return <Particles id="tsparticles" options={options} />;
-}
-
-export const ParticlesBg = () => (
-  <ParticlesProvider init={initEngine}>
-    <ParticlesInner />
-  </ParticlesProvider>
-);

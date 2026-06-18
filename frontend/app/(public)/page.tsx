@@ -38,7 +38,7 @@ export default function Home() {
   };
 
   return (
-    <main className="p-2 sm:p-6 xl:p-0">
+    <main className="p-2 sm:p-6 xl:p-0 relative z-50">
       <section className="pb-[100px]">
         <Hero />
       </section>
