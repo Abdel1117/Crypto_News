@@ -1,0 +1,31 @@
+version: 2.1
+
+jobs:
+  deploy-frontend:
+    docker:
+      - image: cimg/node:22.14
+    working_directory: ~/project/frontend
+    steps:
+      - checkout:
+          path: ~/project
+      - restore_cache:
+          keys:
+            - frontend-deps-v1-{{ checksum "package.json" }}
+            - frontend-deps-v1-
+      - run:
+          name: Install dependencies
+          command: npm ci
+      - run:
+          name: Deploy frontend
+          command: echo "Deploy frontend (e.g. vercel --prod)"
+
+  deploy-backend:
+    docker:
+      - image: cimg/python:3.12
+    working_directory: ~/project/backend
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Deploy backend
+          command: echo "Deploy backend (e.g. push Docker image, update service)"

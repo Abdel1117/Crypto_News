@@ -1,61 +1,63 @@
 version: 2.1
+setup: true
 
-# Runs only on the dev branch — unit tests for frontend and backend
-# Production CI is handled in a separate config
+# Entry point — merges jobs/* + env/<branch>.yml into a single config,
+# then hands off to CircleCI via the continuation orb.
+# Requires "Dynamic config" enabled in CircleCI project settings > Advanced.
+
+orbs:
+  continuation: circleci/continuation@1.0.0
 
 workflows:
-  dev-tests:
+  setup:
     jobs:
-      - test-frontend:
-          filters:
-            branches:
-              only: dev
-      - test-backend:
-          filters:
-            branches:
-              only: dev
+      - generate-config
 
 jobs:
-  test-frontend:
-    docker:
-      - image: cimg/node:22.14
-    working_directory: ~/project/frontend
-    steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - frontend-deps-v1-{{ checksum "package.json" }}
-            - frontend-deps-v1-
-      - run:
-          name: Install dependencies
-          command: npm ci
-      - save_cache:
-          key: frontend-deps-v1-{{ checksum "package.json" }}
-          paths:
-            - node_modules
-      - run:
-          name: Run unit tests
-          command: npm test -- --run
-
-  test-backend:
+  generate-config:
     docker:
       - image: cimg/python:3.12
-    working_directory: ~/project/backend
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - backend-deps-v1-{{ checksum "requirements.txt" }}
-            - backend-deps-v1-
+      - checkout
       - run:
-          name: Install dependencies
-          command: pip install -r requirements.txt
-      - save_cache:
-          key: backend-deps-v1-{{ checksum "requirements.txt" }}
-          paths:
-            - ~/.cache/pip
-      - run:
-          name: Run unit tests
-          command: pytest tests/unit -v
+          name: Merge CI fragments for branch « $CIRCLE_BRANCH »
+          command: |
+            python3 - <<'EOF'
+            import yaml, os
+
+            def deep_merge(base, override):
+                for key, val in override.items():
+                    if key in base and isinstance(base[key], dict) and isinstance(val, dict):
+                        deep_merge(base[key], val)
+                    else:
+                        base[key] = val
+                return base
+
+            branch = os.environ.get("CIRCLE_BRANCH", "dev")
+            env_file = (
+                ".circleci/env/prod.yml"
+                if branch == "prod"
+                else ".circleci/env/dev.yml"
+            )
+
+            fragments = [
+                ".circleci/jobs/build.yml",
+                ".circleci/jobs/test.yml",
+                ".circleci/jobs/deploy.yml",
+                env_file,
+            ]
+
+            merged = {}
+            for path in fragments:
+                with open(path) as fh:
+                    data = yaml.safe_load(fh)
+                    if data:
+                        deep_merge(merged, data)
+
+            with open("/tmp/generated_config.yml", "w") as out:
+                yaml.dump(merged, out, default_flow_style=False, sort_keys=False)
+
+            print(f"Generated config for branch '{branch}' using {env_file}")
+            EOF
+      - continuation/continue:
+          configuration_path: /tmp/generated_config.yml
