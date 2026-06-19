@@ -22,7 +22,7 @@ export default function RadiotTimeMarket({
             key={index}
             onClick={() => onChange(val)}
             className={`px-3 py-1 rounded hover:text-foreground hover:cursor-pointer 
-              ${value === val ? "bg-primary text-foreground" : " bg-card text-foreground"}
+              ${value === val ? "bg-primary text-foreground" : " #000411 text-foreground"}
               transition-colors`}
           >
             {val.toUpperCase()}

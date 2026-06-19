@@ -5,13 +5,21 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build --webpack",
+    "coverage": "vitest run --coverage",
     "start": "next start",
     "lint": "eslint",
+    "type-check": "tsc",
     "test": "vitest"
   },
+ 
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
+    "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
+    "tsparticles": "^3.9.1",
+    "@vitest/coverage-istanbul": "^4.1.9",
+    "gsap": "^3.14.2",
     "lightweight-charts": "^5.1.0",
     "next": "16.1.6",
     "react": "19.2.3",

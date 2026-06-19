@@ -62,7 +62,7 @@ export default function CryptoInfoCard({
       }`}
       onClick={onSelect}
     >
-      {/* Header: icon + name + sparkline + menu */}
+      {/* Header: icon + name + sparkline  */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {coin?.image && (
@@ -78,7 +78,7 @@ export default function CryptoInfoCard({
             {coin.name}
           </span>
           {isInWatchlist && (
-            <span className="text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+            <span className="hidden md:block text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
               Dans vos favoris
             </span>
           )}
@@ -136,13 +136,6 @@ export default function CryptoInfoCard({
             />
           </svg>
           {/* Menu dots */}
-          <button className="text-muted hover:text-foreground transition-colors">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-              <circle cx="3" cy="8" r="1.5" />
-              <circle cx="8" cy="8" r="1.5" />
-              <circle cx="13" cy="8" r="1.5" />
-            </svg>
-          </button>
         </div>
       </div>
 
@@ -168,9 +161,14 @@ export default function CryptoInfoCard({
             ? `${isPositive ? "+" : ""}${changeValue.toFixed(1)}%`
             : "—"}
         </span>
-        <span className="text-muted">
+        <span className="text-xs md:text-base text-muted">
           ({coin.symbol}/{currency_quote})
         </span>
+        {isInWatchlist && (
+          <span className=" block md:hidden  text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+            Dans vos favoris
+          </span>
+        )}
       </div>
     </div>
   );

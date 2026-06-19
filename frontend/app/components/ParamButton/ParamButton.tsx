@@ -6,7 +6,7 @@ import { ParamIcons } from "../Icons/index";
 
 const currencies: { value: Currency; label: string }[] = [
   { value: "eur", label: "EUR €" },
-  { value: "usd", label: "usd $" },
+  { value: "usd", label: "USD $" },
 ];
 
 export function ParamButton() {
@@ -46,7 +46,7 @@ export function ParamButton() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-44 bg-card border border-surface rounded-lg shadow-xl z-50 overflow-hidden ">
+        <div className="absolute right-0 mt-2 w-44 bg-card border border-surface rounded-lg shadow-xl overflow-hidden ">
           <p className="text-muted text-xs px-3 pt-3 pb-1">
             Choisiez une monaie
           </p>

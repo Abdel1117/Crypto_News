@@ -10,10 +10,7 @@ class SymbolesService:
     ):
 
         data = await self.client.fetch_markets(currency, order, per_page, page)
-        print("*" * 50)
-        print(data)
-        print(currency)
-        print("*" * 50)
+       
         return [
             {
                 "id": coin["id"],

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
 import { ParamButton } from "../ParamButton/ParamButton";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { useAppDispatch } from "@/app/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { toggleWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 import {
   SymbolData,
@@ -14,6 +14,7 @@ import {
 } from "@/app/lib/features/symbol/symbolSlice";
 import { searchSymbols } from "@/app/lib/api/crypto";
 import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
+import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 
 /**
  * UserBar component renders the top-right action bar with user controls.
@@ -22,13 +23,17 @@ import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
  */
 export default function UserBar({ className = "" }: { className?: string }) {
   const dispatch = useAppDispatch();
+
   const { currency } = useCurrency();
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SymbolData[]>([]);
   const [searchError, setSearchError] = useState<string | null>(null);
   const debounceRef = useRef<number | null>(null);
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   /**
    * Toggle the crypto search panel open or closed.
@@ -120,37 +125,42 @@ export default function UserBar({ className = "" }: { className?: string }) {
 
   return (
     <div className={className || "w-full relative"}>
-      <ul className="flex justify-end items-center gap-5">
+      <ul className="flex justify-between xs:justify-end items-center flex-wrap gap-5">
         <li className="pr-6">
           <button
             type="button"
             aria-label="Rechercher une crypto"
-            className="px-2"
+            className="px-2 cursor-pointer"
             onClick={handleToggleSearch}
           >
             <SearchIcon width={30} height={30} />
           </button>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="">
+          <Link className="px-2 cursor-pointer" href="">
             <RingIcon width={30} height={30} />
           </Link>
         </li>
         <li className="pr-6">
-          <Link className="px-2" href="">
+          <Link className="px-2 cursor-pointer" href="">
             <MessageIcon width={30} height={30} />
           </Link>
         </li>
-        <li className="pr-6">
-          <Link className="px-2" href="">
-            <UserIcon width={30} height={30} />
-          </Link>
-        </li>
+
         <li className="pr-6">
           <ThemeButton />
         </li>
         <li className="pr-6">
           <ParamButton />
+        </li>
+        <li className="pr-6">
+          {isAuthenticated ? (
+            <ProfileDropdown />
+          ) : (
+            <Link className="px-2 cursor-pointer" href="/login">
+              <UserIcon width={30} height={30} />
+            </Link>
+          )}
         </li>
       </ul>
 
@@ -173,7 +183,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
               />
               <button
                 type="button"
-                className="rounded-2xl border border-border px-3 py-2 text-sm text-muted transition hover:bg-card"
+                className="rounded-2xl border border-border px-3 py-2 text-sm text-muted transition hover:bg-card hover:cursor-pointer"
                 onClick={() => setSearchOpen(false)}
               >
                 Fermer
@@ -211,7 +221,7 @@ export default function UserBar({ className = "" }: { className?: string }) {
                       <button
                         type="button"
                         onClick={(event) => handleAddFromResults(event, coin)}
-                        className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90"
+                        className="rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary/90 hover:cursor-pointer"
                       >
                         Ajouter
                       </button>

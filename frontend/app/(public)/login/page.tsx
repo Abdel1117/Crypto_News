@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useRegistration } from "../../hooks/useRegistration";
-import { RegistrationData } from "../../lib/auth/registration";
+import { useLogin } from "../../hooks/useLogin";
+import {
+  RegistrationData,
+  RegistrationFieldErrors,
+} from "../../lib/auth/registration";
+import { LoginData } from "../../lib/auth/login";
+import { useAppSelector } from "@/app/lib/hooks";
 
 const tabs = ["Connexion", "Inscription"] as const;
 
@@ -12,7 +19,16 @@ const inputClass =
   "w-full rounded-2xl border border-white/10 bg-background/80 px-4 py-3 text-sm text-foreground placeholder:text-muted outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 export default function Login() {
-  const { register, loading, result } = useRegistration();
+  const router = useRouter();
+  const {
+    register,
+    loading: registerLoading,
+    result: registerResult,
+  } = useRegistration();
+  const { login, loading: loginLoading, result: loginResult } = useLogin();
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
   const [activeTab, setActiveTab] = useState<Tab>("Connexion");
   const [formData, setFormData] = useState({
     fullname: "",
@@ -21,6 +37,8 @@ export default function Login() {
     confirmPassword: "",
   });
   const [notice, setNotice] = useState<string>("");
+
+  const loading = activeTab === "Connexion" ? loginLoading : registerLoading;
 
   const onChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,20 +55,39 @@ export default function Login() {
         password: formData.password,
         confirmPassword: formData.confirmPassword,
       };
-
       const result = await register(data);
-      setNotice(result.message);
+      setNotice(result?.message ?? "");
+      if (result.success) {
+        setActiveTab("Connexion");
+        setFormData((prev) => ({ ...prev, fullname: "", confirmPassword: "" }));
+      }
       return;
     }
 
-    setNotice("Tentative de connexion en cours...");
+    const data: LoginData = {
+      email: formData.email,
+      password: formData.password,
+    };
+    const result = await login(data);
+    setNotice(result?.message ?? "");
+    if (result.success) {
+      router.push("/dashboard");
+    }
   };
 
+  const fieldErrors: RegistrationFieldErrors | undefined =
+    activeTab === "Connexion"
+      ? loginResult?.fieldErrors
+      : registerResult?.fieldErrors;
+
+  useEffect(() => {
+    isAuthenticated ? router.push("/profil") : null;
+  }, []);
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid w-full gap-6 overflow-hidden rounded-[2rem] border border-white/10 bg-surface/95 shadow-[0_30px_120px_rgba(15,23,42,0.18)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
-          <div className="hidden flex-col justify-between gap-8 border-r border-white/10 bg-gradient-to-b from-primary/10 to-transparent px-8 py-10 md:flex">
+    <main className="min-h-screen bg-background text-foreground ">
+      <section className="relative z-50 mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid w-full gap-6 overflow-hidden rounded-4xl border border-white/10 bg-surface/95 shadow-[0_30px_120px_rgba(15,23,42,0.18)] backdrop-blur-xl md:grid-cols-[1.05fr_0.95fr]">
+          <div className="hidden flex-col justify-between gap-8 border-r border-white/10 bg-linear-to-b from-primary/10 to-transparent px-8 py-10 md:flex">
             <div className="space-y-6">
               <span className="inline-flex rounded-full bg-primary/10 px-4 py-1 text-sm font-semibold text-primary">
                 Authentification
@@ -59,8 +96,8 @@ export default function Login() {
                 Connectez-vous ou créez votre compte
               </h1>
               <p className="max-w-md text-sm leading-7 text-muted">
-                Profitez de l’expérience Crypto News avec une page d’accès
-                élégante et claire
+                Profitez de l&lsquo;expérience Crypto News avec une page
+                d&apos;accès élégante et claire
               </p>
 
               {notice && (
@@ -141,9 +178,9 @@ export default function Login() {
                     value={formData.fullname}
                     onChange={onChange("fullname")}
                   />
-                  {result?.fieldErrors?.fullname && (
+                  {fieldErrors?.fullname && (
                     <p className="text-sm text-red-500">
-                      {result.fieldErrors.fullname}
+                      {fieldErrors.fullname}
                     </p>
                   )}
                 </div>
@@ -165,10 +202,8 @@ export default function Login() {
                   value={formData.email}
                   onChange={onChange("email")}
                 />
-                {result?.fieldErrors?.email && (
-                  <p className="text-sm text-red-500">
-                    {result.fieldErrors.email}
-                  </p>
+                {fieldErrors?.email && (
+                  <p className="text-sm text-red-500">{fieldErrors.email}</p>
                 )}
               </div>
 
@@ -188,10 +223,8 @@ export default function Login() {
                   value={formData.password}
                   onChange={onChange("password")}
                 />
-                {result?.fieldErrors?.password && (
-                  <p className="text-sm text-red-500">
-                    {result.fieldErrors.password}
-                  </p>
+                {fieldErrors?.password && (
+                  <p className="text-sm text-red-500">{fieldErrors.password}</p>
                 )}
               </div>
 
@@ -212,9 +245,9 @@ export default function Login() {
                     value={formData.confirmPassword}
                     onChange={onChange("confirmPassword")}
                   />
-                  {result?.fieldErrors?.confirmPassword && (
+                  {fieldErrors?.confirmPassword && (
                     <p className="text-sm text-red-500">
-                      {result.fieldErrors.confirmPassword}
+                      {fieldErrors.confirmPassword}
                     </p>
                   )}
                 </div>

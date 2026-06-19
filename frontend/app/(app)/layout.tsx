@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import SideBar from "../components/SideBar/SideBar";
 import DashBoardHeader from "../components/DashBoardHeader/DashBoardHeader";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (

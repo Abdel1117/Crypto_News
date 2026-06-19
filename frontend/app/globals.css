@@ -2,6 +2,10 @@
 @import "swiper/css";
 @import "swiper/css/free-mode";
 
+html {
+  scroll-behavior: smooth;
+}
+
 @theme {
   --ab-body-bg: #ffffff;
   --ab-body-secondary: #f7f7f7;

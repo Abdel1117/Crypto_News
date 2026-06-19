@@ -6,9 +6,11 @@ import topGainersLosersReducer from "./features/topGainersLosers/topGainersLoser
 import trendingReducer from "./features/trending/trendingSlice"
 import watchlistReducer from "./features/watchlist/watchlistSlice"
 import simulationReducer from "./features/simulation/simulationSlice"
+import authReducer from "./features/auth/authSlice"
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     prices: priceReducer,
     symbols: symbolsReducer,
     marketView : marketViewReducer,
@@ -17,8 +19,22 @@ export const store = configureStore({
     watchlist: watchlistReducer,
     simulation: simulationReducer,
   },
-  devTools: process.env.NODE_ENV !== "production",
+  devTools: process.env.NODE_ENV !== "production"
+    ? {
+        name: "CryptoNews",
+        trace: true,
+        traceLimit: 25,
+      }
+    : false,
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+if (process.env.NODE_ENV !== "production") {
+  store.subscribe(() => {
+    console.groupCollapsed("%c[Redux Store]", "color: #764abc; font-weight: bold;");
+    console.log(store.getState());
+    console.groupEnd();
+  });
+}

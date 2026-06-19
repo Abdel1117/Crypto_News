@@ -13,20 +13,41 @@ import {
   DashBoardIcon,
 } from "@/app/components/Icons";
 import { useSidebar } from "@/app/context/SideBar/SideBareContext";
+import { useAppSelector } from "@/app/lib/hooks";
+import { CryptoLogo } from "../Icons/CryptoLogo";
 
 export default function SideBar() {
   const { isCollapsed, toggle } = useSidebar();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
   const navItems = [
     { label: "Accueil", href: "/", Icon: HomeIcon },
     { label: "Dashboard", href: "/dashboard", Icon: DashBoardIcon },
     { label: "Simulation", href: "/simulation", Icon: SimulationIcon },
-    { label: "Page Speciales", href: "/", Icon: SpecialPageIcon },
-    { label: "Authentification", href: "/login", Icon: AuthIcon },
-    { label: "Utilisateur", href: "/settinngs", Icon: UserIcon },
+    isAuthenticated
+      ? { label: "Utilisateur", href: "/profil", Icon: UserIcon }
+      : { label: "Authentification", href: "/login", Icon: AuthIcon },
     { label: "Utilitaires", href: "/utilities", Icon: UtilitiesIcon },
-  ] as const;
+    { label: "Page Speciales", href: "/specials", Icon: SpecialPageIcon },
+  ];
 
   return (
+    <>
+      {/* Mobile-only fixed toggle — visible when sidebar is collapsed */}
+      <button
+        type="button"
+        className={[
+          "fixed top-4 left-4 z-70",
+          "bg-primary p-1.5 rounded-lg cursor-pointer",
+          "xl:hidden",
+          isCollapsed ? "flex" : "hidden",
+        ].join(" ")}
+        onClick={toggle}
+        aria-label="Expand sidebar"
+      >
+        <ArrowRight />
+      </button>
+
     <aside
       className={[
         "top-0 left-0 h-screen",
@@ -62,7 +83,7 @@ export default function SideBar() {
                 isCollapsed ? "xl:hidden" : "",
               ].join(" ")}
             >
-              App
+              <CryptoLogo />
             </p>
             <h2
               className={[
@@ -105,5 +126,6 @@ export default function SideBar() {
         ))}
       </nav>
     </aside>
+    </>
   );
 }

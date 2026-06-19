@@ -2,6 +2,9 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { ThemeButton } from "../ThemeButton/ThemeButton";
+import { useAppSelector } from "@/app/lib/hooks";
+import { CryptoLogo } from "../Icons/CryptoLogo";
+import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
 
 type NavItem = {
   label: string;
@@ -9,10 +12,10 @@ type NavItem = {
 };
 
 const NAV_LINKS: NavItem[] = [
-  { label: "Dash board", href: "/dashboard" },
-  { label: "Blogs", href: "#blog" },
-  { label: "Contact", href: "#contact" },
-  { label: "Projects", href: "#projects" },
+  { label: "Accueil", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
+  /*   { label: "Blog", href: "/blog" },*/
+  { label: "Contact", href: "/#contact" },
 ];
 
 function NavLinks({
@@ -22,6 +25,20 @@ function NavLinks({
   onNavigate?: () => void;
   className?: string;
 }) {
+  const handleClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (!href.startsWith("#")) return;
+    e.preventDefault();
+    const el = document.getElementById(href.slice(1));
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", href);
+    }
+    onNavigate?.();
+  };
+
   return (
     <>
       {NAV_LINKS.map((item) => (
@@ -29,7 +46,7 @@ function NavLinks({
           key={item.href}
           className={className}
           href={item.href}
-          onClick={onNavigate}
+          onClick={(e) => handleClick(e, item.href)}
           data-testid={`nav-link-${item.label.toLowerCase()}`}
         >
           {item.label}
@@ -40,8 +57,10 @@ function NavLinks({
 }
 
 export default function Header() {
-  const [navbar, setNavbar] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
+  const [navbar, setNavbar] = useState<boolean>(false);
+  const [isSticky, setIsSticky] = useState<boolean>(false);
+
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const STICKY_OFFSET = 25;
 
@@ -56,15 +75,14 @@ export default function Header() {
 
   const toggleNavbar = () => setNavbar((v) => !v);
   const closeNavbar = () => setNavbar(false);
-
   return (
     <>
       <nav
         className={[
-          "w-full left-0 right-0 transition-colors duration-300",
+          "w-full left-0 right-0 transition-colors duration-300 ",
           isSticky
-            ? "fixed top-0 z-50 bg-background shadow-md"
-            : "relative z-10 bg-transparent",
+            ? "fixed top-0 z-60 bg-background shadow-md"
+            : "relative z-60 bg-background",
         ].join(" ")}
         data-testid="header-nav"
       >
@@ -80,7 +98,7 @@ export default function Header() {
               href="/"
               onClick={closeNavbar}
             >
-              <h2 className="text-2xl text-cyan-600 font-bold">LOGO</h2>
+              <CryptoLogo />
             </Link>
 
             <div
@@ -90,11 +108,15 @@ export default function Header() {
               <NavLinks className="text-base text-color-foreground hover:text-purple-600" />
 
               <ThemeButton />
-              <Link href={"/login"}>
-                <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
-                  Login
-                </button>
-              </Link>
+              {isAuthenticated ? (
+                <ProfileDropdown />
+              ) : (
+                <Link href="/login">
+                  <button className="hover:cursor-pointer px-5 py-2.5 bg-primary font-semibold rounded-lg transition-all duration-300 transform shadow-xl">
+                    Login
+                  </button>
+                </Link>
+              )}
             </div>
 
             {/* Tablet/Mobile actions (<lg): Theme + Menu + Login */}
@@ -103,12 +125,16 @@ export default function Header() {
               data-testid="mobile-actions"
             >
               <ThemeButton />
-              <Link
-                className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-green-500 text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
-                href={"/login"}
-              >
-                Login
-              </Link>
+              {isAuthenticated ? (
+                <ProfileDropdown />
+              ) : (
+                <Link
+                  className="hidden sm:inline-flex hover:cursor-pointer px-4 py-2 bg-slate-light dark:bg-primary text-white-light dark:text-black font-semibold rounded-lg transition-all duration-300 transform shadow-xl"
+                  href="/login"
+                >
+                  Login
+                </Link>
+              )}
 
               <button
                 className="p-2 rounded-md outline-none focus:border-gray-400 focus:border text-foreground hover:cursor-pointer"
@@ -180,16 +206,16 @@ export default function Header() {
                   className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                 />
 
-                <div className="visible sm:hidden">
+                {!isAuthenticated && (
                   <Link
-                    className="text-base text-foreground"
+                    className="text-base text-foreground hover:outline-1 hover:outline-primary rounded-lg p-2"
                     href="/login"
                     onClick={closeNavbar}
                     data-testid="nav-link-login"
                   >
                     Login
                   </Link>
-                </div>
+                )}
               </div>
             </div>
           </div>

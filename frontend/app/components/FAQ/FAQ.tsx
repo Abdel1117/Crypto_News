@@ -4,8 +4,8 @@ import { faqData } from "./faqData";
 
 export const FAQ = () => {
   return (
-    <div className="container max-w-7xl px-4 md:px-0 mx-auto">
-      <div className="bg-surface rounded-3xl p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="container max-w-7xl  md:px-0 mx-auto">
+      <div className="bg-surface rounded-3xl sm:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col justify-center items-center text-center">
           <h2
             id="block-cta-title"

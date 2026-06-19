@@ -97,7 +97,7 @@ export default function CandleStickGraph({
     const series = chart.addSeries(CandlestickSeries, {});
     seriesRef.current = series;
 
-    const ohlc = rawohlc.map((item) => ({
+    const ohlc = rawohlc?.map((item) => ({
       time: Math.floor(
         item[0] / 1000,
       ) as unknown as import("lightweight-charts").Time,
@@ -143,7 +143,7 @@ export default function CandleStickGraph({
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-card p-4 rounded-t-lg border-b border-border">
+      <div className="flex flex-wrap flex-col md:flex-row items-start md:items-center gap-4 bg-card p-4 rounded-t-lg border-b border-border">
         {/* Bloc monnaie */}
         <div className="flex items-center gap-2 mb-2 md:mb-0">
           <label
@@ -163,13 +163,13 @@ export default function CandleStickGraph({
           </select>
         </div>
         {/* Bloc SymbolDropdown */}
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex gap-2 w-full max-w-[280px] md:w-auto">
           <SymbolDropdown
             value={selectedSymbol}
             options={symbols}
             onChange={onSymbolChange}
             label={undefined}
-            className="w-full md:w-auto"
+            className="w-full"
           />
         </div>
         {/* Bloc RadioTimeMarket */}
@@ -193,13 +193,14 @@ export default function CandleStickGraph({
           )}
         </div>
       </div>
-      <div className="visible md:hidden">
+      <div className="visible md:hidden ">
         <RadioTimeMarket
           value={selectedTimeFrame}
           options={mockTimeFrame}
           onChange={(timeFrame: MarketViewState["selectedTimeFrame"]) =>
             dispatch(setSelectedTimeframe(timeFrame))
           }
+          className="mx-auto my-2"
         />
       </div>
     </div>

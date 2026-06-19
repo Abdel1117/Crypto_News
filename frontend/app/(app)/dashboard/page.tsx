@@ -2,7 +2,11 @@
 
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import CryptoInfoCard from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
-import CandleStickGraph from "@/app/components/CandleStickGraph/CandleStickGraph";
+import dynamic from "next/dynamic";
+const CandleStickGraph = dynamic(
+  () => import("@/app/components/CandleStickGraph/CandleStickGraph"),
+  { ssr: false },
+);
 import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
 import Loading from "./loading";
 import { send } from "@/app/lib/ws/socket";

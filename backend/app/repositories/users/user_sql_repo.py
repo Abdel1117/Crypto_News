@@ -1,18 +1,11 @@
-from typing import Optional, Protocol
+
+from typing import Optional
 
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.repositories.users.user_repository import UserRepositoryProtocol
 from app.models.user import User
-
-
-class UserRepositoryProtocol(Protocol):
-    async def get_by_email(self, email: str) -> Optional[User]:
-        ...
-
-    async def create(self, user: User) -> User:
-        ...
-
 
 class SQLUserRepository(UserRepositoryProtocol):
     def __init__(self, session: AsyncSession) -> None:
@@ -20,8 +13,8 @@ class SQLUserRepository(UserRepositoryProtocol):
 
     async def get_by_email(self, email: str) -> Optional[User]:
         statement = select(User).where(User.email == email)
-        result = await self.session.exec(statement)
-        return result.one_or_none()
+        result = await self.session.execute(statement)
+        return result.scalars().one_or_none()
 
     async def create(self, user: User) -> User:
         self.session.add(user)

@@ -1,0 +1,63 @@
+version: 2.1
+setup: true
+
+# Entry point — merges jobs/* + env/<branch>.yml into a single config,
+# then hands off to CircleCI via the continuation orb.
+# Requires "Dynamic config" enabled in CircleCI project settings > Advanced.
+
+orbs:
+  continuation: circleci/continuation@1.0.0
+
+workflows:
+  setup:
+    jobs:
+      - generate-config
+
+jobs:
+  generate-config:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run:
+          name: Merge CI fragments for branch « $CIRCLE_BRANCH »
+          command: |
+            pip install pyyaml --quiet
+            export CI_PROJECT_DIR="$HOME/project"
+            python3 - \<<'EOF'
+            import yaml, os
+
+            def deep_merge(base, override):
+                for key, val in override.items():
+                    if key in base and isinstance(base[key], dict) and isinstance(val, dict):
+                        deep_merge(base[key], val)
+                    else:
+                        base[key] = val
+                return base
+
+            base = os.environ["CI_PROJECT_DIR"]
+            branch = os.environ.get("CIRCLE_BRANCH", "dev")
+            env_name = "prod" if branch == "prod" else "dev"
+            env_file = f"{base}/.circleci/env/{env_name}.yml"
+
+            fragments = [
+                f"{base}/.circleci/jobs/build.yml",
+                f"{base}/.circleci/jobs/test.yml",
+                f"{base}/.circleci/jobs/deploy.yml",
+                env_file,
+            ]
+
+            merged = {}
+            for path in fragments:
+                with open(path) as fh:
+                    data = yaml.safe_load(fh)
+                    if data:
+                        deep_merge(merged, data)
+
+            with open("/tmp/generated_config.yml", "w") as out:
+                yaml.dump(merged, out, default_flow_style=False, sort_keys=False)
+
+            print(f"Generated config for branch '{branch}' using {env_file}")
+            EOF
+      - continuation/continue:
+          configuration_path: /tmp/generated_config.yml

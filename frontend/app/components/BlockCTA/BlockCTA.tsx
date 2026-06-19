@@ -26,7 +26,7 @@ export default function BlockCTA({
   notReversed = true,
   hidebutton = false,
 }: BlockCTAProps) {
-  const containerClassName = `container max-w-7xl mx-auto flex flex-col ${notReversed ? "lg:flex-row" : "lg:flex-row-reverse"} px-1 sm:px-0`;
+  const containerClassName = `container max-w-7xl mx-auto flex flex-col ${notReversed ? "lg:flex-row" : "lg:flex-row-reverse"} px-1 sm:px-0 `;
   return (
     <div aria-labelledby="block-cta-title">
       <div className={containerClassName}>
@@ -67,7 +67,7 @@ export default function BlockCTA({
             <div className="mt-10 flex flex-wrap justify-center gap-3 md:justify-start">
               <Link
                 href={boutonHref}
-                className="inline-flex items-center justify-center rounded bg-indigo-500 px-6 py-4 text-lg text-white hover:bg-indigo-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+                className="inline-flex items-center justify-center rounded bg-primary px-6 py-4 text-lg text-white  focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 hover:opacity-75 "
               >
                 {boutonText}
               </Link>

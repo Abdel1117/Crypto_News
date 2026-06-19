@@ -24,7 +24,6 @@ services:
     build:
       context: ./backend
     container_name: crypto_back
-
     command: sh -c "uvicorn app.main:app --reload --host 0.0.0.0 --port ${PORT_BACK}"
     ports:
       - "${PORT_BACK}:${PORT_BACK}"
