@@ -22,7 +22,7 @@ jobs:
       - run:
           name: Merge CI fragments for branch « $CIRCLE_BRANCH »
           command: |
-            python3 - <<'EOF'
+            python3 - \<<'EOF'
             import yaml, os
 
             def deep_merge(base, override):
