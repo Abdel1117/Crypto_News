@@ -23,6 +23,7 @@ jobs:
           name: Merge CI fragments for branch « $CIRCLE_BRANCH »
           command: |
             pip install pyyaml --quiet
+            export CI_PROJECT_DIR="$HOME/project"
             python3 - \<<'EOF'
             import yaml, os
 
@@ -34,17 +35,15 @@ jobs:
                         base[key] = val
                 return base
 
+            base = os.environ["CI_PROJECT_DIR"]
             branch = os.environ.get("CIRCLE_BRANCH", "dev")
-            env_file = (
-                ".circleci/env/prod.yml"
-                if branch == "prod"
-                else ".circleci/env/dev.yml"
-            )
+            env_name = "prod" if branch == "prod" else "dev"
+            env_file = f"{base}/.circleci/env/{env_name}.yml"
 
             fragments = [
-                ".circleci/jobs/build.yml",
-                ".circleci/jobs/test.yml",
-                ".circleci/jobs/deploy.yml",
+                f"{base}/.circleci/jobs/build.yml",
+                f"{base}/.circleci/jobs/test.yml",
+                f"{base}/.circleci/jobs/deploy.yml",
                 env_file,
             ]
 
