@@ -1,0 +1,38 @@
+version: 2.1
+
+# Prod pipeline: build → test → deploy, triggered on main
+workflows:
+  prod-pipeline:
+    jobs:
+      - build-frontend:
+          filters:
+            branches:
+              only: main
+      - build-backend:
+          filters:
+            branches:
+              only: main
+      - test-frontend:
+          requires:
+            - build-frontend
+          filters:
+            branches:
+              only: main
+      - test-backend:
+          requires:
+            - build-backend
+          filters:
+            branches:
+              only: main
+      - deploy-frontend:
+          requires:
+            - test-frontend
+          filters:
+            branches:
+              only: main
+      - deploy-backend:
+          requires:
+            - test-backend
+          filters:
+            branches:
+              only: main
