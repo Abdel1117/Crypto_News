@@ -22,6 +22,7 @@ jobs:
       - run:
           name: Merge CI fragments for branch « $CIRCLE_BRANCH »
           command: |
+            pip install pyyaml --quiet
             python3 - \<<'EOF'
             import yaml, os
 
