@@ -11,5 +11,5 @@ jobs:
           command: ssh $HOST_VPS@$IP_VPS 'echo "Connexion au VPS réussi"'
       - run:
           name: Navigate to project directory
-          command: ssh $HOST_VPS@$IP_VPS 'ls -la && cd $DEPLOY_PATH && pwd && git checkout prod && git pull'
+          command: ssh $HOST_VPS@$IP_VPS 'ls -la && cd /opt/app/Crypto_News && pwd && git checkout prod && git pull'
       
