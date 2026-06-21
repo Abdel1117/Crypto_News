@@ -3,6 +3,7 @@ version: "3.9"
 services:
   frontend:
     build:
+      target: dev
       context: ./frontend
     container_name: crypto_front
     ports:

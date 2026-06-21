@@ -1,22 +1,23 @@
-version: "3.9"
-
 services:
   frontend:
     build:
+      target: prod 
       context: ./frontend
       args:
         - ENV=${ENV}
     expose:
       - "${PORT_FRONT}"
-    ports: "${PORT_FRONT}:${PORT_FRONT}"
     depends_on:
       - backend
-    container_name: "crypto_front"
+    container_name: "crypto_front_test_prod"
 
   backend:
     build:
       context: ./backend
-      args:
+    container_name: crypto_back_test_prod
+    command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT_BACK}"
+   
+    environment:
         - ENV=${ENV}
         - PORT_BACK=${PORT_BACK}
         - DB_HOST=${DB_HOST}
@@ -24,8 +25,7 @@ services:
         - DB_PASSWORD=${DB_PASSWORD}
         - DB_NAME=${DB_NAME}
         - DB_PORT=${DB_PORT}
-      ports:
-        - "${PORT_BACK}:${PORT_BACK}"
+   
 
     expose:
       - "${PORT_BACK}"
@@ -34,13 +34,11 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: crypto-db
+    container_name: crypto-db_test_prod
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
