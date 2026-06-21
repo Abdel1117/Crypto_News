@@ -11,8 +11,5 @@ jobs:
           command: ssh $HOST_VPS@$IP_VPS 'echo "Connexion au VPS réussi"'
       - run:
           name: Navigate to project directory
-          command: ssh $HOST_VPS@$IP_VPS 'cd $DEPLOY_PATH && git checkout prod && git pull'
-      - run: 
-          name: Lancement Docker 
-          command : ssh @HOST_VPS@$IP_VPS ' cd $DEPLOY_PATH && docker compose up -f docker-compose-prod.yml build --no-cache'
-
+          command: ssh $HOST_VPS@$IP_VPS 'ls -la && cd $DEPLOY_PATH && pwd && git checkout prod && git pull'
+      
