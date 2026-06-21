@@ -9,12 +9,12 @@ services:
       - "${PORT_FRONT}"
     depends_on:
       - backend
-    container_name: "crypto_front_test_prod"
+    
 
   backend:
     build:
       context: ./backend
-    container_name: crypto_back_test_prod
+    
     command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT_BACK}"
    
     environment:
@@ -34,7 +34,7 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: crypto-db_test_prod
+    
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
