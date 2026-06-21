@@ -4,35 +4,18 @@ version: 2.1
 workflows:
   prod-pipeline:
     jobs:
-      - build-frontend:
-          filters:
-            branches:
-              only: main
-      - build-backend:
-          filters:
-            branches:
-              only: main
       - test-frontend:
-          requires:
-            - build-frontend
           filters:
             branches:
-              only: main
+              only: prod
       - test-backend:
-          requires:
-            - build-backend
           filters:
             branches:
-              only: main
-      - deploy-frontend:
+              only: prod
+      - deploy:
           requires:
             - test-frontend
-          filters:
-            branches:
-              only: main
-      - deploy-backend:
-          requires:
             - test-backend
           filters:
             branches:
-              only: main
+              only: prod

@@ -1,31 +1,18 @@
 version: 2.1
 
 jobs:
-  deploy-frontend:
-    docker:
-      - image: cimg/node:22.14
-    working_directory: ~/project/frontend
+  deploy:
+    machine:
+      image: ubuntu-2204:2022.10.2
     steps:
-      - checkout:
-          path: ~/project
-      - restore_cache:
-          keys:
-            - frontend-deps-v1-{{ checksum "package.json" }}
-            - frontend-deps-v1-
+      - checkout
       - run:
-          name: Install dependencies
-          command: npm ci
+          name: Deploy
+          command: ssh $HOST_VPS@$IP_VPS 'echo "Connexion au VPS réussi"'
       - run:
-          name: Deploy frontend
-          command: echo "Deploy frontend (e.g. vercel --prod)"
+          name: Navigate to project directory
+          command: ssh $HOST_VPS@$IP_VPS 'cd $DEPLOY_PATH && git checkout prod && git pull'
+      - run: 
+          name: Lancement Docker 
+          command : ssh @HOST_VPS@$IP_VPS ' cd $DEPLOY_PATH && docker compose up -f docker-compose-prod.yml build --no-cache'
 
-  deploy-backend:
-    docker:
-      - image: cimg/python:3.12
-    working_directory: ~/project/backend
-    steps:
-      - checkout:
-          path: ~/project
-      - run:
-          name: Deploy backend
-          command: echo "Deploy backend (e.g. push Docker image, update service)"
