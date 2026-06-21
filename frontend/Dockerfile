@@ -1,4 +1,4 @@
-FROM node:22-slim
+FROM node:22-slim as dev 
 
 WORKDIR /app
 
@@ -14,4 +14,21 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm install --legacy-peer-deps && npm run dev"]
+CMD ["sh", "-c", "npm run dev"]
+
+
+from node:22-slim as prod 
+
+WORKDIR /app
+
+copy package*.json ./
+
+RUN npm ci 
+
+COPY . . 
+
+RUN npm run build 
+
+EXPOSE 3000
+
+CMD ["sh", "-c" , "npm run start"]
