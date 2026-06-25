@@ -60,7 +60,6 @@ graph TB
 
         subgraph Data["Data Layer"]
             PG["PostgreSQL 15"]
-            Redis["Redis"]
         end
     end
 
@@ -70,7 +69,6 @@ graph TB
     Nginx -->|"/ws/"| FastAPI
     FastAPI --> PG
     FastAPI --> Redis
-    Celery --> Redis
     Celery --> FastAPI
 ```
 
