@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🪙 Crypto News
+# 🪙 Crypto-Explorer
 
 **Plateforme crypto full-stack – marchés en temps réel, watchlist, portfolio & actualités**
 
@@ -20,7 +20,7 @@
 
 ## 📖 Présentation
 
-**Crypto News** est une application web full-stack permettant de suivre les marchés des cryptomonnaies en temps réel. Elle combine un dashboard interactif avec des graphiques en chandeliers (candlestick), une watchlist personnalisée, une simulation de portefeuille virtuel, et un blog d'actualités crypto.
+**Crypto-Explorer** est une application web full-stack permettant de suivre les marchés des cryptomonnaies en temps réel. Elle combine un dashboard interactif avec des graphiques en chandeliers (candlestick), une watchlist personnalisée, une simulation de portefeuille virtuel, et un blog d'actualités crypto.
 
 Le projet adopte une architecture **microservices légère** : un frontend Next.js et un backend FastAPI découplés, communiquant via REST et WebSocket, le tout servi par un reverse proxy Nginx et orchestré avec Docker Compose.
 

@@ -54,7 +54,7 @@ export default function ProductDescription() {
             Fonctionnalités
           </small>
           <h2 className="mt-3 mb-[20px] text-3xl font-semibold text-foreground sm:text-5xl">
-            Ce que vous pouvez faire avec CoinxEX
+            Ce que vous pouvez faire avec Crypto-Explorer
           </h2>
           <p className="px-2 md:px-12 lg:px-25 text-muted">
             Un outil pensé pour les investisseurs autonomes — du débutant qui

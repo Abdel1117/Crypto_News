@@ -38,9 +38,9 @@ export default function Hero() {
           </h2>
 
           <p className="mt-0 mb-[20px] text-base leading-relaxed text-foreground">
-            CoinxEX est un tableau de bord crypto personnel — conçu pour suivre
-            les marchés, simuler des stratégies et gérer votre watchlist, sans
-            avoir besoin d&apos;un compte broker.
+            Crypto-Explorer est un tableau de bord crypto personnel — conçu pour
+            suivre les marchés, simuler des stratégies et gérer votre watchlist,
+            sans avoir besoin d&apos;un compte broker.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-3">
