@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
 const COUNTRY_FEES = {
   France: 0.015, // 1.5%
@@ -16,7 +16,8 @@ export default function WithdrawalForm() {
   const [amount, setAmount] = useState("");
 
   // Les frais sont calculés uniquement sur le montant retiré, indépendamment du bénéfice utilisateur
-  const feeRate = COUNTRY_FEES[country as keyof typeof COUNTRY_FEES] || COUNTRY_FEES["Autre"];
+  const feeRate =
+    COUNTRY_FEES[country as keyof typeof COUNTRY_FEES] || COUNTRY_FEES["Autre"];
   const numAmount = parseFloat(amount) || 0;
   const fee = numAmount * feeRate;
   const total = numAmount - fee;

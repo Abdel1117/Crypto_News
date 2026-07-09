@@ -2,29 +2,25 @@ import { MarketViewState } from "../features/marketView/marketViewSlice";
 
 /* Function to call for the market base */
 export async function fetchPrices(currency: string) {
-  const res = await fetch(
+    const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BACK_END}/markets?currency=${encodeURIComponent(currency)}`
-  );
-
+    );
   if (!res.ok) {
     throw new Error("Failed to fetch prices");
   }
-
   return res.json();
 }
 
-
-/* Function to call for the symbole base */
-
+/* Function to call for the symbols base */
 export async function fetchSymbols(currency : string ) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/symbols?currency=${encodeURIComponent(currency)}`);
-
   if(!res.ok){
     throw new Error("Failed to fetch Symbols")
   }
   return res.json()
 }
 
+/* Function to call for the  searching symbols*/
 export async function searchSymbols(query: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_BACK_END}/symbols/search?query=${encodeURIComponent(query)}`);
 
