@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { executeTrade } from "@/app/lib/features/simulation/simulationSlice";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
@@ -10,15 +10,20 @@ import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
 
 interface TradeFormProps {
   coins: CryptoMarketData[];
+  selectedId: string | null | number;
+  handleSymbolChange: (value: string) => void;
 }
 
-export default function TradeForm({ coins }: TradeFormProps) {
+export default function TradeForm({
+  coins,
+  selectedId,
+  handleSymbolChange,
+}: TradeFormProps) {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const { balance, holdings } = useAppSelector((state) => state.simulation);
 
-  const [selectedCoinId, setSelectedCoinId] = useState("");
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
 
@@ -27,8 +32,8 @@ export default function TradeForm({ coins }: TradeFormProps) {
   );
   const availableCoins = tradeType === "sell" ? sellableCoins : coins;
 
-  const selectedCoin = coins.find((c) => c.id === selectedCoinId);
-  const holding = holdings.find((h) => h.coinId === selectedCoinId);
+  const selectedCoin = coins.find((c) => c.id === selectedId);
+  const holding = holdings.find((h) => h.coinId === selectedId);
   const numAmount = parseFloat(amount) || 0;
   const total = selectedCoin ? numAmount * selectedCoin.price : 0;
 
@@ -60,11 +65,8 @@ export default function TradeForm({ coins }: TradeFormProps) {
     setTradeType(nextType);
     setAmount("0");
 
-    if (
-      nextType === "sell" &&
-      !holdings.some((h) => h.coinId === selectedCoinId)
-    ) {
-      setSelectedCoinId("");
+    if (nextType === "sell" && !holdings.some((h) => h.coinId === selectedId)) {
+      handleSymbolChange("");
     }
   };
 
@@ -104,12 +106,12 @@ export default function TradeForm({ coins }: TradeFormProps) {
           Crypto
         </label>
         <select
-          value={selectedCoinId}
-          onChange={(e) => setSelectedCoinId(e.target.value)}
+          value={(selectedId as number) || ""}
+          onChange={(e) => handleSymbolChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring focus:border-primary"
         >
           <option value="">Sélectionner une crypto</option>
-          {availableCoins.map((c) => (
+          {availableCoins?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.symbol.toUpperCase()}) —{" "}
               {formatPrice(c.price, 2, symbol)}

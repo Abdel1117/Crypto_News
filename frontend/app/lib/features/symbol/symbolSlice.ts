@@ -13,7 +13,7 @@ export interface SymbolData {
 const adapter = createEntityAdapter<SymbolData>();
 
 export interface SymbolState {
-	symbols: SymbolData[]; // legacy array kept for compatibility
+	symbols: SymbolData[]; 
 	loading: boolean;
 	connected: boolean;
 }

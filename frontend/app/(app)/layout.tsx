@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import SideBar from "../components/SideBar/SideBar";
 import DashBoardHeader from "../components/DashBoardHeader/DashBoardHeader";
+import SymbolsBootstrap from "../components/SymbolsBootstrap/SymbolsBootstrap";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -9,6 +10,7 @@ export const metadata: Metadata = {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SymbolsBootstrap />
       <div className="flex min-h-screen">
         <SideBar />
 

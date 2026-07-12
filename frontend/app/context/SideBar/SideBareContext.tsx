@@ -1,30 +1,52 @@
 "use client";
 
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 interface SidebarCtx {
-  isCollapsed: boolean;
+  isCollapsed: boolean | null | undefined;
   open: () => void;
   close: () => void;
   toggle: () => void;
 }
 
 const SidebarContext = createContext<SidebarCtx | null>(null);
+const STORAGE_KEY = "sideBareToggle";
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  // `isCollapsed` drives 2 behaviors:
-  // - < xl: sidebar slides off-canvas (overlay)
-  // - >= xl: sidebar collapses to an icon-only rail (push content)
-  const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const saved = window.localStorage.getItem(STORAGE_KEY);
+    if (saved === "true") setIsCollapsed(true);
+    else if (saved === "false") setIsCollapsed(false);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(STORAGE_KEY, String(isCollapsed));
+  }, [isCollapsed]);
+
+  const toggle = useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
 
   const value = useMemo(
     () => ({
       isCollapsed,
       open: () => setIsCollapsed(false),
       close: () => setIsCollapsed(true),
-      toggle: () => setIsCollapsed((v) => !v),
+      toggle,
     }),
-    [isCollapsed],
+    [isCollapsed, toggle],
   );
 
   return (

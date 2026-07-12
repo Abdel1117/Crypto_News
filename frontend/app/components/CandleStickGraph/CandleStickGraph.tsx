@@ -10,7 +10,6 @@ import {
 import { CrosshairMode } from "lightweight-charts";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
-import { getPrices } from "@/app/lib/features/prices/pricesThunks";
 import { getCssVar } from "@/app/utils/StyleFunctions/GetCssVar";
 import SymbolDropdown from "@/app/ui/SymbolDropdown/SymbolDropdown";
 import RadioTimeMarket from "@/app/components/RadioTimeMarket/RadiotTimeMarket";
@@ -20,6 +19,7 @@ import {
 } from "@/app/lib/features/marketView/marketViewSlice";
 import { fetchOhlcData } from "@/app/lib/features/marketView/marketViewThunk";
 import CandleStickSkeleton from "@/app/ui/Skeleton/CandleStickSkeleton/CandleStickSkeleton";
+import { SymbolData } from "@/app/lib/features/symbol/symbolSlice";
 
 const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
   "1d",
@@ -29,16 +29,17 @@ const mockTimeFrame: MarketViewState["selectedTimeFrame"][] = [
 ];
 
 interface CandleStickGraphProps {
+  symbols: SymbolData[];
   onSymbolChange: (symbolId: string) => void;
 }
 
 export default function CandleStickGraph({
+  symbols,
   onSymbolChange,
 }: CandleStickGraphProps) {
   const { currency, setCurrency } = useCurrency();
   const dispatch = useAppDispatch();
-  const { coins, loading } = useAppSelector((state) => state.prices);
-  const { symbols } = useAppSelector((state) => state.symbols);
+  const { loading } = useAppSelector((state) => state.prices);
   const {
     ohlcLoading,
     ohlc: rawohlc,
@@ -52,10 +53,18 @@ export default function CandleStickGraph({
   const seriesRef = useRef<ISeriesApi<"Candlestick">>(null);
   const textColor = getCssVar("--color-foreground");
 
-  // Charger les prix à chaque changement de monnaie
+  // Charger les données OHLC du symbole sélectionné
   useEffect(() => {
-    dispatch(getPrices(currency));
-  }, [currency, dispatch]);
+    if (selectedSymbol.length > 0) {
+      dispatch(
+        fetchOhlcData({
+          currency,
+          selectedTimeFrame,
+          cryptoId: selectedSymbol,
+        }),
+      );
+    }
+  }, [currency, selectedTimeFrame, selectedSymbol, dispatch]);
 
   // Créer et mettre à jour le graphique
   useEffect(() => {
@@ -130,16 +139,6 @@ export default function CandleStickGraph({
     };
   }, [ohlcLoading, loading, rawohlc, textColor]);
   /* ===================================================== */
-
-  useEffect(() => {
-    dispatch(
-      fetchOhlcData({
-        currency,
-        selectedTimeFrame,
-        cryptoId: selectedSymbol,
-      }),
-    );
-  }, [currency, selectedTimeFrame, selectedSymbol, dispatch]);
 
   return (
     <div>
