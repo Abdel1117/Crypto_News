@@ -10,6 +10,8 @@ import {
 } from "../../lib/auth/registration";
 import { LoginData } from "../../lib/auth/login";
 import { useAppSelector } from "@/app/lib/hooks";
+import { GoogleLogin } from "@react-oauth/google";
+import { loginWithGoogle } from "@/app/lib/auth/api";
 
 const tabs = ["Connexion", "Inscription"] as const;
 
@@ -265,39 +267,19 @@ export default function Login() {
                     : "S'inscrire"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => setNotice("Connexion Google en cours...")}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-foreground transition hover:border-primary/30 hover:bg-background/90 hover:cursor-pointer"
-              >
-                <span className="inline-flex items-center justify-center gap-2">
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M21.35 11.1H12v2.8h5.45c-.25 1.35-1 2.5-2.1 3.25l3.4 2.65c2-1.85 3.15-4.6 3.15-7.9 0-.7-.05-1.4-.15-2.05z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 22c2.7 0 4.95-.9 6.6-2.45l-3.4-2.65c-.95.65-2.2 1.05-3.2 1.05-2.45 0-4.5-1.65-5.25-3.9H3.1v2.45C4.75 19.95 8.15 22 12 22z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M6.75 13.05c-.2-.65-.3-1.35-.3-2.05s.1-1.4.3-2.05V6.5H3.1C2.35 8.15 2 9.95 2 12s.35 3.85 1.1 5.5l3.65-2.45z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.5c1.45 0 2.75.5 3.8 1.5l2.85-2.85C16.95 2.5 14.7 1.5 12 1.5 8.15 1.5 4.75 3.55 3.1 6.5l3.65 2.45C7.5 7.15 9.55 5.5 12 5.5z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Se connecter avec Google
-                </span>
-              </button>
+              <GoogleLogin
+                shape="circle"
+                onSuccess={(credentialResponse) => {
+                  if (credentialResponse.credential != undefined) {
+                    loginWithGoogle(credentialResponse?.credential);
+                  }
+                }}
+                onError={() => {
+                  setNotice(
+                    "Une erreur lors de l'authentification avec google est survenu",
+                  );
+                }}
+              />
 
               <div className="flex flex-col gap-2 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
                 <p>

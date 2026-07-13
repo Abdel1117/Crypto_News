@@ -4,7 +4,8 @@ from jose import JWTError
 from app.core.jwt_config import JWT_EXPIRATION_HOURS, TOKEN_TYPE_REFRESH
 from app.models.user import User
 from app.repositories.users.user_repository import UserRepositoryProtocol
-from app.schemas.auth import AuthRegistrationRequest
+from app.clients.google_auth_provider import GoogleAuthProvider
+from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoogle
 from app.schemas.token import TokenPair
 from app.auth.token_service import TokenServiceProtocol
 from app.utils.security import PasswordHasher
@@ -13,10 +14,12 @@ from app.utils.security import PasswordHasher
 class AuthService:
     def __init__(
         self,
+        google_auth_provider : GoogleAuthProvider,
         user_repository: UserRepositoryProtocol,
         token_service: TokenServiceProtocol | None = None,
         password_hasher: PasswordHasher | None = None,
     ) -> None:
+        self.google_auth_provider = google_auth_provider
         self.user_repository = user_repository
         self.token_service = token_service
         self.password_hasher = password_hasher or PasswordHasher()
@@ -111,3 +114,14 @@ class AuthService:
             token_type="bearer",
             expires_in=JWT_EXPIRATION_HOURS * 3600,
         )
+
+    async def google_auth(self, credentials : AuthRegistrationRequestGoogle) -> TokenPair: 
+        if self.google_auth_provider is None : 
+            raise RuntimeError("Google Auth Client requis pour la connexion.")
+        
+        result = await self.google_auth_provider.verify_credentials(credentials)
+        print(result)
+        print(credentials)
+        
+        
+        

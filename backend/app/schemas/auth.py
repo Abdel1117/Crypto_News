@@ -11,6 +11,9 @@ class AuthRegistrationRequest(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class AuthRegistrationRequestGoogle(BaseModel) : 
+    credentials : str
+
 class AuthRegistrationResponse(BaseModel):
     id: int
     full_name: str

@@ -6,7 +6,8 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.repositories.users.user_sql_repo import SQLUserRepository
-from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, LoginRequest
+from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, LoginRequest, AuthRegistrationRequestGoogle
+from app.clients.google_auth_provider import  GoogleAuthProvider
 from app.schemas.token import AccessTokenResponse
 from app.services.auth_service import AuthService
 from app.auth.jwt_token_service import JWTTokenService
@@ -22,6 +23,7 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
     return AuthService(
         user_repository=SQLUserRepository(session),
         token_service=JWTTokenService(),
+        google_auth_provider=GoogleAuthProvider()
     )
 
 
@@ -47,6 +49,19 @@ async def register_user(
     auth_service: AuthService = Depends(get_auth_service),
 ) -> AuthRegistrationResponse:
     return await auth_service.register_user(registration_data)
+
+
+@router.post("/google", 
+             response_model=AccessTokenResponse,
+             status_code=status.HTTP_201_CREATED
+             )
+async def register_user_google(
+        credentials : AuthRegistrationRequestGoogle,
+        auth_service : AuthService = Depends(get_auth_service),
+        
+) -> AccessTokenResponse: 
+    return await auth_service.google_auth(credentials)
+
 
 
 @router.post("/login", response_model=AccessTokenResponse)

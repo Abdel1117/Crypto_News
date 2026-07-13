@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from datetime import timedelta
 
+
 class Settings(BaseSettings):
     ENV: str = "development"
     PORT_BACK: int = 4000
@@ -10,9 +11,11 @@ class Settings(BaseSettings):
     DB_NAME: str = ""
     DB_PORT: int = 5432
     API_KEY_COINGECKO: str = ""
-
+    GOOGLE_CLIENT_ID : str = ""
+    
     JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
+    
     JWT_EXPIRATION_HOURS: int = 24
     JWT_REFRESH_EXPIRATION_DAYS: int = 7
 
