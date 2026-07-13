@@ -71,25 +71,28 @@ async def get_market_coin(
     return result
 
 
+_poller_task: asyncio.Task | None = None
+
+
+async def _poll_markets_loop():
+    service = get_market_service()
+    while True:
+        try:
+            data = await service.get_top_markets("eur", "market_cap_desc", 10, 1)
+            await manager.broadcast("markets", data)
+        except Exception:
+            pass
+        await asyncio.sleep(POLL_INTERVAL)
+
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    global _poller_task
     await manager.connect(websocket)
-    service = get_market_service()
-    currency = "eur"
+    if _poller_task is None:
+        _poller_task = asyncio.create_task(_poll_markets_loop())
     try:
         while True:
-            # Fetch and push market data
-            data = await service.get_top_markets(currency, "market_cap_desc", 10, 1)
-            await manager.broadcast("markets", data)
-
-            # Wait for client messages (currency change) or timeout
-            try:
-                msg = await asyncio.wait_for(
-                    websocket.receive_json(), timeout=POLL_INTERVAL
-                )
-                if "currency" in msg:
-                    currency = msg["currency"]
-            except asyncio.TimeoutError:
-                pass
+            await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
