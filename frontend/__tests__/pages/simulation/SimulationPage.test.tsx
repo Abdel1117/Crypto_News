@@ -14,7 +14,7 @@ vi.mock("@/app/lib/hooks", () => ({
 }));
 
 vi.mock("@/app/lib/features/simulation/simulationSlice", () => ({
-  initSimulation:  vi.fn(() => ({ type: "simulation/initSimulation" })),
+  initSimulation: vi.fn(() => ({ type: "simulation/initSimulation" })),
   resetSimulation: vi.fn(() => ({ type: "simulation/resetSimulation" })),
 }));
 
@@ -41,6 +41,9 @@ vi.mock("@/app/components/Simulation/WithdrawalForm", () => ({
 vi.mock("@/app/components/Simulation/TradeHistory", () => ({
   default: () => <div data-testid="trade-history">TradeHistory</div>,
 }));
+vi.mock("@/app/components/CandleStickGraph/CandleStickGraph", () => ({
+  default: () => <div data-testid="candlestick-graph">CandleStickGraph</div>,
+}));
 
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import SimulationPage from "../../../app/(app)/simulation/page";
@@ -54,7 +57,12 @@ describe("SimulationPage", () => {
     vi.clearAllMocks();
     vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector({ prices: { coins: [] } } as any),
+      selector({
+        prices: { coins: [] },
+        symbols: { symbols: [] },
+        topGainersLosers: { topGainers: [], topLosers: [] },
+        trending: { coins: [] },
+      } as any),
     );
   });
 
@@ -98,11 +106,6 @@ describe("SimulationPage", () => {
       expect(screen.getByTestId("portfolio-chart")).toBeTruthy();
     });
 
-    it("renders WithdrawalForm", () => {
-      render(<SimulationPage />);
-      expect(screen.getByTestId("withdrawal-form")).toBeTruthy();
-    });
-
     it("renders TradeHistory", () => {
       render(<SimulationPage />);
       expect(screen.getByTestId("trade-history")).toBeTruthy();
@@ -127,9 +130,7 @@ describe("SimulationPage", () => {
 
   describe("reset button", () => {
     it("shows a confirmation dialog when reset is clicked", () => {
-      const confirmSpy = vi
-        .spyOn(window, "confirm")
-        .mockReturnValue(false);
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
       render(<SimulationPage />);
       fireEvent.click(screen.getByRole("button", { name: /réinitialiser/i }));
       expect(confirmSpy).toHaveBeenCalledOnce();

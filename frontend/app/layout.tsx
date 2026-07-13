@@ -16,10 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  ),
   title: {
-    default: "Crypto News",
-    template: "%s | Crypto News",
+    default: "Crypto-Explorer",
+    template: "%s | Crypto-Explorer",
   },
   description:
     "Suivez l'actualité crypto en temps réel : prix, analyses de marchés, tendances Bitcoin, Ethereum et bien plus.",
@@ -32,12 +34,12 @@ export const metadata: Metadata = {
     "marchés crypto",
     "prix crypto",
   ],
-  authors: [{ name: "Crypto News" }],
+  authors: [{ name: "Crypto-Explorer" }],
   openGraph: {
     type: "website",
     locale: "fr_FR",
-    siteName: "Crypto News",
-    title: "Crypto News",
+    siteName: "Crypto-Explorer",
+    title: "Crypto-Explorer",
     description:
       "Suivez l'actualité crypto en temps réel : prix, analyses de marchés, tendances Bitcoin, Ethereum et bien plus.",
     images: [
@@ -45,13 +47,13 @@ export const metadata: Metadata = {
         url: "/images/01.png",
         width: 1200,
         height: 630,
-        alt: "Crypto News – Actualité et marchés crypto",
+        alt: "Crypto-Explorer – Actualité et marchés crypto",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crypto News",
+    title: "Crypto-Explorer",
     description:
       "Suivez l'actualité crypto en temps réel : prix, analyses de marchés, tendances Bitcoin, Ethereum et bien plus.",
     images: ["/images/01.png"],

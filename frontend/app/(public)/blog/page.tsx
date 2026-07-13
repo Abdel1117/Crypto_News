@@ -6,13 +6,13 @@ export const metadata: Metadata = {
   description:
     "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies : Bitcoin, Ethereum, DeFi, NFT et bien plus.",
   openGraph: {
-    title: "Blog Crypto News – Analyses et actualités crypto",
+    title: "Blog Crypto-Explorer – Analyses et actualités crypto",
     description:
       "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies : Bitcoin, Ethereum, DeFi, NFT et bien plus.",
     url: "/blog",
   },
   twitter: {
-    title: "Blog Crypto News – Analyses et actualités crypto",
+    title: "Blog Crypto-Explorer – Analyses et actualités crypto",
     description:
       "Retrouvez toutes nos analyses, guides et actualités sur les cryptomonnaies.",
   },

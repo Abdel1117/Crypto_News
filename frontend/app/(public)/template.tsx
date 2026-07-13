@@ -1,3 +1,7 @@
-export default function PublicTemplate({ children }: { children: React.ReactNode }) {
+export default function PublicTemplate({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <div className="page-transition">{children}</div>;
 }

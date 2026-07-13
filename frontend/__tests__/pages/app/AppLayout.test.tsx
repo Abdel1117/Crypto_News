@@ -14,6 +14,10 @@ vi.mock("../../../app/components/DashBoardHeader/DashBoardHeader", () => ({
   ),
 }));
 
+vi.mock("../../../app/components/SymbolsBootstrap/SymbolsBootstrap", () => ({
+  default: () => null,
+}));
+
 import AppLayout from "../../../app/(app)/layout";
 
 // ─── Tests ────────────────────────────────────────────────────────────────────

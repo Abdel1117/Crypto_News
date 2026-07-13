@@ -15,7 +15,6 @@ export const fetchOhlcData = createAsyncThunk(
   }) => {
     try {
       const data = await callOhlc(currency, selectedTimeFrame, cryptoId);
-      console.log(data);
       return data;
     } catch (e) {
       return e;

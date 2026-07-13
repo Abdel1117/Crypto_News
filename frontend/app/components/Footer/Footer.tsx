@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="min-w-full bg-surface py-5 relative z-50 ">
       <div className="flex justify-center items-center">
         <p className="text-center">
-          © Copyright {getCurrentYear()} Crypto News Developed by Adjali
+          © Copyright {getCurrentYear()} Crypto-Explorer Developed by Adjali
           Abderahmane.
         </p>
       </div>

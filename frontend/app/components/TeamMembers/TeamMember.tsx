@@ -12,8 +12,8 @@ export default function TeamMember() {
             Construit Indépendamment
           </h2>
           <p className="px-2 md:px-12 lg:px-25 text-muted">
-            CoinxEX est un projet personnel conçu et développé en solo — de
-            l&apos;architecture backend à l&apos;interface utilisateur.
+            Crypto-Explorer est un projet personnel conçu et développé en solo —
+            de l&apos;architecture backend à l&apos;interface utilisateur.
           </p>
         </div>
 
@@ -27,9 +27,9 @@ export default function TeamMember() {
               Full Stack Developer
             </p>
             <p className="mt-4 text-base leading-relaxed text-muted">
-              Conception, développement et déploiement de CoinxEX — du backend
-              Next.js / PostgreSQL à l&apos;interface React / Redux, en passant
-              par l&apos;infrastructure Docker.
+              Conception, développement et déploiement de Crypto-Explorer — du
+              backend Next.js / PostgreSQL à l&apos;interface React / Redux, en
+              passant par l&apos;infrastructure Docker.
             </p>
             <div className="mt-6">
               <span className="inline-block rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">

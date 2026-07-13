@@ -12,15 +12,10 @@ import Loading from "./loading";
 import { send } from "@/app/lib/ws/socket";
 import { useEffect, useState, useMemo } from "react";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { getSymbols } from "@/app/lib/features/symbol/symbolThunks";
 import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
 import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
 import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
-import {
-  addSymbolIfMissing,
-  readLocalSymbols,
-  setSymbols as setSymbolsAction,
-} from "@/app/lib/features/symbol/symbolSlice";
+import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
 import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 
 export default function DashboardPage() {
@@ -55,24 +50,14 @@ export default function DashboardPage() {
   }, [currency]);
 
   useEffect(() => {
-    dispatch(getSymbols(currency));
-  }, [dispatch, currency]);
-
-  useEffect(() => {
     dispatch(initWatchlist());
   }, [dispatch]);
 
   useEffect(() => {
-    // load any locally persisted symbols added via the search UX
-    const persisted = readLocalSymbols();
-    if (persisted && persisted.length > 0) {
-      dispatch(setSymbolsAction(persisted));
-
-      const missingWatchlistIds = watchlistIds.filter((id) => !priceMap[id]);
-      missingWatchlistIds.forEach((id) => {
-        dispatch(getMarketCoin({ currency, cryptoId: id }));
-      });
-    }
+    const missingWatchlistIds = watchlistIds.filter((id) => !priceMap[id]);
+    missingWatchlistIds.forEach((id) => {
+      dispatch(getMarketCoin({ currency, cryptoId: id }));
+    });
   }, [dispatch, currency, watchlistIds, priceMap]);
 
   const topCrypto = Array.isArray(coins)
@@ -180,7 +165,7 @@ export default function DashboardPage() {
               />
             ))}
       </div>
-      <CandleStickGraph onSymbolChange={handleSymbolChange} />
+      <CandleStickGraph symbols={symbols} onSymbolChange={handleSymbolChange} />
       <TopGainersLosers onSymbolChange={handleSymbolChange} />
     </section>
   );

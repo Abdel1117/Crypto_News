@@ -3,28 +3,28 @@ import BlockCTA from "../components/BlockCTA/BlockCTA";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Crypto News – Actualité et marchés crypto en temps réel",
+    absolute: "Crypto-Explorer – Actualité et marchés crypto en temps réel",
   },
   description:
-    "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
+    "Découvrez Crypto-Explorer : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
   openGraph: {
-    title: "Crypto News – Actualité et marchés crypto en temps réel",
+    title: "Crypto-Explorer – Actualité et marchés crypto en temps réel",
     description:
-      "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
+      "Découvrez Crypto-Explorer : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies. Analyses, tendances et actualités en temps réel.",
     url: "/",
     images: [
       {
         url: "/images/01.png",
         width: 1200,
         height: 630,
-        alt: "Crypto News – Accueil",
+        alt: "Crypto-Explorer – Accueil",
       },
     ],
   },
   twitter: {
-    title: "Crypto News – Actualité et marchés crypto en temps réel",
+    title: "Crypto-Explorer – Actualité et marchés crypto en temps réel",
     description:
-      "Découvrez Crypto News : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies.",
+      "Découvrez Crypto-Explorer : suivez les prix du Bitcoin, de l'Ethereum et de toutes les cryptomonnaies.",
   },
 };
 import Hero from "../components/Hero/Hero";
@@ -45,7 +45,7 @@ export default function Home() {
     title: "Des données en temps réel,",
     underTitle: "sans la complexité.",
     firstParma:
-      "CoinxEX agrège les cours des principales cryptomonnaies et les présente dans un tableau de bord lisible — variations, volumes, capitalisation — accessible en quelques secondes.",
+      "Crypto-Explorer agrège les cours des principales cryptomonnaies et les présente dans un tableau de bord lisible — variations, volumes, capitalisation — accessible en quelques secondes.",
     secondParam:
       "Ajoutez les actifs qui vous intéressent à votre watchlist personnelle et suivez leur évolution sans quitter votre espace de travail.",
     boutonText: "Accéder au dashboard",

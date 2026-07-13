@@ -6,9 +6,6 @@ import { render, screen } from "@testing-library/react";
 
 vi.mock("@/app/lib/ws/socket", () => ({ send: vi.fn() }));
 
-vi.mock("@/app/lib/features/symbol/symbolThunks", () => ({
-  getSymbols: vi.fn(() => ({ type: "symbols/getSymbols" })),
-}));
 vi.mock("@/app/lib/features/prices/pricesThunks", () => ({
   getMarketCoin: vi.fn(() => ({ type: "prices/getMarketCoin" })),
 }));
@@ -20,8 +17,6 @@ vi.mock("@/app/lib/features/marketView/marketViewSlice", () => ({
 }));
 vi.mock("@/app/lib/features/symbol/symbolSlice", () => ({
   addSymbolIfMissing: vi.fn(() => ({ type: "symbols/addSymbolIfMissing" })),
-  readLocalSymbols: vi.fn(() => []),
-  setSymbols: vi.fn(() => ({ type: "symbols/setSymbols" })),
 }));
 vi.mock("@/app/lib/features/watchlist/watchlistSlice", () => ({
   initWatchlist: vi.fn(() => ({ type: "watchlist/initWatchlist" })),
@@ -116,13 +111,6 @@ describe("DashboardPage", () => {
       render(<DashboardPage />);
       expect(mockDispatch).toHaveBeenCalledWith({
         type: "watchlist/initWatchlist",
-      });
-    });
-
-    it("dispatches getSymbols with the current currency", () => {
-      render(<DashboardPage />);
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "symbols/getSymbols",
       });
     });
   });

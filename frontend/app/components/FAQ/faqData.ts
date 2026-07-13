@@ -3,9 +3,9 @@ import { FAQItemData } from "./types";
 export const faqData: FAQItemData[] = [
   {
     id: "1",
-    question: "Qu'est-ce que CoinxEX ?",
+    question: "Qu'est-ce que Crypto-Explorer ?",
     answer:
-      "CoinxEX est un tableau de bord crypto personnel, conçu pour suivre les marchés en temps réel, simuler des stratégies d'investissement et gérer une watchlist personnalisée, sans compte broker requis.",
+      "Crypto-Explorer est un tableau de bord crypto personnel, conçu pour suivre les marchés en temps réel, simuler des stratégies d'investissement et gérer une watchlist personnalisée, sans compte broker requis.",
   },
   {
     id: "2",
