@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     SMTP_RECIPIENT: str = ""
 
+    GOOGLE_CLIENT_ID: str = ""
+
     model_config = {"env_file": ".env"}
 
     @property
