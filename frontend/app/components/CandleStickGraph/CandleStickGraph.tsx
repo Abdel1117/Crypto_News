@@ -51,7 +51,6 @@ export default function CandleStickGraph({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick">>(null);
-  const textColor = getCssVar("--color-foreground");
 
   // Charger les données OHLC du symbole sélectionné
   useEffect(() => {
@@ -79,6 +78,7 @@ export default function CandleStickGraph({
     }
 
     const container = chartContainerRef.current;
+    const textColor = getCssVar("--color-foreground");
 
     if (chartRef.current) {
       chartRef.current.remove();
@@ -137,7 +137,7 @@ export default function CandleStickGraph({
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [ohlcLoading, loading, rawohlc, textColor]);
+  }, [ohlcLoading, loading, rawohlc]);
   /* ===================================================== */
 
   return (
