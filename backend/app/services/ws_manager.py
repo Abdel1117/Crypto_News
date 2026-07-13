@@ -23,5 +23,12 @@ class ConnectionManager:
             except Exception:
                 self.disconnect(ws)
 
+    async def send_to(self, ws: WebSocket, channel: str, data):
+        payload = json.dumps({"channel": channel, "data": data})
+        try:
+            await ws.send_text(payload)
+        except Exception:
+            self.disconnect(ws)
+
 
 manager = ConnectionManager()
