@@ -14,18 +14,9 @@ services:
   backend:
     build:
       context: ./backend
-    
+    env_file:
+      - .env
     command: sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT_BACK}"
-   
-    environment:
-        - ENV=${ENV}
-        - PORT_BACK=${PORT_BACK}
-        - DB_HOST=${DB_HOST}
-        - DB_USER=${DB_USER}
-        - DB_PASSWORD=${DB_PASSWORD}
-        - DB_NAME=${DB_NAME}
-        - DB_PORT=${DB_PORT}
-   
 
     expose:
       - "${PORT_BACK}"
