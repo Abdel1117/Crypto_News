@@ -1,6 +1,35 @@
+import time
 import httpx
 from app.core.config import settings
-from typing import Protocol, Optional, List, Dict
+from typing import Optional, List, Dict
+
+_CACHE_TTL = 30  # seconds — matches the markets WS poll interval
+_cache: Dict[str, tuple[float, object]] = {}
+
+
+def _cache_key(name: str, *args) -> str:
+    return f"{name}:{args}"
+
+
+def _cache_get_fresh(key: str):
+    entry = _cache.get(key)
+    if entry and time.monotonic() - entry[0] < _CACHE_TTL:
+        return entry[1]
+    return None
+
+
+def _cache_get_stale(key: str):
+    entry = _cache.get(key)
+    return entry[1] if entry else None
+
+
+def _cache_set(key: str, value) -> None:
+    _cache[key] = (time.monotonic(), value)
+
+
+def clear_cache() -> None:
+    """Reset the shared cache. Used by tests to avoid cross-test pollution."""
+    _cache.clear()
 
 
 class CoinGeckoClient:
@@ -16,6 +45,11 @@ class CoinGeckoClient:
         sparkline: bool = False,
         ids: Optional[str] = None,
     ):
+        key = _cache_key("fetch_markets", currency, order, per_page, page, sparkline, ids)
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
+
         params = {
             "vs_currency": currency,
             "order": order,
@@ -26,33 +60,68 @@ class CoinGeckoClient:
         if ids:
             params["ids"] = ids
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.BASE_URL}/coins/markets",
-                params=params,
-                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
-            )
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.BASE_URL}/coins/markets",
+                    params=params,
+                    headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPStatusError:
+            stale = _cache_get_stale(key)
+            if stale is not None:
+                return stale
+            raise
+
+        _cache_set(key, data)
+        return data
 
     async def fetch_markets_view(self, currency: str = "eur"):
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.BASE_URL}/global",
-                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
-            )
-            response.raise_for_status()
-            return response.json()
+        key = _cache_key("fetch_markets_view", currency)
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.BASE_URL}/global",
+                    headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPStatusError:
+            stale = _cache_get_stale(key)
+            if stale is not None:
+                return stale
+            raise
+
+        _cache_set(key, data)
+        return data
 
     async def fetch_symbols(self, include_platform: bool):
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.BASE_URL}/coins/list?inlcude_platform={include_platform}"
-            )
+        key = _cache_key("fetch_symbols", include_platform)
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
 
-            response.raise_for_status()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.BASE_URL}/coins/list?inlcude_platform={include_platform}"
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPStatusError:
+            stale = _cache_get_stale(key)
+            if stale is not None:
+                return stale
+            raise
 
-            return response.json()
+        _cache_set(key, data)
+        return data
 
     async def fetch_ohlc(
         self,
@@ -60,27 +129,54 @@ class CoinGeckoClient:
         selectedTimeFrame: str,
         cryptoId: str,
     ) -> List[Dict]:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.BASE_URL}/coins/{cryptoId}/ohlc",
-                params={
-                    "vs_currency": currency,
-                    "days": selectedTimeFrame,
-                },
-                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
-            )
+        key = _cache_key("fetch_ohlc", currency, selectedTimeFrame, cryptoId)
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
 
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.BASE_URL}/coins/{cryptoId}/ohlc",
+                    params={
+                        "vs_currency": currency,
+                        "days": selectedTimeFrame,
+                    },
+                    headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPStatusError:
+            stale = _cache_get_stale(key)
+            if stale is not None:
+                return stale
+            raise
+
+        _cache_set(key, data)
+        return data
 
     async def fetch_trending(self) -> List[Dict]:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                f"{self.BASE_URL}/search/trending",
-                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
-            )
-            response.raise_for_status()
-            return response.json()
+        key = _cache_key("fetch_trending")
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.BASE_URL}/search/trending",
+                    headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+                )
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPStatusError:
+            stale = _cache_get_stale(key)
+            if stale is not None:
+                return stale
+            raise
+
+        _cache_set(key, data)
+        return data
 
     async def fetch_search(self, query: str) -> List[Dict]:
         async with httpx.AsyncClient() as client:
