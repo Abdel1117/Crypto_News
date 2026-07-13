@@ -71,25 +71,36 @@ async def get_market_coin(
     return result
 
 
+_poller_task: asyncio.Task | None = None
+_last_markets_data = None
+
+
+async def _poll_markets_loop():
+    global _last_markets_data
+    service = get_market_service()
+    while True:
+        try:
+            _last_markets_data = await service.get_top_markets(
+                "eur", "market_cap_desc", 10, 1
+            )
+            await manager.broadcast("markets", _last_markets_data)
+        except Exception:
+            pass
+        await asyncio.sleep(POLL_INTERVAL)
+
+
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    global _poller_task
     await manager.connect(websocket)
-    service = get_market_service()
-    currency = "eur"
+    if _poller_task is None:
+        _poller_task = asyncio.create_task(_poll_markets_loop())
+    elif _last_markets_data is not None:
+        # Poller already running: give the new client the latest snapshot
+        # right away instead of waiting up to POLL_INTERVAL for the next tick.
+        await manager.send_to(websocket, "markets", _last_markets_data)
     try:
         while True:
-            # Fetch and push market data
-            data = await service.get_top_markets(currency, "market_cap_desc", 10, 1)
-            await manager.broadcast("markets", data)
-
-            # Wait for client messages (currency change) or timeout
-            try:
-                msg = await asyncio.wait_for(
-                    websocket.receive_json(), timeout=POLL_INTERVAL
-                )
-                if "currency" in msg:
-                    currency = msg["currency"]
-            except asyncio.TimeoutError:
-                pass
+            await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
