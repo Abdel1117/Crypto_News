@@ -26,3 +26,14 @@ class SQLUserRepository(UserRepositoryProtocol):
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def update(self, user: User) -> User:
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
+
+    async def delete(self, user: User) -> User:
+        await self.session.delete(user)
+        await self.session.commit()
+        return user
