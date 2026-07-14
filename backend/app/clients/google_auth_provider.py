@@ -8,14 +8,15 @@ from app.interface.protocol.GoogleAuthProvider import GoogleAuthProviderProtocol
 class GoogleAuthProvider(GoogleAuthProviderProtocol):
     def __init__(self, client_id : str| None = None ) -> None:
         self.client_id = client_id or os.getenv("GOOGLE_CLIENT_ID")
-        
+
     def verify_credentials(self, credentials):
-        print(os.getenv("GOOGLE_CLIENT_ID"))
         if not self.client_id:
             raise ValueError("GOOGLE_CLIENT_ID is not configured.")
         
         try:
-            payload = id_token.verify_oauth2_token(credentials, requests.Request(), self.client_id)
+
+            payload = id_token.verify_oauth2_token(credentials.credentials, requests.Request(), self.client_id)
+            print(payload)
         except ValueError as exc :
             raise ValueError("Invalid Google credentials.") from exc
 

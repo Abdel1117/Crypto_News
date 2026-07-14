@@ -61,7 +61,7 @@ async def register_user_google(
         
 ) -> AccessTokenResponse: 
     return await auth_service.google_auth(credentials)
-
+    
 
 
 @router.post("/login", response_model=AccessTokenResponse)

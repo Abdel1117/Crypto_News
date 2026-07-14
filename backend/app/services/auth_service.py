@@ -119,9 +119,28 @@ class AuthService:
         if self.google_auth_provider is None : 
             raise RuntimeError("Google Auth Client requis pour la connexion.")
         
-        result = await self.google_auth_provider.verify_credentials(credentials)
-        print(result)
-        print(credentials)
+        user_info_from_google = self.google_auth_provider.verify_credentials(credentials)
+        
+        print(user_info_from_google)
+        
+        user = await self.user_repository.get_by_email(user_info_from_google.email)
+        
+        if user :
+            new_access_token = self.token_service.create_access_token(str(user.google_id), user.email, user.full_name)
+            new_refresh_token = self.token_service.create_refresh_token(str(user.google_id), user.email, user.full_name)
+            return TokenPair(
+                access_token=new_access_token,
+                refresh_token=new_refresh_token,
+                token_type="bearer",
+                expires_in=JWT_EXPIRATION_HOURS * 3600,
+            )
+        if not user or not user.is_active:
+            self.user_repository.create(user_info_from_google) 
+            
+            
+        
+        
+        
         
         
         
