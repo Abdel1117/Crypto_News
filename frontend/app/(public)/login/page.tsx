@@ -10,8 +10,8 @@ import {
 } from "../../lib/auth/registration";
 import { LoginData } from "../../lib/auth/login";
 import { useAppSelector } from "@/app/lib/hooks";
-import { GoogleLogin } from "@react-oauth/google";
-import { loginWithGoogle } from "@/app/lib/auth/api";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
+import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 
 const tabs = ["Connexion", "Inscription"] as const;
 
@@ -29,6 +29,8 @@ export default function Login() {
   } = useRegistration();
   const { login, loading: loginLoading, result: loginResult } = useLogin();
 
+  const { loginGoogle, loading: googleLoading } = useGoogleLogin();
+
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState<Tab>("Connexion");
@@ -40,7 +42,8 @@ export default function Login() {
   });
   const [notice, setNotice] = useState<string>("");
 
-  const loading = activeTab === "Connexion" ? loginLoading : registerLoading;
+  const loading =
+    activeTab === "Connexion" ? loginLoading || googleLoading : registerLoading;
 
   const onChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +77,18 @@ export default function Login() {
     setNotice(result?.message ?? "");
     if (result.success) {
       router.push("/dashboard");
+    }
+  };
+
+  const handleSubmitWithGoogle = async (
+    credentialResponse: CredentialResponse,
+  ) => {
+    if (credentialResponse.credential != undefined) {
+      const result = await loginGoogle(credentialResponse?.credential);
+      setNotice(result.message);
+      if (result.success) {
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -269,10 +284,8 @@ export default function Login() {
 
               <GoogleLogin
                 shape="circle"
-                onSuccess={(credentialResponse) => {
-                  if (credentialResponse.credential != undefined) {
-                    loginWithGoogle(credentialResponse?.credential);
-                  }
+                onSuccess={(credentialResponse: CredentialResponse) => {
+                  handleSubmitWithGoogle(credentialResponse);
                 }}
                 onError={() => {
                   setNotice(

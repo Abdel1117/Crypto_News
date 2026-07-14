@@ -7,6 +7,7 @@ from app.schemas.auth import AuthRegistrationRequest
 from app.schemas.token import TokenPayload
 from app.models.user import User
 from app.core.jwt_config import TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
+from app.enums.auth_provider import AuthProvider
 
 USER_ID = 1
 EMAIL = "test@example.com"
@@ -18,6 +19,10 @@ FULL_NAME = "Test User"
 def mock_repo():
     return AsyncMock()
 
+
+@pytest.fixture
+def mock_google_provider():
+    return MagicMock()
 
 @pytest.fixture
 def mock_token_service():
@@ -43,12 +48,14 @@ def active_user():
         email=EMAIL,
         hashed_password="hashed_password",
         is_active=True,
+        provider=AuthProvider.local,
     )
 
 
 @pytest.fixture
-def service(mock_repo, mock_token_service, mock_hasher):
+def service(mock_google_provider, mock_repo, mock_token_service, mock_hasher):
     return AuthService(
+        google_auth_provider=mock_google_provider,
         user_repository=mock_repo,
         token_service=mock_token_service,
         password_hasher=mock_hasher,
@@ -60,7 +67,7 @@ class TestRegisterUser:
         mock_repo.get_by_email.return_value = None
         mock_repo.create.return_value = active_user
 
-        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD)
+        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD, provider=AuthProvider.local)
         result = await service.register_user(request)
 
         assert result == active_user
@@ -70,7 +77,7 @@ class TestRegisterUser:
         mock_repo.get_by_email.return_value = None
         mock_repo.create.return_value = active_user
 
-        request = AuthRegistrationRequest(fullname=FULL_NAME, email="USER@EXAMPLE.COM", password=PASSWORD)
+        request = AuthRegistrationRequest(fullname=FULL_NAME, email="USER@EXAMPLE.COM", password=PASSWORD, provider=AuthProvider.local)
         await service.register_user(request)
 
         mock_repo.get_by_email.assert_called_with("user@example.com")
@@ -79,7 +86,7 @@ class TestRegisterUser:
         mock_repo.get_by_email.return_value = None
         mock_repo.create.return_value = active_user
 
-        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD)
+        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD, provider=AuthProvider.local)
         await service.register_user(request)
 
         mock_hasher.hash.assert_called_once_with(PASSWORD)
@@ -87,7 +94,7 @@ class TestRegisterUser:
     async def test_raises_400_if_email_already_taken(self, service, mock_repo, active_user):
         mock_repo.get_by_email.return_value = active_user
 
-        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD)
+        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD, provider=AuthProvider.local)
         with pytest.raises(HTTPException) as exc:
             await service.register_user(request)
 
@@ -145,8 +152,8 @@ class TestLogin:
         assert result.refresh_token == "mocked_refresh_token"
         assert result.token_type == "bearer"
 
-    async def test_raises_runtime_error_without_token_service(self, mock_repo):
-        service = AuthService(user_repository=mock_repo)
+    async def test_raises_runtime_error_without_token_service(self, mock_repo, mock_google_provider):
+        service = AuthService(google_auth_provider=mock_google_provider, user_repository=mock_repo )
         with pytest.raises(RuntimeError):
             await service.login(EMAIL, PASSWORD)
 
@@ -195,7 +202,7 @@ class TestRefreshAccessToken:
 
         assert exc.value.status_code == 401
 
-    async def test_raises_runtime_error_without_token_service(self, mock_repo):
-        service = AuthService(user_repository=mock_repo)
+    async def test_raises_runtime_error_without_token_service(self, mock_repo , mock_google_provider):
+        service = AuthService(google_auth_provider=mock_google_provider ,user_repository=mock_repo)
         with pytest.raises(RuntimeError):
             await service.refresh_access_token("any_token")

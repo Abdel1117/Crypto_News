@@ -5,8 +5,7 @@ import { fetchJson } from "../api/fetchJson";
 const API = process.env.NEXT_PUBLIC_API_BACK_END;
 
 
-export async function loginWithGoogle(credentials : string )  {
-  console.log(credentials)  
+export async function loginWithGoogle(credentials : string ) : Promise<AuthTokens>  {
   return fetchJson<AuthTokens>(`${API}/auth/google` , {
     method : "POST",
     headers : {"Content-Type" : "application/json"},

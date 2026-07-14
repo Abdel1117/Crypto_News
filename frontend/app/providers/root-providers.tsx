@@ -8,7 +8,6 @@ import { CurrencyProvider } from "../context/Curency/CurrencyContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 export function Providers({ children }: { children: React.ReactNode }) {
   const CLIENT_ID: string = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string;
-  console.log(CLIENT_ID);
   return (
     <ReduxProvider>
       <SocketProvider>

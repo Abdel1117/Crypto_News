@@ -1,12 +1,8 @@
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field, constr
+from app.enums.auth_provider import AuthProvider
 
-class AuthProvider(str, Enum):
-    local = "local"
-    googleE =  "google"
-    
 class AuthRegistrationRequest(BaseModel):
     full_name: constr(strip_whitespace=True, min_length=2) = Field(alias="fullname")
     email: EmailStr

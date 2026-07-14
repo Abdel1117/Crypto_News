@@ -20,10 +20,15 @@ vi.mock("@/app/lib/hooks", () => ({
 }));
 
 import Login from "../../../app/(public)/login/page";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 describe("Login page", () => {
   it("renders the login form and tab controls", () => {
-    render(<Login />);
+    render(
+      <GoogleOAuthProvider clientId="test-client-id">
+        <Login />
+      </GoogleOAuthProvider>,
+    );
 
     expect(screen.getByText("Bienvenue de retour")).toBeTruthy();
     expect(
@@ -37,7 +42,11 @@ describe("Login page", () => {
   });
 
   it("switches to inscription tab when the inscription button is clicked", () => {
-    render(<Login />);
+    render(
+      <GoogleOAuthProvider clientId="test-client-id">
+        <Login />
+      </GoogleOAuthProvider>,
+    );
 
     const registerTabButton = screen.getByRole("button", {
       name: /inscrivez-vous/i,

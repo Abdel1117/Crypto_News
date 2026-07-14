@@ -14,13 +14,11 @@ class GoogleAuthProvider(GoogleAuthProviderProtocol):
             raise ValueError("GOOGLE_CLIENT_ID is not configured.")
         
         try:
-
-            payload = id_token.verify_oauth2_token(credentials.credentials, requests.Request(), self.client_id)
-            print(payload)
+            print(credentials.credentials)
+            payload = id_token.verify_oauth2_token(credentials.credentials, requests.Request(), self.client_id, clock_skew_in_seconds=10)
         except ValueError as exc :
             raise ValueError("Invalid Google credentials.") from exc
 
-        
         return GoogleUserInfo(
             email=payload["email"],
             full_name=payload.get("name"),

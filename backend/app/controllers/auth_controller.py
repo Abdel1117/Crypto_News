@@ -16,7 +16,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_COOKIE = "refresh_token"
 REFRESH_MAX_AGE = JWT_REFRESH_EXPIRATION_DAYS * 24 * 3600
-_IS_PROD = os.getenv("ENV") == "PROD"
+_IS_PROD = os.getenv("ENV") == "production"
 
 
 def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
@@ -61,7 +61,7 @@ async def register_user_google(
         
 ) -> AccessTokenResponse: 
     return await auth_service.google_auth(credentials)
-    
+
 
 
 @router.post("/login", response_model=AccessTokenResponse)

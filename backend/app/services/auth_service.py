@@ -6,6 +6,7 @@ from app.models.user import User
 from app.repositories.users.user_repository import UserRepositoryProtocol
 from app.clients.google_auth_provider import GoogleAuthProvider
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoogle
+from app.enums.auth_provider import  AuthProvider
 from app.schemas.token import TokenPair
 from app.auth.token_service import TokenServiceProtocol
 from app.utils.security import PasswordHasher
@@ -24,6 +25,17 @@ class AuthService:
         self.token_service = token_service
         self.password_hasher = password_hasher or PasswordHasher()
 
+    
+    def __create_session(self, user : User) -> TokenPair :
+        access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
+        refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
+        return TokenPair(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer",
+            expires_in=JWT_EXPIRATION_HOURS * 3600,
+        )
+    
     async def register_user(self, registration_data: AuthRegistrationRequest) -> User:
         normalized_email = registration_data.email.lower()
         existing_user = await self.user_repository.get_by_email(normalized_email)
@@ -38,6 +50,7 @@ class AuthService:
             full_name=registration_data.full_name,
             email=normalized_email,
             hashed_password=hashed_password,
+            provider = AuthProvider.local,
             is_active=True,
         )
         return await self.user_repository.create(user)
@@ -67,16 +80,9 @@ class AuthService:
 
         user = await self.authenticate_user(email, password)
 
-        access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
-        refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
-
-        return TokenPair(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="bearer",
-            expires_in=JWT_EXPIRATION_HOURS * 3600,
-        )
-
+        return  self.__create_session(user)
+        
+        
     async def refresh_access_token(self, refresh_token: str) -> TokenPair:
         if self.token_service is None:
             raise RuntimeError("TokenService requis pour le rafraîchissement du token.")
@@ -104,39 +110,39 @@ class AuthService:
                 detail="Utilisateur introuvable ou inactif.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-
-        new_access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
-        new_refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
-
-        return TokenPair(
-            access_token=new_access_token,
-            refresh_token=new_refresh_token,
-            token_type="bearer",
-            expires_in=JWT_EXPIRATION_HOURS * 3600,
-        )
-
+        return  self.__create_session(user)
+      
     async def google_auth(self, credentials : AuthRegistrationRequestGoogle) -> TokenPair: 
         if self.google_auth_provider is None : 
             raise RuntimeError("Google Auth Client requis pour la connexion.")
         
         user_info_from_google = self.google_auth_provider.verify_credentials(credentials)
         
-        print(user_info_from_google)
+        user = await self.user_repository.get_by_google_id(user_info_from_google.google_id)
         
-        user = await self.user_repository.get_by_email(user_info_from_google.email)
+        if user is None : 
+            user = await self.user_repository.get_by_email(user_info_from_google.email)
         
-        if user :
-            new_access_token = self.token_service.create_access_token(str(user.google_id), user.email, user.full_name)
-            new_refresh_token = self.token_service.create_refresh_token(str(user.google_id), user.email, user.full_name)
-            return TokenPair(
-                access_token=new_access_token,
-                refresh_token=new_refresh_token,
-                token_type="bearer",
-                expires_in=JWT_EXPIRATION_HOURS * 3600,
+        if user is None:
+            user = User(
+                google_id=user_info_from_google.google_id,
+                full_name=user_info_from_google.full_name,
+                email=user_info_from_google.email,
+                hashed_password=None,
+                provider=AuthProvider.google,
+                is_active=True,
             )
-        if not user or not user.is_active:
-            self.user_repository.create(user_info_from_google) 
+            user = await self.user_repository.create(user) 
             
+        if user.google_id is None:
+            user.google_id = user_info_from_google.google_id
+            user.provider = AuthProvider.google
+            user = await self.user_repository.update(user)
+            
+        if not user.is_active: 
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Votre compte est désactivé.")
+        
+        return  self.__create_session(user)
             
         
         
