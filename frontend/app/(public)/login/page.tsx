@@ -98,7 +98,7 @@ export default function Login() {
       : registerResult?.fieldErrors;
 
   useEffect(() => {
-    isAuthenticated ? router.push("/profil") : null;
+    if (isAuthenticated) router.push("/profil");
   }, []);
   return (
     <main className="min-h-screen bg-background text-foreground ">

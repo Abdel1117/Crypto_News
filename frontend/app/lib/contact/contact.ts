@@ -13,7 +13,7 @@ export type ContactResult = {
   fieldErrors?: ContactFieldErrors;
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@.]+\.[^\s@]+$/;
 
 export function validateContact(data: ContactData): ContactResult {
   const fieldErrors: ContactFieldErrors = {};

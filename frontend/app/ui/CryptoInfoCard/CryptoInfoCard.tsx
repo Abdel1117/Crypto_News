@@ -61,6 +61,7 @@ export default function CryptoInfoCard({
         selected ? "ring-2 ring-primary" : ""
       }`}
       onClick={onSelect}
+      role="button"
     >
       {/* Header: icon + name + sparkline  */}
       <div className="flex items-center justify-between mb-3">
