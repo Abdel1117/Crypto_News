@@ -6,9 +6,15 @@ jobs:
       - image: sonarsource/sonar-scanner-cli:latest
     working_directory: ~/project
     steps:
-      - checkout
+      - checkout : 
+          method: full
       - attach_workspace:
           at: ~/project
+      - run:
+          name: Verify Git repository
+          command: |
+            git fsck --full
+            git rev-parse --is-shallow-repository
       - run:
           name: Run SonarCloud analysis
           command: |
