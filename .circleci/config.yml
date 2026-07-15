@@ -44,6 +44,7 @@ jobs:
                 f"{base}/.circleci/jobs/build.yml",
                 f"{base}/.circleci/jobs/test.yml",
                 f"{base}/.circleci/jobs/deploy.yml",
+                f"{base}/.circleci/jobs/sonar.yml",
                 env_file,
             ]
 

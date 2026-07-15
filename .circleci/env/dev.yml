@@ -5,3 +5,10 @@ workflows:
     jobs:
       - test-frontend
       - test-backend
+      - sonar-scan:
+          requires:
+            - test-frontend
+            - test-backend
+          filters:
+            branches:
+              only: dev
