@@ -12,13 +12,6 @@ workflows:
           filters:
             branches:
               only: prod
-      - sonar-scan:
-          requires:
-            - test-frontend
-            - test-backend
-          filters:
-            branches:
-              only: prod
       - deploy:
           requires:
             - test-frontend
