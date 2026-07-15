@@ -18,7 +18,7 @@ export default function WithdrawalForm() {
   // Les frais sont calculés uniquement sur le montant retiré, indépendamment du bénéfice utilisateur
   const feeRate =
     COUNTRY_FEES[country as keyof typeof COUNTRY_FEES] || COUNTRY_FEES["Autre"];
-  const numAmount = parseFloat(amount) || 0;
+  const numAmount = Number.parseFloat(amount) || 0;
   const fee = numAmount * feeRate;
   const total = numAmount - fee;
 
@@ -26,8 +26,14 @@ export default function WithdrawalForm() {
     <form className="bg-card rounded-lg p-4 space-y-4 mt-4">
       <h3 className="text-lg font-semibold text-foreground">Retrait</h3>
       <div>
-        <label className="block text-sm text-muted-foreground mb-1">Pays</label>
+        <label
+          htmlFor="countryList"
+          className="block text-sm text-muted-foreground mb-1"
+        >
+          Pays
+        </label>
         <select
+          id="countryList"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring focus:border-primary"
@@ -40,10 +46,14 @@ export default function WithdrawalForm() {
         </select>
       </div>
       <div>
-        <label className="block text-sm text-muted-foreground mb-1">
+        <label
+          htmlFor="amountWithDraw"
+          className="block text-sm text-muted-foreground mb-1"
+        >
           Montant à retirer
         </label>
         <input
+          id="amountWithDraw"
           type="number"
           min="0"
           value={amount}

@@ -1,15 +1,18 @@
 from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, constr
-
+from app.enums.auth_provider import AuthProvider
 
 class AuthRegistrationRequest(BaseModel):
     full_name: constr(strip_whitespace=True, min_length=2) = Field(alias="fullname")
     email: EmailStr
-    password: constr(min_length=8)
-
+    password: constr(min_length=8) | None
+    provider : AuthProvider
     model_config = {"populate_by_name": True}
 
+
+class AuthRegistrationRequestGoogle(BaseModel) : 
+    credentials : str
 
 class AuthRegistrationResponse(BaseModel):
     id: int
@@ -24,3 +27,4 @@ class AuthRegistrationResponse(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+

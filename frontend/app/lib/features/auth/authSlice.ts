@@ -15,7 +15,7 @@ type AuthState = {
 
 function decodeJwtPayload(token: string): { sub: string; email: string; full_name?: string | null } | null {
   try {
-    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const base64 = token.split(".")[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/");
     return JSON.parse(atob(base64));
   } catch {
     return null;

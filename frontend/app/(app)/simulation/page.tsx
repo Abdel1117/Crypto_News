@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import {
@@ -13,7 +13,6 @@ import TradeForm from "@/app/components/Simulation/TradeForm";
 import TradeHistory from "@/app/components/Simulation/TradeHistory";
 import PortfolioChart from "@/app/components/Simulation/PortfolioChart";
 import PerformanceChart from "@/app/components/Simulation/PerformanceChart";
-import WithdrawalForm from "@/app/components/Simulation/WithdrawalForm";
 import CandleStickGraph from "@/app/components/CandleStickGraph/CandleStickGraph";
 import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
 import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";

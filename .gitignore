@@ -50,6 +50,8 @@ node_modules
 
 # testing
 /coverage
+backend/coverage.xml
+backend/htmlcov/
 
 # next.js
 /.next/

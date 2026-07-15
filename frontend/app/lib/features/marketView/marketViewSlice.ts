@@ -36,7 +36,6 @@ const marketViewSlice = createSlice({
 			})
 			.addCase(fetchOhlcData.fulfilled, (state, action) => {
 				state.ohlcLoading = false;
-				console.log(action.payload)
 				state.ohlc = action.payload;
 			})
 			.addCase(fetchOhlcData.rejected, (state, action) => {

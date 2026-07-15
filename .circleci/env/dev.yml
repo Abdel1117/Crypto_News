@@ -1,14 +1,14 @@
 version: 2.1
 
-# Dev pipeline: tests only, triggered on the dev branch
 workflows:
   dev-pipeline:
     jobs:
-      - test-frontend:
-          filters:
-            branches:
-              only: dev
-      - test-backend:
+      - test-frontend
+      - test-backend
+      - sonar-scan:
+          requires:
+            - test-frontend
+            - test-backend
           filters:
             branches:
               only: dev

@@ -34,7 +34,7 @@ export default function TradeForm({
 
   const selectedCoin = coins.find((c) => c.id === selectedId);
   const holding = holdings.find((h) => h.coinId === selectedId);
-  const numAmount = parseFloat(amount) || 0;
+  const numAmount = Number.parseFloat(amount) || 0;
   const total = selectedCoin ? numAmount * selectedCoin.price : 0;
 
   const canTrade =
@@ -102,10 +102,14 @@ export default function TradeForm({
 
       {/* Crypto select */}
       <div>
-        <label className="block text-sm text-muted-foreground mb-1">
+        <label
+          htmlFor="cryptoList"
+          className="block text-sm text-muted-foreground mb-1"
+        >
           Crypto
         </label>
         <select
+          id="cryptoList"
           value={(selectedId as number) || ""}
           onChange={(e) => handleSymbolChange(e.target.value)}
           className="w-full px-3 py-2 rounded-lg border border-border bg-surface text-foreground focus:outline-none focus:ring focus:border-primary"
@@ -114,7 +118,7 @@ export default function TradeForm({
           {availableCoins?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.symbol.toUpperCase()}) —{" "}
-              {formatPrice(c.price, 2, symbol)}
+              {formatPrice(c.price, symbol, 2)}
             </option>
           ))}
         </select>
@@ -122,11 +126,15 @@ export default function TradeForm({
 
       {/* Amount */}
       <div>
-        <label className="block text-sm text-muted-foreground mb-1">
+        <label
+          htmlFor="tradeFormAmount"
+          className="block text-sm text-muted-foreground mb-1"
+        >
           Quantité
         </label>
         <div className=" flex gap-1">
           <input
+            id="tradeFormAmount"
             type="text"
             step="any"
             min="0"
@@ -163,7 +171,7 @@ export default function TradeForm({
         <div className="flex items-center justify-between text-sm bg-surface rounded-lg px-3 py-2">
           <span className="text-muted-foreground">Total</span>
           <span className="font-semibold text-foreground">
-            {formatPrice(total, 2, symbol)}
+            {formatPrice(total, symbol, 2)}
           </span>
         </div>
       )}

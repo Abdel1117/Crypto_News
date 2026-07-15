@@ -11,6 +11,11 @@ class SQLUserRepository(UserRepositoryProtocol):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def get_by_google_id(self, id):
+        statement = select(User).where(User.google_id == id)
+        result = await self.session.execute(statement)
+        return result.scalars().one_or_none()
+    
     async def get_by_email(self, email: str) -> Optional[User]:
         statement = select(User).where(User.email == email)
         result = await self.session.execute(statement)
@@ -20,4 +25,15 @@ class SQLUserRepository(UserRepositoryProtocol):
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
+        return user
+
+    async def update(self, user: User) -> User:
+        self.session.add(user)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
+
+    async def delete(self, user: User) -> User:
+        await self.session.delete(user)
+        await self.session.commit()
         return user

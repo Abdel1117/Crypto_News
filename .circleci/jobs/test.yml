@@ -21,7 +21,11 @@ jobs:
             - node_modules
       - run:
           name: Run unit tests
-          command: npm test -- --run
+          command: npm run coverage
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - frontend/coverage
 
   test-backend:
     docker:
@@ -30,17 +34,30 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+
       - restore_cache:
           keys:
             - backend-deps-v1-{{ checksum "requirements.txt" }}
             - backend-deps-v1-
+
       - run:
           name: Install dependencies
           command: pip install -r requirements.txt
+
       - save_cache:
           key: backend-deps-v1-{{ checksum "requirements.txt" }}
           paths:
             - ~/.cache/pip
+
       - run:
           name: Run unit tests
-          command: pytest tests/unit -v
+          command: |
+            pytest tests/unit \
+              --cov \
+              --cov-report=xml:coverage.xml \
+              -v
+
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - backend/coverage.xml

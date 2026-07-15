@@ -16,7 +16,9 @@ interface PortfolioSummaryProps {
 export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
-  const { balance, initialBalance, holdings, realizedPnl } = useAppSelector((state) => state.simulation);
+  const { balance, initialBalance, holdings, realizedPnl } = useAppSelector(
+    (state) => state.simulation,
+  );
   const loading = useAppSelector((state) => state.prices.loading);
 
   const holdingsValue = holdings.reduce((sum, h) => {
@@ -38,13 +40,25 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <InfoCard value={balance} symbol={symbol} label="Solde disponible" loading={loading} />
-        <InfoCard value={totalValue} symbol={symbol} label="Valeur du portefeuille" loading={loading} />
+        <InfoCard
+          value={balance}
+          symbol={symbol}
+          label="Solde disponible"
+          loading={loading}
+        />
+        <InfoCard
+          value={totalValue}
+          symbol={symbol}
+          label="Valeur du portefeuille"
+          loading={loading}
+        />
         <div className="bg-card rounded-lg p-4">
           <p className="text-sm text-muted-foreground">Profit / Perte</p>
-          <p className={`text-2xl font-bold ${isPositive ? "text-success" : "text-red-500"}`}>
+          <p
+            className={`text-2xl font-bold ${isPositive ? "text-success" : "text-red-500"}`}
+          >
             {isPositive ? "+" : ""}
-            {formatPrice(pnl, 2, symbol)} ({pnlPercent.toFixed(2)}%)
+            {formatPrice(pnl, symbol, 2)} ({pnlPercent.toFixed(2)}%)
           </p>
         </div>
       </div>
@@ -52,19 +66,27 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="bg-card rounded-lg p-4">
           <p className="text-sm text-muted-foreground">PnL non réalisé</p>
-          <p className={`text-xl font-bold ${unrealizedPnl >= 0 ? "text-success" : "text-red-500"}`}>
+          <p
+            className={`text-xl font-bold ${unrealizedPnl >= 0 ? "text-success" : "text-red-500"}`}
+          >
             {unrealizedPnl >= 0 ? "+" : ""}
-            {formatPrice(unrealizedPnl, 2, symbol)}
+            {formatPrice(unrealizedPnl, symbol, 2)}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Positions ouvertes</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Positions ouvertes
+          </p>
         </div>
         <div className="bg-card rounded-lg p-4">
           <p className="text-sm text-muted-foreground">PnL réalisé</p>
-          <p className={`text-xl font-bold ${realizedPnl >= 0 ? "text-success" : "text-red-500"}`}>
+          <p
+            className={`text-xl font-bold ${realizedPnl >= 0 ? "text-success" : "text-red-500"}`}
+          >
             {realizedPnl >= 0 ? "+" : ""}
-            {formatPrice(realizedPnl, 2, symbol)}
+            {formatPrice(realizedPnl, symbol, 2)}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">Positions clôturées</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Positions clôturées
+          </p>
         </div>
       </div>
 
@@ -106,13 +128,13 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-foreground">
-                      {h.amount.toFixed(6)} · {formatPrice(value, 2, symbol)}
+                      {h.amount.toFixed(6)} · {formatPrice(value, symbol, 2)}
                     </p>
                     <p
                       className={`text-xs ${holdingPositive ? "text-success" : "text-red-500"}`}
                     >
                       {holdingPositive ? "+" : ""}
-                      {formatPrice(holdingPnl, 2, symbol)}
+                      {formatPrice(holdingPnl, symbol, 2)}
                     </p>
                   </div>
                 </div>

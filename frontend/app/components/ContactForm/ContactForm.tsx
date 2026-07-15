@@ -332,14 +332,13 @@ export const ContactForm = () => {
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {socialIcons.map(({ label, Icon }) => (
-                <a
+                <button
                   key={label}
-                  href="#"
                   aria-label={label}
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-foreground/10 bg-background/40 hover:bg-primary hover:border-primary transition"
                 >
                   <Icon className="h-5 w-5 text-foreground" />
-                </a>
+                </button>
               ))}
             </div>
           </div>

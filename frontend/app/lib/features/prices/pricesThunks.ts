@@ -5,7 +5,6 @@ export const getPrices = createAsyncThunk(
   "prices/getPrices",
   async (currency : string) => {
     try {
-      console.log(currency)
       const data = await fetchPrices(currency)
       return data
     } catch (e) {

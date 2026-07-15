@@ -9,11 +9,24 @@
  * @returns {string} The formatted string with spaces as thousand separators, or an empty string if input is invalid.
  */
 export function formatNumberToCurrency(value: number | string): string {
-    const number = typeof value === 'string' ? parseFloat(value) : value;
-    if (isNaN(number)) return '';
+    const number = typeof value === 'string' ? Number.parseFloat(value) : value;
+    if (Number.isNaN(number)) return '';
 
-    // Remove decimals and format with spaces as thousand separators
-    return Math.floor(number)
-        .toString()
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    // Remove decimals, then format with spaces as thousand separators by
+    // grouping digits from the right (reverse, group, reverse back) instead
+    // of a lookahead-based regex, which avoids super-linear backtracking.
+    const floored = Math.floor(number);
+    const sign = floored < 0 ? '-' : '';
+    const digits = Math.abs(floored).toString();
+
+    const grouped = digits
+        .split('')
+        .reverse()
+        .join('')
+        .replace(/\d{3}(?=\d)/g, '$& ')
+        .split('')
+        .reverse()
+        .join('');
+
+    return sign + grouped;
 }

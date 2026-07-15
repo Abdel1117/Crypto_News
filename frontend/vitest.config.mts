@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "istanbul",
+      reporter: ['text', 'lcov'],
       include: ['app/**/*.{ts,tsx}'],
       exclude: [
         '**/node_modules/**',

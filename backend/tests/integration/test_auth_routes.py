@@ -39,6 +39,7 @@ REGISTER_PAYLOAD = {
     "fullname": "Test User",
     "email": "test@example.com",
     "password": "password123",
+    "provider": "local",
 }
 
 LOGIN_PAYLOAD = {
