@@ -21,7 +21,11 @@ jobs:
             - node_modules
       - run:
           name: Run unit tests
-          command: npm test -- --run
+          command: npm run coverage
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - frontend/coverage
 
   test-backend:
     docker:
@@ -43,4 +47,8 @@ jobs:
             - ~/.cache/pip
       - run:
           name: Run unit tests
-          command: pytest tests/unit -v
+          command: pytest tests/unit --cov=app --cov-report=xml -v
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - backend/coverage.xml
