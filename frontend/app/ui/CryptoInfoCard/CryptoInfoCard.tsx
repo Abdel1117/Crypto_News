@@ -61,6 +61,7 @@ export default function CryptoInfoCard({
         selected ? "ring-2 ring-primary" : ""
       }`}
       onClick={onSelect}
+      role="button"
     >
       {/* Header: icon + name + sparkline  */}
       <div className="flex items-center justify-between mb-3">
@@ -142,7 +143,7 @@ export default function CryptoInfoCard({
       {/* Price */}
       <p className="text-foreground text-xl font-bold mb-2">
         {typeof coin.price === "number"
-          ? formatPrice(coin.price, 2, symbol)
+          ? formatPrice(coin.price, symbol, 2)
           : "N/A"}
       </p>
 

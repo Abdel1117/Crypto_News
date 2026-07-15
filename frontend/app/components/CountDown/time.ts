@@ -5,7 +5,7 @@ export function toTimestampMs(target: Date | number | string): number {
   if (typeof target === "number") return target;
 
   const ms = new Date(target).getTime();
-  return Number.isFinite(ms) ? ms : NaN;
+  return Number.isFinite(ms) ? ms : Number.NaN;
 }
 
 export function getCountDownParts(

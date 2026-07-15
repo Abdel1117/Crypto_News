@@ -122,7 +122,7 @@ function CoinTable({
                 </div>
               </td>
               <td className="px-2 py-1.5 md:px-4 md:py-3 text-right text-foreground ">
-                {formatPrice(coin.price, 2, currencySymbol)}
+                {formatPrice(coin.price, currencySymbol, 2)}
               </td>
               <td
                 className={`px-2 py-1.5 md:px-4 md:py-3 text-right font-medium ${getPercentColor(coin.price_change_percentage)}`}

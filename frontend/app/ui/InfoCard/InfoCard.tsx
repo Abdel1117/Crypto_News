@@ -21,7 +21,7 @@ export default function InfoCard({
         {loading ? (
           <span className="animate-pulse">Chargement...</span>
         ) : (
-          formatPrice(value, 2, symbol)
+          formatPrice(value, symbol, 2)
         )}
       </p>
     </div>

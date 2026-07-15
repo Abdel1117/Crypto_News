@@ -26,7 +26,11 @@ export default function ProfileDropdown() {
   }, [open]);
 
   const handleLogout = async () => {
-    try { await logoutUser(); } catch { /* cookie déjà expiré ou réseau */ }
+    try {
+      await logoutUser();
+    } catch {
+      /* cookie déjà expiré ou réseau */
+    }
     dispatch(logout());
     setOpen(false);
     router.push("/login");
@@ -34,12 +38,12 @@ export default function ProfileDropdown() {
 
   return (
     <div className="relative" ref={ref}>
-      <div
+      <button
         onClick={() => setOpen((v) => !v)}
         className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl"
       >
         {avatarLetter}
-      </div>
+      </button>
       {open && (
         <div className="absolute right-0 mt-2 w-44 bg-surface rounded-xl shadow-lg overflow-hidden z-50 border border-border">
           <Link

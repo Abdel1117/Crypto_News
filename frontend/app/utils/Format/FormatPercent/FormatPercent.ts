@@ -18,7 +18,7 @@ export function getPercentColor(
   negativeColor: string = 'text-red-500',
   neutralColor: string = 'text-neutral-500'
 ): string {
-  if (isNaN(value) || value === 0) return neutralColor;
+  if (Number.isNaN(value) || value === 0) return neutralColor;
   if (value > 0) return positiveColor;
   return negativeColor;
 }
@@ -39,7 +39,7 @@ export function formatPercentValue(
   value: number,
   decimals: number = 2
 ): string {
-  if (isNaN(value)) return "";
+  if (Number.isNaN(value)) return "";
   if (value > 0) return `+${value.toFixed(decimals)}%`;
   if (value < 0) return `${value.toFixed(decimals)}%`;
   return `0.00%`;

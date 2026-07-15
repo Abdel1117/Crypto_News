@@ -26,7 +26,6 @@ export default function MarketOverView() {
   useEffect(() => {
     const getDataMarkerView = async () => {
       const data = await getMarketView(currency);
-      console.log(data);
       if (!data) return;
 
       setTotalMarketCap(data.total_market_cap);
