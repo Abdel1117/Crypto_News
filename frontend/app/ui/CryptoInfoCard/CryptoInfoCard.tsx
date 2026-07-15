@@ -143,7 +143,7 @@ export default function CryptoInfoCard({
       {/* Price */}
       <p className="text-foreground text-xl font-bold mb-2">
         {typeof coin.price === "number"
-          ? formatPrice(coin.price, 2, symbol)
+          ? formatPrice(coin.price, symbol, 2)
           : "N/A"}
       </p>
 

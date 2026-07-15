@@ -118,7 +118,7 @@ export default function TradeForm({
           {availableCoins?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name} ({c.symbol.toUpperCase()}) —{" "}
-              {formatPrice(c.price, 2, symbol)}
+              {formatPrice(c.price, symbol, 2)}
             </option>
           ))}
         </select>
@@ -171,7 +171,7 @@ export default function TradeForm({
         <div className="flex items-center justify-between text-sm bg-surface rounded-lg px-3 py-2">
           <span className="text-muted-foreground">Total</span>
           <span className="font-semibold text-foreground">
-            {formatPrice(total, 2, symbol)}
+            {formatPrice(total, symbol, 2)}
           </span>
         </div>
       )}
