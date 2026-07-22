@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
 import TopLoader from "./components/TopLoader/TopLoader";
+import PlausibleAnalytics from "./components/PlausibleAnalytics/PlausibleAnalytics";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -92,6 +93,7 @@ export default function RootLayout({
       >
         <Providers>
           <TopLoader />
+          <PlausibleAnalytics />
           {children}
         </Providers>
       </body>

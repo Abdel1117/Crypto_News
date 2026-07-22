@@ -10,10 +10,16 @@ vi.mock("../../app/components/ThemeScript/ThemeScript", () => ({
   ThemeScript: () => <script data-testid="theme-script" />,
 }));
 vi.mock("../../app/providers/root-providers", () => ({
-  Providers: ({ children }: { children: React.ReactNode }) => <div data-testid="providers">{children}</div>,
+  Providers: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="providers">{children}</div>
+  ),
 }));
 vi.mock("../../app/components/TopLoader/TopLoader", () => ({
   default: () => <div data-testid="top-loader" />,
+}));
+
+vi.mock("../../app/components/PlausibleAnalytics/PlausibleAnalytics", () => ({
+  default: () => null,
 }));
 
 import RootLayout from "../../app/layout";
