@@ -185,7 +185,7 @@ export default function CandleStickGraph({
       </div>
       <div className="w-full min-w-0 rounded-lg p-1 md:p-2 overflow-hidden">
         <div className="h-[350px] w-full min-w-0 overflow-hidden">
-          {ohlcLoading || loading || !rawohlc || rawohlc.length === 0 ? (
+          {ohlcLoading || loading || !rawohlc || rawohlc?.length === 0 ? (
             <CandleStickSkeleton />
           ) : (
             <div ref={chartContainerRef} className="w-full h-full" />
