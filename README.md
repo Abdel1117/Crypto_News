@@ -12,7 +12,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Redis](https://img.shields.io/badge/Redis-Celery-DC382D?logo=redis&logoColor=white)](https://redis.io)
+
 
 </div>
 
@@ -55,7 +55,6 @@ graph TB
 
         subgraph Backend["Backend Container"]
             FastAPI["FastAPI\n:4000"]
-            Celery["Celery Worker"]
         end
 
         subgraph Data["Data Layer"]
@@ -69,7 +68,6 @@ graph TB
     Nginx -->|"/ws/"| FastAPI
     FastAPI --> PG
     FastAPI --> Redis
-    Celery --> FastAPI
 ```
 
 **Flux de données :**
@@ -98,7 +96,6 @@ graph TB
 | **FastAPI** | Framework API asynchrone |
 | **SQLModel** + asyncpg | ORM + driver PostgreSQL async |
 | **Alembic** | Migrations de base de données |
-| **Redis** + Celery | Cache et tâches asynchrones |
 | **python-jose** | JWT (access + refresh tokens) |
 | **aiosmtplib** | Envoi d'emails asynchrone |
 | **pytest** + pytest-asyncio | Tests unitaires |
