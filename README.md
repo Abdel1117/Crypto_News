@@ -67,7 +67,6 @@ graph TB
     Nginx -->|"/api/"| FastAPI
     Nginx -->|"/ws/"| FastAPI
     FastAPI --> PG
-    FastAPI --> Redis
 ```
 
 **Flux de données :**
