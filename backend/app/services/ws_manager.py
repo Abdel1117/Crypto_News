@@ -15,6 +15,9 @@ class ConnectionManager:
         if ws in self.active:
             self.active.remove(ws)
 
+    def has_clients(self) -> bool:
+        return len(self.active) > 0
+
     async def broadcast(self, channel: str, data):
         payload = json.dumps({"channel": channel, "data": data})
         for ws in list(self.active):

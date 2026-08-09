@@ -104,3 +104,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        if not manager.has_clients() and _poller_task is not None:
+            _poller_task.cancel()
+            _poller_task = None
