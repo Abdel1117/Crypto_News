@@ -1,88 +1,110 @@
 "use client";
 
 import { useMemo } from "react";
-import { ResponsiveTreeMap, ComputedNode } from "@nivo/treemap";
-import { useAppSelector } from "@/app/lib/hooks";
+import { ResponsiveTreeMap } from "@nivo/treemap";
+import { useMarketHeatmap } from "@/app/hooks/useMarketHeatmap";
+import { useCurrency } from "@/app/context/Curency/CurrencyContext";
+import { CURRENCY_SYMBOLS } from "@/app/utils/constants/currency";
+import { formatPercentValue } from "@/app/utils/Format/FormatPercent/FormatPercent";
+import HeatMapTooltip from "../HeatMapToolTip/HeatMapToolTi";
+import { getHeatmapColor } from "@/app/utils/ColorsPicker/getHeatmapColor";
 
-interface HeatMapDatum {
+export interface HeatMapDatum {
   name: string;
-  value?: number;
+  id?: string;
+  symbol?: string;
+  fullName?: string;
+  marketCap?: number;
+  price?: number;
+  volume24h?: number;
   change24h?: number;
+  currencySymbol?: string;
   children?: HeatMapDatum[];
 }
 
-function getChangeColor(change: number): string {
-  if (change > 5) return "#15803d";
-  if (change > 0) return "#16a34a";
-  if (change === 0) return "#475569";
-  if (change > -5) return "#dc2626";
-  return "#991b1b";
+interface HeatMapProps {
+  onSelectCrypto?: (id: string) => void;
 }
 
-function HeatMapTooltip({ node }: { node: ComputedNode<HeatMapDatum> }) {
-  const change = node.data.change24h ?? 0;
-  const isPositive = change > 0;
-
-  return (
-    <div
-      className="bg-card text-foreground text-sm rounded-md shadow-lg px-3 py-2 border border-primary/20"
-      style={{
-        color: "var(--color-foreground)",
-        background: "var(--color-card)",
-      }}
-    >
-      <div className="font-semibold">{node.data.name}</div>
-      <div className="text-muted">Cap. marché : {node.formattedValue}</div>
-      <div style={{ color: getChangeColor(change) }}>
-        {isPositive ? "+" : ""}
-        {change.toFixed(1)}% (24h)
-      </div>
-    </div>
-  );
-}
-
-export default function HeatMap() {
-  const coins = useAppSelector((state) => state.prices.coins);
+export default function HeatMap({ onSelectCrypto }: HeatMapProps) {
+  const { currency } = useCurrency();
+  const currencySymbol = CURRENCY_SYMBOLS[currency];
+  const {
+    data: coins,
+    loading,
+    error,
+    refresh,
+  } = useMarketHeatmap(currency, 20);
 
   const data = useMemo<HeatMapDatum>(
     () => ({
       name: "Market",
-      children: coins
-        .filter(
-          (coin) => typeof coin.market_cap === "number" && coin.market_cap > 0,
-        )
-        .map((coin) => ({
-          name: coin.symbol?.toUpperCase() ?? coin.id,
-          value: coin.market_cap,
-          change24h: coin.change_24h ?? 0,
-        })),
+      children: coins.map((coin) => ({
+        name: coin.symbol?.toUpperCase() ?? coin.id,
+        id: coin.id,
+        symbol: coin.symbol?.toUpperCase(),
+        fullName: coin.name,
+        marketCap: coin.market_cap,
+        price: coin.price,
+        volume24h: coin.volume_24h,
+        change24h: coin.change_24h ?? 0,
+        currencySymbol,
+      })),
     }),
-    [coins],
+    [coins, currencySymbol],
   );
+
+  if (error) {
+    return (
+      <div className="bg-card rounded-lg h-162.5 flex flex-col items-center justify-center gap-3 text-muted">
+        <p>{error}</p>
+        <button
+          onClick={refresh}
+          className="text-sm px-3 py-1.5 rounded-md border border-primary/30 text-foreground hover:bg-primary/10 transition-colors"
+        >
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-card rounded-lg h-162.5 animate-pulse flex items-center justify-center text-muted"></div>
+    );
+  }
 
   if (!data.children || data.children.length === 0) {
     return (
-      <div className="bg-card rounded-lg min-h-225 flex items-center justify-center text-muted">
-        Chargement des données du marché...
+      <div className="bg-card rounded-lg h-162.5 flex items-center justify-center text-muted">
+        Aucune donnée de marché disponible.
       </div>
     );
   }
 
   return (
-    <div className="bg-card rounded-lg  min-h-[100lvh]">
+    <div className="bg-card rounded-lg h-162.5">
       <ResponsiveTreeMap
         data={data}
         identity="name"
-        value="value"
+        value="marketCap"
         valueFormat=".02s"
         tile="squarify"
         margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-        labelSkipSize={12}
+        labelSkipSize={28}
+        label={(node) => {
+          const symbol = node.data.symbol ?? node.data.name;
+          const change = node.data.change24h ?? 0;
+          return `${symbol}  ${formatPercentValue(change)}`;
+        }}
         labelTextColor="var(--color-foreground)"
         parentLabelTextColor="var(--color-muted)"
-        colors={(node) => getChangeColor(node.data.change24h ?? 0)}
+        colors={(node) => getHeatmapColor(node.data.change24h ?? 0)}
         borderColor={{ from: "color", modifiers: [["darker", 0.3]] }}
         tooltip={HeatMapTooltip}
+        onClick={(node) => {
+          if (node.data.id) onSelectCrypto?.(node.data.id);
+        }}
         theme={{
           text: { fill: "var(--color-foreground)" },
           tooltip: {

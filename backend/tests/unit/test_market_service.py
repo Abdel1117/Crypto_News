@@ -13,6 +13,7 @@ def make_coin(**overrides):
         "current_price": 50000.0,
         "market_cap": 1_000_000_000,
         "price_change_percentage_24h": 3.5,
+        "total_volume": 500_000_000,
         "sparkline_in_7d": {"price": [1.0, 2.0, 3.0]},
     }
     base.update(overrides)
@@ -42,6 +43,7 @@ class TestGetTopMarkets:
         assert coin["price"] == 50000.0
         assert coin["market_cap"] == 1_000_000_000
         assert coin["change_24h"] == 3.5
+        assert coin["volume_24h"] == 500_000_000
 
     async def test_uppercases_symbol(self, service, mock_client):
         mock_client.fetch_markets.return_value = [make_coin(symbol="eth")]

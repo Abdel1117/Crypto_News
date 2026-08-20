@@ -4,12 +4,7 @@ import { fetchPrices, fetchMarketCoin } from "../../api/crypto"
 export const getPrices = createAsyncThunk(
   "prices/getPrices",
   async (currency : string) => {
-    try {
-      const data = await fetchPrices(currency)
-      return data
-    } catch (e) {
-      return e
-    }
+    return await fetchPrices(currency)
   }
 )
 

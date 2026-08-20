@@ -16,6 +16,7 @@ export interface CryptoMarketData {
   price: number;
   market_cap: number;
   change_24h: number;
+  volume_24h?: number;
 }
 
 export interface CryptoInfoCardData {
@@ -26,6 +27,7 @@ export interface CryptoInfoCardData {
   price?: number;
   market_cap?: number;
   change_24h?: number;
+  volume_24h?: number;
 }
 
 interface CryptoInfoCardProps {

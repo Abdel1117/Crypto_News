@@ -168,7 +168,7 @@ export default function DashboardPage() {
       </div>
       <CandleStickGraph symbols={symbols} onSymbolChange={handleSymbolChange} />
       <TopGainersLosers onSymbolChange={handleSymbolChange} />
-      <HeatMap />
+      <HeatMap onSelectCrypto={handleSymbolChange} />
     </section>
   );
 }
