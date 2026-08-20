@@ -17,6 +17,7 @@ import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
 import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
 import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
 import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
+import HeatMap from "@/app/components/HeatMap/HeatMap";
 
 export default function DashboardPage() {
   const { currency } = useCurrency();
@@ -167,6 +168,7 @@ export default function DashboardPage() {
       </div>
       <CandleStickGraph symbols={symbols} onSymbolChange={handleSymbolChange} />
       <TopGainersLosers onSymbolChange={handleSymbolChange} />
+      <HeatMap />
     </section>
   );
 }
