@@ -61,6 +61,7 @@ export default function HeatMap({ onSelectCrypto }: HeatMapProps) {
         <button
           onClick={refresh}
           className="text-sm px-3 py-1.5 rounded-md border border-primary/30 text-foreground hover:bg-primary/10 transition-colors"
+          type="button"
         >
           Réessayer
         </button>

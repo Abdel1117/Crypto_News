@@ -1,27 +1,34 @@
 "use client";
 
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
-import CryptoInfoCard from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
 import dynamic from "next/dynamic";
+import { send } from "@/app/lib/ws/socket";
+
+import { useEffect, useState, useMemo } from "react";
+
+import { useCurrency } from "@/app/context/Curency/CurrencyContext";
+
+import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
+import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
+import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
+import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
+
+import CryptoInfoCard, {
+  CryptoInfoCardData,
+} from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
+
+import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
+import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
+import Loading from "./loading";
+import HeatMap from "@/app/components/HeatMap/HeatMap";
 const CandleStickGraph = dynamic(
   () => import("@/app/components/CandleStickGraph/CandleStickGraph"),
   { ssr: false },
 );
-import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
-import Loading from "./loading";
-import { send } from "@/app/lib/ws/socket";
-import { useEffect, useState, useMemo } from "react";
-import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
-import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
-import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
-import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
-import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
-import HeatMap from "@/app/components/HeatMap/HeatMap";
 
 export default function DashboardPage() {
-  const { currency } = useCurrency();
   const dispatch = useAppDispatch();
+  const { currency } = useCurrency();
   const { coins, loading } = useAppSelector((state) => state.prices);
   const { symbols } = useAppSelector((state) => state.symbols);
   const { topGainers, topLosers } = useAppSelector(
@@ -65,33 +72,9 @@ export default function DashboardPage() {
     ? coins.slice(0, preferedNumberOfCrypto)
     : [];
 
-  const watchlistCoins = watchlistIds.reduce<
-    Array<{
-      id: string;
-      symbol: string;
-      name: string;
-      image?: string;
-      price?: number;
-      market_cap?: number;
-      change_24h?: number;
-    }>
-  >((acc, id) => {
-    const coin = priceMap[id] ?? symbolMap[id];
-    if (coin) {
-      acc.push(
-        coin as {
-          id: string;
-          symbol: string;
-          name: string;
-          image?: string;
-          price?: number;
-          market_cap?: number;
-          change_24h?: number;
-        },
-      );
-    }
-    return acc;
-  }, []);
+  const watchlistCoins: CryptoInfoCardData[] = watchlistIds
+    .map((id) => priceMap[id] ?? symbolMap[id])
+    .filter((coin) => coin !== undefined);
 
   const handleSymbolChange = (symbolId: string) => {
     setSelectedId(symbolId);
@@ -134,13 +117,13 @@ export default function DashboardPage() {
   return (
     <section className="min-w-0 space-y-6">
       <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
-      {watchlistCoins.length > 0 && (
+      {watchlistCoins?.length > 0 && (
         <div>
           <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
             <span className="text-yellow-400">⭐</span> Your Watchlist
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
-            {watchlistCoins.map((coin) => (
+            {watchlistCoins?.map((coin) => (
               <CryptoInfoCard
                 key={coin.id}
                 coin={coin}
@@ -167,8 +150,8 @@ export default function DashboardPage() {
             ))}
       </div>
       <CandleStickGraph symbols={symbols} onSymbolChange={handleSymbolChange} />
-      <TopGainersLosers onSymbolChange={handleSymbolChange} />
       <HeatMap onSelectCrypto={handleSymbolChange} />
+      <TopGainersLosers onSymbolChange={handleSymbolChange} />
     </section>
   );
 }

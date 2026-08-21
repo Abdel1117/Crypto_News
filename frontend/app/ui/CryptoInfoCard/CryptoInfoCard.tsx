@@ -1,4 +1,4 @@
-import { Currency, useCurrency } from "@/app/context/Curency/CurrencyContext";
+import {  useCurrency } from "@/app/context/Curency/CurrencyContext";
 import Image from "next/image";
 import React from "react";
 import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
