@@ -4,6 +4,7 @@ import symbolsReducer from "./features/symbol/symbolSlice"
 import marketViewReducer from "./features/marketView/marketViewSlice"
 import topGainersLosersReducer from "./features/topGainersLosers/topGainersLosersSlice"
 import trendingReducer from "./features/trending/trendingSlice"
+import marketHeatmapReducer from "./features/marketHeatmap/marketHeatmapSlice"
 import watchlistReducer from "./features/watchlist/watchlistSlice"
 import simulationReducer from "./features/simulation/simulationSlice"
 import authReducer from "./features/auth/authSlice"
@@ -16,6 +17,7 @@ export const store = configureStore({
     marketView : marketViewReducer,
     topGainersLosers: topGainersLosersReducer,
     trending: trendingReducer,
+    marketHeatmap: marketHeatmapReducer,
     watchlist: watchlistReducer,
     simulation: simulationReducer,
   },

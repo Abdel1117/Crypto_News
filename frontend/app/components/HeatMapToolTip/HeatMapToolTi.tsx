@@ -1,5 +1,5 @@
 import { ComputedNode } from "@nivo/treemap";
-import { HeatMapDatum } from "../HeatMap/HeatMap";
+import { HeatMapDatum } from "../HeatMap/HeatMapTreemap";
 import { formatCurrencyCompact } from "@/app/utils/Format/CurrencyFormat/CurrencyFormat";
 import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
 import { formatPercentValue } from "@/app/utils/Format/FormatPercent/FormatPercent";

@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ArrowRight,
   DashBoardIcon,
+  HeatMapIcon,
 } from "@/app/components/Icons";
 import { useSidebar } from "@/app/context/SideBar/SideBareContext";
 import { useAppSelector } from "@/app/lib/hooks";
@@ -24,6 +25,7 @@ export default function SideBar() {
     { label: "Accueil", href: "/", Icon: HomeIcon },
     { label: "Dashboard", href: "/dashboard", Icon: DashBoardIcon },
     { label: "Simulation", href: "/simulation", Icon: SimulationIcon },
+    { label: "Heatmap", href: "/heatmap", Icon: HeatMapIcon },
     isAuthenticated
       ? { label: "Utilisateur", href: "/profil", Icon: UserIcon }
       : { label: "Authentification", href: "/login", Icon: AuthIcon },

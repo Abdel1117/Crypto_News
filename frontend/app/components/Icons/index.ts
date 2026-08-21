@@ -21,6 +21,7 @@ export {ArrowLeft} from "./ArrowLeft"
 export {ArrowRight} from "./ArrowRight"
 export { SimulationIcon } from "./SimulationIcon"
 export {DashBoardIcon} from "./DashBoardIcon"
+export {HeatMapIcon} from "./HeatMapIcon"
 
 /* Header DahsBoard Icon */
 export {MessageIcon} from "./MessageIcon"
