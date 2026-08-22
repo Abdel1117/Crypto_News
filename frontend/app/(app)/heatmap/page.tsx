@@ -22,7 +22,7 @@ export default function HeatmapPage() {
 
   return (
     <section className="min-w-0 space-y-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center flex-wrap justify-between gap-4 p-1">
         <div>
           <h1 className="text-3xl font-semibold">Heatmap du marché</h1>
           <p className="text-muted text-sm">
