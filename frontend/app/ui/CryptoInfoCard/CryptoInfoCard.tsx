@@ -168,7 +168,7 @@ export default function CryptoInfoCard({
           ({coin.symbol}/{currency_quote})
         </span>
         {isInWatchlist && (
-          <span className=" block md:hidden  text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+          <span className=" block md:hidden text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
             Dans vos favoris
           </span>
         )}
