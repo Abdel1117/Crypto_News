@@ -19,7 +19,6 @@ vi.mock("@/app/lib/hooks", () => ({
 
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
-import { logout } from "@/app/lib/features/auth/authSlice";
 import ProfilPage from "../../../app/(app)/profil/page";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
@@ -46,6 +45,7 @@ describe("ProfilPage", () => {
       forward: vi.fn(),
       refresh: vi.fn(),
       prefetch: vi.fn(),
+      bfcacheId: "test",
     } as ReturnType<typeof useRouter>);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
       selector({ auth: { user: mockUser } } as any),
@@ -111,9 +111,7 @@ describe("ProfilPage", () => {
 
     it("renders a single logout button", () => {
       render(<ProfilPage />);
-      expect(
-        screen.getByRole("button", { name: /déconnecter/i }),
-      ).toBeTruthy();
+      expect(screen.getByRole("button", { name: /déconnecter/i })).toBeTruthy();
     });
 
     it("dispatches logout action when logout button is clicked", () => {
