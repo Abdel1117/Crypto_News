@@ -81,7 +81,7 @@ class TestGetMarketsRoute:
     async def test_uses_default_params(self, client, mock_market_service):
         await client.get("/markets")
         mock_market_service.get_top_markets.assert_called_once_with(
-            "eur", "market_cap_desc", 10, 1
+            "eur", "market_cap_desc", 20, 1
         )
 
 

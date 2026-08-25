@@ -1,9 +1,9 @@
 import { MarketViewState } from "../features/marketView/marketViewSlice";
 
 /* Function to call for the market base */
-export async function fetchPrices(currency: string) {
+export async function fetchPrices(currency: string, perPage: number = 20) {
     const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_BACK_END}/markets?currency=${encodeURIComponent(currency)}`
+    `${process.env.NEXT_PUBLIC_API_BACK_END}/markets?currency=${encodeURIComponent(currency)}&per_page=${perPage}`
     );
   if (!res.ok) {
     throw new Error("Failed to fetch prices");

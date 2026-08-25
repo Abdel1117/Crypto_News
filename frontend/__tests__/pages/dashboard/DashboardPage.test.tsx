@@ -116,12 +116,13 @@ describe("DashboardPage", () => {
   });
 
   describe("loading state", () => {
-    it("shows 6 loading skeletons when prices.loading is true", () => {
+    it("shows 6 coin-card skeletons plus the heatmap skeleton when prices.loading is true", () => {
       vi.mocked(useAppSelector).mockImplementation((selector) =>
         selector({ ...defaultState, prices: { coins: [], loading: true } } as any),
       );
       const { container } = render(<DashboardPage />);
-      expect(container.querySelectorAll(".animate-pulse").length).toBe(6);
+      // 6 CryptoInfoCard skeletons + 1 HeatMap skeleton (real component, not mocked).
+      expect(container.querySelectorAll(".animate-pulse").length).toBe(7);
     });
 
     it("shows no loading skeletons when prices.loading is false", () => {

@@ -12,6 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "@nivo/treemap": "^0.99.0",
     "@plausible-analytics/tracker": "^0.4.5",
     "@react-oauth/google": "^0.13.5",
     "@reduxjs/toolkit": "^2.11.2",

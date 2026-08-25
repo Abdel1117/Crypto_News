@@ -19,7 +19,7 @@ def get_market_service():
 async def get_markets(
     currency: str = "eur",
     order: str = "market_cap_desc",
-    per_page: int = 10,
+    per_page: int = 20,
     page: int = 1,
     service: MarketService = Depends(get_market_service),
 ):
@@ -81,7 +81,7 @@ async def _poll_markets_loop():
     while True:
         try:
             _last_markets_data = await service.get_top_markets(
-                "eur", "market_cap_desc", 10, 1
+                "eur", "market_cap_desc", 20, 1
             )
             await manager.broadcast("markets", _last_markets_data)
         except Exception:
@@ -104,3 +104,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        if not manager.has_clients() and _poller_task is not None:
+            _poller_task.cancel()
+            _poller_task = None

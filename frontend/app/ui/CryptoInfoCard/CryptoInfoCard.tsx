@@ -1,4 +1,4 @@
-import { Currency, useCurrency } from "@/app/context/Curency/CurrencyContext";
+import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import Image from "next/image";
 import React from "react";
 import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
@@ -16,6 +16,7 @@ export interface CryptoMarketData {
   price: number;
   market_cap: number;
   change_24h: number;
+  volume_24h?: number;
 }
 
 export interface CryptoInfoCardData {
@@ -26,6 +27,7 @@ export interface CryptoInfoCardData {
   price?: number;
   market_cap?: number;
   change_24h?: number;
+  volume_24h?: number;
 }
 
 interface CryptoInfoCardProps {
@@ -166,7 +168,7 @@ export default function CryptoInfoCard({
           ({coin.symbol}/{currency_quote})
         </span>
         {isInWatchlist && (
-          <span className=" block md:hidden  text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
+          <span className=" block md:hidden text-[10px] font-medium bg-primary/15 text-primary px-1.5 py-0.5 rounded-full">
             Dans vos favoris
           </span>
         )}

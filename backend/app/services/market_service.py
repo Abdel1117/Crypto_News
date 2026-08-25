@@ -19,6 +19,7 @@ class MarketService:
                 "price": coin["current_price"],
                 "market_cap": coin["market_cap"],
                 "change_24h": coin["price_change_percentage_24h"],
+                "volume_24h": coin["total_volume"],
             }
             for coin in data
         ]
@@ -38,6 +39,7 @@ class MarketService:
             "price": coin["current_price"],
             "market_cap": coin["market_cap"],
             "change_24h": coin["price_change_percentage_24h"],
+            "volume_24h": coin["total_volume"],
         }
 
     async def get_market_view(self, currency: str):

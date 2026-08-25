@@ -33,6 +33,17 @@ describe("SideBar", () => {
     expect(screen.queryByText("Utilisateur")).toBeNull();
   });
 
+  it("shows the heatmap link", () => {
+    vi.mocked(useSidebar).mockReturnValue({ isCollapsed: false, open: vi.fn(), close: vi.fn(), toggle: vi.fn() });
+    vi.mocked(useAppSelector).mockImplementation((selector: any) =>
+      selector({ auth: { isAuthenticated: false } }),
+    );
+
+    render(<SideBar />);
+
+    expect(screen.getByText("Heatmap").closest("a")?.getAttribute("href")).toBe("/heatmap");
+  });
+
   it("shows the profile link when the user is authenticated", () => {
     vi.mocked(useSidebar).mockReturnValue({ isCollapsed: false, open: vi.fn(), close: vi.fn(), toggle: vi.fn() });
     vi.mocked(useAppSelector).mockImplementation((selector: any) =>
