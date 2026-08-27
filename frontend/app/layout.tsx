@@ -4,7 +4,8 @@ import "./globals.css";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
 import TopLoader from "./components/TopLoader/TopLoader";
-import PlausibleAnalytics from "./components/PlausibleAnalytics/PlausibleAnalytics";
+import { ConsentProvider } from "./consent/useConsent";
+import CookieBanner from "./consent/components/CookieBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,11 +92,13 @@ export default function RootLayout({
           "antialiased bg-background text-foreground",
         ].join(" ")}
       >
-        <Providers>
-          <TopLoader />
-          <PlausibleAnalytics />
-          {children}
-        </Providers>
+        <ConsentProvider>
+          <Providers>
+            <TopLoader />
+            {children}
+          </Providers>
+          <CookieBanner />
+        </ConsentProvider>
       </body>
     </html>
   );
