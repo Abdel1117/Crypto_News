@@ -7,7 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { syncAnalyticsConsent } from "./analytics";
+import { syncAnalyticsConsent } from "@/app/lib/analytics/analytics";
 
 export type ConsentCategoryId = "necessary" | "analytics" | "marketing";
 

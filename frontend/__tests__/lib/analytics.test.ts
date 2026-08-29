@@ -13,7 +13,7 @@ describe("syncAnalyticsConsent", () => {
   });
 
   it("does not load the tracker when analytics is not granted", async () => {
-    const { syncAnalyticsConsent } = await import("../../app/consent/analytics");
+    const { syncAnalyticsConsent } = await import("../../app/lib/analytics/analytics");
     process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN = "example.com";
 
     syncAnalyticsConsent({ necessary: true, analytics: false, marketing: false });
@@ -22,7 +22,7 @@ describe("syncAnalyticsConsent", () => {
   });
 
   it("does not load the tracker when no domain is configured", async () => {
-    const { syncAnalyticsConsent } = await import("../../app/consent/analytics");
+    const { syncAnalyticsConsent } = await import("../../app/lib/analytics/analytics");
 
     syncAnalyticsConsent({ necessary: true, analytics: true, marketing: false });
 
@@ -30,7 +30,7 @@ describe("syncAnalyticsConsent", () => {
   });
 
   it("loads the tracker once analytics is granted and a domain is configured", async () => {
-    const { syncAnalyticsConsent } = await import("../../app/consent/analytics");
+    const { syncAnalyticsConsent } = await import("../../app/lib/analytics/analytics");
     process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN = "example.com";
 
     syncAnalyticsConsent({ necessary: true, analytics: true, marketing: false });
@@ -39,7 +39,7 @@ describe("syncAnalyticsConsent", () => {
   });
 
   it("only loads the tracker once even if called again", async () => {
-    const { syncAnalyticsConsent } = await import("../../app/consent/analytics");
+    const { syncAnalyticsConsent } = await import("../../app/lib/analytics/analytics");
     process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN = "example.com";
 
     syncAnalyticsConsent({ necessary: true, analytics: true, marketing: false });

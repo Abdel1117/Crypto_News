@@ -1,6 +1,6 @@
 "use client";
 
-import { CookieCategoryConfig } from "../useConsent";
+import { CookieCategoryConfig } from "@/app/context/Consent/ConsentContext";
 
 interface CategoryToggleRowProps {
   category: CookieCategoryConfig;
@@ -18,12 +18,16 @@ export default function CategoryToggleRow({
   return (
     <div className="rounded-md border border-foreground/10 p-3">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-medium text-foreground">{category.title}</span>
+        <span className="text-sm font-medium text-foreground">
+          {category.title}
+        </span>
         <button
           type="button"
           role="switch"
           aria-checked={checked}
-          aria-label={locked ? `${category.title} (toujours actif)` : category.title}
+          aria-label={
+            locked ? `${category.title} (toujours actif)` : category.title
+          }
           disabled={locked}
           onClick={() => onChange?.(!checked)}
           className={[
@@ -35,14 +39,16 @@ export default function CategoryToggleRow({
           <span
             className={[
               "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
-              checked ? "translate-x-5" : "translate-x-0.5",
+              checked ? "translate-x-0" : "-translate-x-5",
             ].join(" ")}
           />
         </button>
       </div>
       <p className="mt-1 text-xs text-muted">{category.description}</p>
       {locked && (
-        <p className="mt-1 text-[11px] font-medium text-muted">Toujours actif</p>
+        <p className="mt-1 text-[11px] font-medium text-muted">
+          Toujours actif
+        </p>
       )}
     </div>
   );

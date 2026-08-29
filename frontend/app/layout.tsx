@@ -4,8 +4,8 @@ import "./globals.css";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
 import TopLoader from "./components/TopLoader/TopLoader";
-import { ConsentProvider } from "./consent/useConsent";
-import CookieBanner from "./consent/components/CookieBanner";
+import { ConsentProvider } from "./context/Consent/ConsentContext";
+import CookieBanner from "./components/CookieBanner/CookieBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

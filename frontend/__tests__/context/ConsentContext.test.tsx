@@ -3,11 +3,11 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 const syncAnalyticsConsentMock = vi.fn();
-vi.mock("../../app/consent/analytics", () => ({
+vi.mock("../../app/lib/analytics/analytics", () => ({
   syncAnalyticsConsent: (...args: unknown[]) => syncAnalyticsConsentMock(...args),
 }));
 
-import { ConsentProvider, useConsent } from "../../app/consent/useConsent";
+import { ConsentProvider, useConsent } from "../../app/context/Consent/ConsentContext";
 
 const STORAGE_KEY = "consent";
 

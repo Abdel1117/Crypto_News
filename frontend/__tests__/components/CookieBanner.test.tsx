@@ -3,14 +3,14 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 const useConsentMock = vi.fn();
-vi.mock("../../app/consent/useConsent", () => ({
+vi.mock("../../app/context/Consent/ConsentContext", () => ({
   useConsent: () => useConsentMock(),
 }));
-vi.mock("../../app/consent/components/ConsentPreferencesPanel", () => ({
+vi.mock("../../app/components/ConsentPreferencesPanel/ConsentPreferencesPanel", () => ({
   default: () => <div data-testid="preferences-panel" />,
 }));
 
-import CookieBanner from "../../app/consent/components/CookieBanner";
+import CookieBanner from "../../app/components/CookieBanner/CookieBanner";
 
 function baseConsent(overrides: Partial<ReturnType<typeof useConsentMock>> = {}) {
   return {

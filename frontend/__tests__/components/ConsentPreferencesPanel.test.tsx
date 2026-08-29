@@ -3,15 +3,15 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
 const useConsentMock = vi.fn();
-vi.mock("../../app/consent/useConsent", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../app/consent/useConsent")>();
+vi.mock("../../app/context/Consent/ConsentContext", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../app/context/Consent/ConsentContext")>();
   return {
     ...actual,
     useConsent: () => useConsentMock(),
   };
 });
 
-import ConsentPreferencesPanel from "../../app/consent/components/ConsentPreferencesPanel";
+import ConsentPreferencesPanel from "../../app/components/ConsentPreferencesPanel/ConsentPreferencesPanel";
 
 function baseConsent(overrides: Record<string, unknown> = {}) {
   return {

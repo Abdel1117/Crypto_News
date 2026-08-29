@@ -1,4 +1,4 @@
-import type { ConsentPreferences } from "./useConsent";
+import type { ConsentPreferences } from "@/app/context/Consent/ConsentContext";
 
 /**
  * Loads the real Plausible tracker — the exact `init` call that used to run

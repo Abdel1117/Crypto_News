@@ -18,10 +18,10 @@ vi.mock("../../app/components/TopLoader/TopLoader", () => ({
   default: () => <div data-testid="top-loader" />,
 }));
 
-vi.mock("../../app/consent/useConsent", () => ({
+vi.mock("../../app/context/Consent/ConsentContext", () => ({
   ConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
-vi.mock("../../app/consent/components/CookieBanner", () => ({
+vi.mock("../../app/components/CookieBanner/CookieBanner", () => ({
   default: () => <div data-testid="cookie-banner" />,
 }));
 

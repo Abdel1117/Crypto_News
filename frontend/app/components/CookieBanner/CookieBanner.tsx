@@ -1,8 +1,8 @@
 "use client";
 
-import { useConsent } from "../useConsent";
+import { useConsent } from "@/app/context/Consent/ConsentContext";
 import { ParamIcons } from "@/app/components/Icons";
-import ConsentPreferencesPanel from "./ConsentPreferencesPanel";
+import ConsentPreferencesPanel from "../ConsentPreferencesPanel/ConsentPreferencesPanel";
 
 export default function CookieBanner() {
   const { needsConsent, acceptAll, rejectAll, openPreferencesPanel, isPreferencesPanelOpen } =

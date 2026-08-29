@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useConsent, COOKIE_CATEGORIES, ConsentPreferences } from "../useConsent";
-import CategoryToggleRow from "./CategoryToggleRow";
+import { useConsent, COOKIE_CATEGORIES, ConsentPreferences } from "@/app/context/Consent/ConsentContext";
+import CategoryToggleRow from "../CategoryToggleRow/CategoryToggleRow";
 
 type OptionalPreferences = Pick<ConsentPreferences, "analytics" | "marketing">;
 
