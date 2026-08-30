@@ -1,4 +1,5 @@
 import asyncio
+import json
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from app.services.market_service import MarketService
 from app.clients.coingecko_client import CoinGeckoClient
@@ -71,8 +72,10 @@ async def get_market_coin(
     return result
 
 
+SUPPORTED_CURRENCIES = ("eur", "usd")
+
 _poller_task: asyncio.Task | None = None
-_last_markets_data = None
+_last_markets_data: dict[str, object] | None = None
 
 
 async def _poll_markets_loop():
@@ -80,10 +83,13 @@ async def _poll_markets_loop():
     service = get_market_service()
     while True:
         try:
-            _last_markets_data = await service.get_top_markets(
-                "eur", "market_cap_desc", 20, 1
-            )
-            await manager.broadcast("markets", _last_markets_data)
+            _last_markets_data = {
+                currency: await service.get_top_markets(
+                    currency, "market_cap_desc", 20, 1
+                )
+                for currency in SUPPORTED_CURRENCIES
+            }
+            await manager.broadcast_per_currency("markets", _last_markets_data)
         except Exception:
             pass
         await asyncio.sleep(POLL_INTERVAL)
@@ -92,16 +98,26 @@ async def _poll_markets_loop():
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     global _poller_task
-    await manager.connect(websocket)
+    await manager.connect(websocket, currency="eur")
     if _poller_task is None:
         _poller_task = asyncio.create_task(_poll_markets_loop())
     elif _last_markets_data is not None:
         # Poller already running: give the new client the latest snapshot
         # right away instead of waiting up to POLL_INTERVAL for the next tick.
-        await manager.send_to(websocket, "markets", _last_markets_data)
+        await manager.send_to(websocket, "markets", _last_markets_data["eur"])
     try:
         while True:
-            await websocket.receive_text()
+            raw = await websocket.receive_text()
+            try:
+                message = json.loads(raw)
+            except (TypeError, ValueError):
+                continue
+            currency = message.get("currency") if isinstance(message, dict) else None
+            if currency not in SUPPORTED_CURRENCIES:
+                continue
+            manager.set_currency(websocket, currency)
+            if _last_markets_data is not None:
+                await manager.send_to(websocket, "markets", _last_markets_data[currency])
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         if not manager.has_clients() and _poller_task is not None:

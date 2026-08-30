@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import { send, onOpen } from "@/app/lib/ws/socket";
 
 export type Currency = "eur" | "usd";
 
@@ -15,12 +16,22 @@ const DEFAULT_CURRENCY: Currency = "eur";
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>(DEFAULT_CURRENCY);
+  const currencyRef = useRef(currency);
 
   useEffect(() => {
     const stored = localStorage.getItem("currency");
     if (stored === "usd" || stored === "eur") {
       setCurrency(stored);
     }
+  }, []);
+
+  useEffect(() => {
+    currencyRef.current = currency;
+    send({ currency });
+  }, [currency]);
+
+  useEffect(() => {
+    return onOpen(() => send({ currency: currencyRef.current }));
   }, []);
 
   const handleSetCurrency = (value: Currency) => {

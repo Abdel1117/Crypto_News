@@ -8,6 +8,7 @@ type MessageHandler = (data: unknown) => void;
 let ws: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 const listeners = new Map<string, Set<MessageHandler>>();
+const openHandlers = new Set<() => void>();
 const RECONNECT_DELAY = 3_000;
 
 function getUrl() {
@@ -24,6 +25,7 @@ export function connect() {
 
   ws.onopen = () => {
     console.log("[ws] connected");
+    openHandlers.forEach((fn) => fn());
   };
 
   ws.onmessage = (event) => {
@@ -66,6 +68,20 @@ export function subscribe(channel: string, handler: MessageHandler): () => void 
 
   return () => {
     listeners.get(channel)?.delete(handler);
+  };
+}
+
+/**
+ * Register a handler fired every time the socket (re)connects.
+ * Called immediately if the socket is already open. Returns an unsubscribe function.
+ */
+export function onOpen(handler: () => void): () => void {
+  openHandlers.add(handler);
+  if (ws?.readyState === WebSocket.OPEN) {
+    handler();
+  }
+  return () => {
+    openHandlers.delete(handler);
   };
 }
 
