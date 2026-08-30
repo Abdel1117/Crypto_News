@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useConsent } from "@/app/context/Consent/ConsentContext";
 import { ParamIcons } from "@/app/components/Icons";
 import ConsentPreferencesPanel from "../ConsentPreferencesPanel/ConsentPreferencesPanel";
@@ -43,7 +44,11 @@ export default function CookieBanner() {
             Nous utilisons des cookies strictement nécessaires au fonctionnement et à la
             sécurité du site. Ces cookies ne nécessitent pas votre consentement. Avec votre
             accord, nous pouvons également utiliser des cookies de mesure d&rsquo;audience et
-            marketing.
+            marketing. En savoir plus dans notre{" "}
+            <Link href="/politique-de-confidentialite" className="underline hover:text-foreground">
+              politique de confidentialité
+            </Link>
+            .
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
