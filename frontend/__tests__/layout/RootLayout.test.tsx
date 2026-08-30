@@ -18,8 +18,11 @@ vi.mock("../../app/components/TopLoader/TopLoader", () => ({
   default: () => <div data-testid="top-loader" />,
 }));
 
-vi.mock("../../app/components/PlausibleAnalytics/PlausibleAnalytics", () => ({
-  default: () => null,
+vi.mock("../../app/context/Consent/ConsentContext", () => ({
+  ConsentProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+vi.mock("../../app/components/CookieBanner/CookieBanner", () => ({
+  default: () => <div data-testid="cookie-banner" />,
 }));
 
 import RootLayout from "../../app/layout";
@@ -34,6 +37,7 @@ describe("RootLayout", () => {
 
     expect(screen.getByTestId("providers")).toBeTruthy();
     expect(screen.getByTestId("top-loader")).toBeTruthy();
+    expect(screen.getByTestId("cookie-banner")).toBeTruthy();
     expect(screen.getByText("page content")).toBeTruthy();
   });
 });

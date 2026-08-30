@@ -116,7 +116,7 @@ export default function Home() {
       <section className="pb-[100px]">
         <FAQ />
       </section>
-      <section className="pb-[100px]">
+      <section id="contact" className="pb-[100px]">
         <ContactForm />
       </section>
     </main>
