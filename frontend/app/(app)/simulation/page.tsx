@@ -8,6 +8,7 @@ import {
   resetSimulation,
 } from "@/app/lib/features/simulation/simulationSlice";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
+import { getExchangeRate } from "@/app/lib/features/exchangeRate/exchangeRateThunks";
 import PortfolioSummary from "@/app/components/Simulation/PortfolioSummary";
 import TradeForm from "@/app/components/Simulation/TradeForm";
 import TradeHistory from "@/app/components/Simulation/TradeHistory";
@@ -69,6 +70,7 @@ export default function SimulationPage() {
 
   useEffect(() => {
     dispatch(initSimulation());
+    dispatch(getExchangeRate());
   }, [dispatch]);
 
   useEffect(() => {

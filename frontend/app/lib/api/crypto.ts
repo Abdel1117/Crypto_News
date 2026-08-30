@@ -76,6 +76,18 @@ export async function fetchTopWinnersLosers(currency: string, topCoins: number =
 }
 
 
+export async function fetchExchangeRate(base: string = "eur", quote: string = "usd") {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BACK_END}/markets/exchange-rate?base=${encodeURIComponent(base)}&quote=${encodeURIComponent(quote)}`
+  );
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch exchange rate");
+  }
+  return res.json();
+}
+
+
 export async function fetchTrending() {
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_BACK_END}/trending`

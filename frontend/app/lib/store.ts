@@ -8,6 +8,7 @@ import marketHeatmapReducer from "./features/marketHeatmap/marketHeatmapSlice"
 import watchlistReducer from "./features/watchlist/watchlistSlice"
 import simulationReducer from "./features/simulation/simulationSlice"
 import authReducer from "./features/auth/authSlice"
+import exchangeRateReducer from "./features/exchangeRate/exchangeRateSlice"
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     marketHeatmap: marketHeatmapReducer,
     watchlist: watchlistReducer,
     simulation: simulationReducer,
+    exchangeRate: exchangeRateReducer,
   },
   devTools: process.env.NODE_ENV !== "production"
     ? {

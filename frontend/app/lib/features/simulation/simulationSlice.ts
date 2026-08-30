@@ -100,10 +100,26 @@ const simulationSlice = createSlice({
         type: "buy" | "sell";
         amount: number;
         price: number;
+        currency?: "eur" | "usd";
+        usdPerEur?: number | null;
       }>,
     ) {
-      const { coinId, coinName, coinSymbol, coinImage, type, amount, price } =
-        action.payload;
+      const {
+        coinId,
+        coinName,
+        coinSymbol,
+        coinImage,
+        type,
+        amount,
+        currency = "eur",
+        usdPerEur,
+      } = action.payload;
+
+      // The portfolio is always stored in EUR internally so that switching
+      // the display currency never changes the underlying numbers.
+      if (currency === "usd" && !usdPerEur) return;
+      const price =
+        currency === "usd" ? action.payload.price / (usdPerEur as number) : action.payload.price;
       const total = amount * price;
 
       if (type === "buy") {

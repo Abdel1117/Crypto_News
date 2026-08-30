@@ -67,6 +67,25 @@ class MarketService:
         data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
         return data
 
+    async def get_exchange_rate(
+        self, base: str = "eur", quote: str = "usd", reference_coin: str = "bitcoin"
+    ):
+        base_data = await self.client.fetch_markets(
+            base, "market_cap_desc", 1, 1, ids=reference_coin
+        )
+        quote_data = await self.client.fetch_markets(
+            quote, "market_cap_desc", 1, 1, ids=reference_coin
+        )
+        if not base_data or not quote_data:
+            return None
+      
+        base_price = base_data[0]["current_price"]
+        quote_price = quote_data[0]["current_price"]
+        if not base_price:
+            return None
+
+        return {"base": base, "quote": quote, "rate": quote_price / base_price}
+
     async def get_top_gainers_losers(
         self,
         currency: str,

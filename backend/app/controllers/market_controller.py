@@ -72,6 +72,18 @@ async def get_market_coin(
     return result
 
 
+@router.get("/exchange-rate")
+async def get_exchange_rate(
+    base: str = "eur",
+    quote: str = "usd",
+    service: MarketService = Depends(get_market_service),
+):
+    result = await service.get_exchange_rate(base, quote)
+    if result is None:
+        return {}
+    return result
+
+
 SUPPORTED_CURRENCIES = ("eur", "usd")
 
 _poller_task: asyncio.Task | None = None
