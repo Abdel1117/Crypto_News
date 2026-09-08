@@ -25,7 +25,7 @@ describe("TradeHistory", () => {
 
   it("shows a placeholder when there are no trades", () => {
     vi.mocked(useAppSelector).mockImplementation((selector: any) =>
-      selector({ simulation: { trades: [] } }),
+      selector({ simulation: { trades: [] }, exchangeRate: { usdPerEur: null } }),
     );
     render(<TradeHistory />);
     expect(screen.getByText("Aucune transaction pour le moment.")).toBeTruthy();
@@ -34,6 +34,7 @@ describe("TradeHistory", () => {
   it("renders a row per trade with buy/sell labeling", () => {
     vi.mocked(useAppSelector).mockImplementation((selector: any) =>
       selector({
+        exchangeRate: { usdPerEur: null },
         simulation: {
           trades: [
             {

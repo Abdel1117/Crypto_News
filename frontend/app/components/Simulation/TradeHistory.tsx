@@ -11,6 +11,10 @@ export default function TradeHistory() {
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const { trades } = useAppSelector((state) => state.simulation);
+  const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
+  // Trades are stored in EUR internally; convert to the display currency
+  // so history stays consistent when the toggle changes.
+  const displayMultiplier = currency === "usd" ? (usdPerEur ?? 1) : 1;
 
   if (trades.length === 0) {
     return (
@@ -80,10 +84,14 @@ export default function TradeHistory() {
                   {trade.amount.toFixed(6)}
                 </td>
                 <td className="px-3 py-2 text-right text-foreground">
-                  {formatPrice(trade.priceAtTrade, symbol, 2)}
+                  {formatPrice(
+                    trade.priceAtTrade * displayMultiplier,
+                    symbol,
+                    2,
+                  )}
                 </td>
                 <td className="px-3 py-2 text-right font-medium text-foreground">
-                  {formatPrice(trade.total, symbol, 2)}
+                  {formatPrice(trade.total * displayMultiplier, symbol, 2)}
                 </td>
               </tr>
             ))}

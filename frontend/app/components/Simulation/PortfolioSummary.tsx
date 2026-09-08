@@ -16,22 +16,35 @@ interface PortfolioSummaryProps {
 export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
-  const { balance, initialBalance, holdings, realizedPnl } = useAppSelector(
-    (state) => state.simulation,
-  );
+  const {
+    balance: balanceEur,
+    initialBalance: initialBalanceEur,
+    holdings,
+    realizedPnl: realizedPnlEur,
+  } = useAppSelector((state) => state.simulation);
   const loading = useAppSelector((state) => state.prices.loading);
+  const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
+
+  // The portfolio is stored in EUR internally; convert to the display
+  // currency here so the numbers stay consistent when the toggle changes.
+  const displayMultiplier = currency === "usd" ? (usdPerEur ?? 1) : 1;
+  const balance = balanceEur * displayMultiplier;
+  const initialBalance = initialBalanceEur * displayMultiplier;
+  const realizedPnl = realizedPnlEur * displayMultiplier;
 
   const holdingsValue = holdings.reduce((sum, h) => {
     const coin = coins.find((c) => c.id === h.coinId);
-    const price = coin?.price ?? h.avgBuyPrice;
+    const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
+    const price = coin?.price ?? avgBuyPrice;
     return sum + h.amount * price;
   }, 0);
 
   const totalValue = balance + holdingsValue;
   const unrealizedPnl = holdings.reduce((sum, h) => {
     const coin = coins.find((c) => c.id === h.coinId);
-    const price = coin?.price ?? h.avgBuyPrice;
-    return sum + (price - h.avgBuyPrice) * h.amount;
+    const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
+    const price = coin?.price ?? avgBuyPrice;
+    return sum + (price - avgBuyPrice) * h.amount;
   }, 0);
   const pnl = totalValue - initialBalance;
   const pnlPercent = initialBalance > 0 ? (pnl / initialBalance) * 100 : 0;
@@ -98,9 +111,10 @@ export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
           <div className="space-y-2">
             {holdings.map((h) => {
               const coin = coins.find((c) => c.id === h.coinId);
-              const currentPrice = coin?.price ?? h.avgBuyPrice;
+              const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
+              const currentPrice = coin?.price ?? avgBuyPrice;
               const value = h.amount * currentPrice;
-              const holdingPnl = (currentPrice - h.avgBuyPrice) * h.amount;
+              const holdingPnl = (currentPrice - avgBuyPrice) * h.amount;
               const holdingPositive = holdingPnl >= 0;
               return (
                 <div

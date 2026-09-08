@@ -43,6 +43,7 @@ describe("PerformanceChart", () => {
           holdings: [{ coinId: "btc", amount: 5, avgBuyPrice: 100 }],
           portfolioSnapshots: [{ date: "2024-01-01T00:00:00.000Z", value: 1000 }],
         },
+        exchangeRate: { usdPerEur: null },
       }),
     );
   });
@@ -64,6 +65,7 @@ describe("PerformanceChart", () => {
           holdings: [],
           portfolioSnapshots: [],
         },
+        exchangeRate: { usdPerEur: null },
       }),
     );
 

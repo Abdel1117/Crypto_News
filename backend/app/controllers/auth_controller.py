@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.core.jwt_config import JWT_REFRESH_EXPIRATION_DAYS
+from app.core.jwt_config import REFRESH_TOKEN_EXPIRE_DELTA
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
@@ -15,7 +15,7 @@ import os
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 REFRESH_COOKIE = "refresh_token"
-REFRESH_MAX_AGE = JWT_REFRESH_EXPIRATION_DAYS * 24 * 3600
+REFRESH_MAX_AGE = int(REFRESH_TOKEN_EXPIRE_DELTA.total_seconds())
 _IS_PROD = os.getenv("ENV") == "production"
 
 

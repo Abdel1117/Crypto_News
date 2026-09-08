@@ -23,13 +23,29 @@ export default function PerformanceChart({ coins }: PerformanceChartProps) {
 
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
-  const { balance, holdings, initialBalance, portfolioSnapshots } =
-    useAppSelector((state) => state.simulation);
+  const {
+    balance: balanceEur,
+    holdings,
+    initialBalance: initialBalanceEur,
+    portfolioSnapshots: portfolioSnapshotsEur,
+  } = useAppSelector((state) => state.simulation);
+  const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
+
+  // The portfolio is stored in EUR internally; convert to the display currency so it stays consistent when the toggle changes.
+  const displayMultiplier = currency === "usd" ? (usdPerEur ?? 1) : 1;
+  const balance = balanceEur * displayMultiplier;
+
+  const initialBalance = initialBalanceEur * displayMultiplier;
+  const portfolioSnapshots = portfolioSnapshotsEur.map((s) => ({
+    ...s,
+    value: s.value * displayMultiplier,
+  }));
 
   // Compute live portfolio value for the latest data point
   const holdingsValue = holdings.reduce((sum, h) => {
     const coin = coins.find((c) => c.id === h.coinId);
-    const price = coin?.price ?? h.avgBuyPrice;
+    const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
+    const price = coin?.price ?? avgBuyPrice;
     return sum + h.amount * price;
   }, 0);
   const currentValue = balance + holdingsValue;

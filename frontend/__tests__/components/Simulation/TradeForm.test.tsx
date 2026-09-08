@@ -30,7 +30,10 @@ describe("TradeForm", () => {
     vi.clearAllMocks();
     vi.mocked(useAppDispatch).mockReturnValue(dispatch);
     vi.mocked(useCurrency).mockReturnValue({ currency: "usd", setCurrency: vi.fn() });
-    setupSelector({ simulation: { balance: 1000, holdings: [] } });
+    setupSelector({
+      simulation: { balance: 1000, holdings: [] },
+      exchangeRate: { usdPerEur: 1.1 },
+    });
   });
 
   it("disables submit until a coin and amount are selected", () => {
@@ -78,6 +81,7 @@ describe("TradeForm", () => {
           },
         ],
       },
+      exchangeRate: { usdPerEur: null },
     });
     const handleSymbolChange = vi.fn();
     render(<TradeForm coins={coins} selectedId="eth" handleSymbolChange={handleSymbolChange} />);
@@ -103,6 +107,7 @@ describe("TradeForm", () => {
           },
         ],
       },
+      exchangeRate: { usdPerEur: null },
     });
     render(<TradeForm coins={coins} selectedId="btc" handleSymbolChange={vi.fn()} />);
 

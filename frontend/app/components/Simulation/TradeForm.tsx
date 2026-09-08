@@ -23,6 +23,8 @@ export default function TradeForm({
   const { currency } = useCurrency();
   const symbol = CURRENCY_SYMBOLS[currency];
   const { balance, holdings } = useAppSelector((state) => state.simulation);
+  const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
+  const rateUnavailable = currency === "usd" && !usdPerEur;
 
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
   const [amount, setAmount] = useState("");
@@ -40,6 +42,7 @@ export default function TradeForm({
   const canTrade =
     selectedCoin &&
     numAmount > 0 &&
+    !rateUnavailable &&
     (tradeType === "buy"
       ? total <= balance
       : holding && numAmount <= holding.amount);
@@ -56,6 +59,8 @@ export default function TradeForm({
         type: tradeType,
         amount: numAmount,
         price: selectedCoin.price,
+        currency,
+        usdPerEur,
       }),
     );
     setAmount("");
@@ -174,6 +179,12 @@ export default function TradeForm({
             {formatPrice(total, symbol, 2)}
           </span>
         </div>
+      )}
+
+      {rateUnavailable && (
+        <p className="text-xs text-red-500">
+          Taux de change USD indisponible, réessayez plus tard.
+        </p>
       )}
 
       <button

@@ -48,6 +48,7 @@ def mock_market_service():
     svc.get_ohlc.return_value = make_ohlc()
     svc.get_top_gainers_losers.return_value = make_gainers_losers()
     svc.get_market_by_id.return_value = make_market_coin()
+    svc.get_exchange_rate.return_value = {"base": "eur", "quote": "usd", "rate": 1.08}
     return svc
 
 
@@ -141,6 +142,29 @@ class TestGetTopWinnersLosersRoute:
         call_args = mock_market_service.get_top_gainers_losers.call_args
         assert call_args[0][0] == "usd"
         assert call_args[0][3] == "100"
+
+
+class TestGetExchangeRateRoute:
+    async def test_returns_200(self, client):
+        response = await client.get("/markets/exchange-rate")
+        assert response.status_code == 200
+
+    async def test_returns_rate_data(self, client):
+        body = (await client.get("/markets/exchange-rate")).json()
+        assert body == {"base": "eur", "quote": "usd", "rate": 1.08}
+
+    async def test_returns_empty_dict_when_unavailable(self, client, mock_market_service):
+        mock_market_service.get_exchange_rate.return_value = None
+        body = (await client.get("/markets/exchange-rate")).json()
+        assert body == {}
+
+    async def test_passes_base_and_quote_to_service(self, client, mock_market_service):
+        await client.get("/markets/exchange-rate?base=usd&quote=eur")
+        mock_market_service.get_exchange_rate.assert_called_once_with("usd", "eur")
+
+    async def test_uses_default_params(self, client, mock_market_service):
+        await client.get("/markets/exchange-rate")
+        mock_market_service.get_exchange_rate.assert_called_once_with("eur", "usd")
 
 
 class TestGetMarketCoinRoute:

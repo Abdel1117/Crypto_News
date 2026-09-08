@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings
-from datetime import timedelta
 
 
 class Settings(BaseSettings):
@@ -12,28 +11,20 @@ class Settings(BaseSettings):
     DB_PORT: int = 5432
     API_KEY_COINGECKO: str = ""
     GOOGLE_CLIENT_ID : str = ""
-    
-    JWT_SECRET_KEY: str = "dev-secret-key-change-in-production"
-    JWT_ALGORITHM: str = "HS256"
-    
-    JWT_EXPIRATION_HOURS: int = 24
-    JWT_REFRESH_EXPIRATION_DAYS: int = 7
 
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_RECIPIENT: str = ""
-    GOOGLE_CLIENT_ID : str = ""
-    model_config = {"env_file": ".env"}
+
+    CORS_ORIGINS: str = "http://localhost:3000"
+
+    model_config = {"extra": "ignore"}
 
     @property
-    def ACCESS_TOKEN_EXPIRE_DELTA(self) -> timedelta:
-        return timedelta(hours=self.JWT_EXPIRATION_HOURS)
-
-    @property
-    def REFRESH_TOKEN_EXPIRE_DELTA(self) -> timedelta:
-        return timedelta(days=self.JWT_REFRESH_EXPIRATION_DAYS)
+    def CORS_ORIGINS_LIST(self) -> list[str]:
+        return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
 
 settings = Settings()

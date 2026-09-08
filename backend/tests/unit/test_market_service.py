@@ -138,6 +138,36 @@ class TestGetOhlc:
         mock_client.fetch_ohlc.assert_called_once_with("usd", "7", "ethereum")
 
 
+class TestGetExchangeRate:
+    async def test_computes_rate_from_reference_coin(self, service, mock_client):
+        mock_client.fetch_markets.side_effect = [
+            [make_coin(current_price=90000.0)],  # eur
+            [make_coin(current_price=100000.0)],  # usd
+        ]
+        result = await service.get_exchange_rate("eur", "usd")
+        assert result == {"base": "eur", "quote": "usd", "rate": pytest.approx(100000.0 / 90000.0)}
+
+    async def test_passes_reference_coin_to_client(self, service, mock_client):
+        mock_client.fetch_markets.return_value = [make_coin()]
+        await service.get_exchange_rate("eur", "usd", reference_coin="ethereum")
+        mock_client.fetch_markets.assert_any_call(
+            "eur", "market_cap_desc", 1, 1, ids="ethereum"
+        )
+        mock_client.fetch_markets.assert_any_call(
+            "usd", "market_cap_desc", 1, 1, ids="ethereum"
+        )
+
+    async def test_returns_none_when_base_data_missing(self, service, mock_client):
+        mock_client.fetch_markets.side_effect = [[], [make_coin()]]
+        result = await service.get_exchange_rate("eur", "usd")
+        assert result is None
+
+    async def test_returns_none_when_quote_data_missing(self, service, mock_client):
+        mock_client.fetch_markets.side_effect = [[make_coin()], []]
+        result = await service.get_exchange_rate("eur", "usd")
+        assert result is None
+
+
 class TestGetTopGainersLosers:
     async def test_top_gainers_sorted_by_highest_change_first(self, service, mock_client):
         coins = [

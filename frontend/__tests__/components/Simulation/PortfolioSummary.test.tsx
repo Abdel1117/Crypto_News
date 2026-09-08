@@ -24,7 +24,11 @@ const coins = [
 
 function setupState(simulation: any, pricesLoading = false) {
   vi.mocked(useAppSelector).mockImplementation((selector: any) =>
-    selector({ simulation, prices: { loading: pricesLoading } }),
+    selector({
+      simulation,
+      prices: { loading: pricesLoading },
+      exchangeRate: { usdPerEur: null },
+    }),
   );
 }
 

@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.controllers import api_router
+from app.core.config import settings
 from app.db.session import init_db
 
 app = FastAPI()
@@ -17,9 +18,10 @@ async def coingecko_error_handler(request: Request, exc: httpx.HTTPStatusError):
         )
     return JSONResponse(status_code=502, content={"detail": "Upstream market data error."})
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

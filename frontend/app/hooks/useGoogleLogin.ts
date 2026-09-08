@@ -20,7 +20,7 @@ export function useGoogleLogin(){
         try {
             setLoading(true)
             const response  = await loginWithGoogle(credentials)
-            dispatch(loginSuccess({accessToken : response.access_token}))
+            dispatch(loginSuccess({accessToken : response.access_token, expiresIn: response.expires_in}))
             
             const successResult  : LoginResult  = {
                 success : true,

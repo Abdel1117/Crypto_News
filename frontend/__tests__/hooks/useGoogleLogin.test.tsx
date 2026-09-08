@@ -44,7 +44,9 @@ describe("useGoogleLogin", () => {
     });
 
     expect(loginWithGoogle).toHaveBeenCalledWith(CREDENTIAL);
-    expect(mockDispatch).toHaveBeenCalledWith(loginSuccess({ accessToken: "abc123" }));
+    expect(mockDispatch).toHaveBeenCalledWith(
+      loginSuccess({ accessToken: "abc123", expiresIn: 3600 }),
+    );
   });
 
   it("returns a success result on success", async () => {

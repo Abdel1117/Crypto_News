@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
+import AuthGuard from "@/app/components/AuthGuard/AuthGuard";
 
 export const metadata: Metadata = {
   title: "Paramètres",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function page() {
-  return <div>page</div>;
+  return (
+    <AuthGuard>
+      <div>Settings</div>
+    </AuthGuard>
+  );
 }
