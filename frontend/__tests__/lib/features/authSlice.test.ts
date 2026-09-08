@@ -1,14 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
-vi.mock("../../../app/lib/auth/tokenStorage", () => ({
-  tokenStorage: {
-    getAccessToken: vi.fn(() => null),
-    setAccessToken: vi.fn(),
-    clearTokens: vi.fn(),
-  },
-}));
-
-import { tokenStorage } from "../../../app/lib/auth/tokenStorage";
+import { describe, expect, it } from "vitest";
+import authReducer, { loginSuccess, logout } from "../../../app/lib/features/auth/authSlice";
+import { refreshSession } from "../../../app/lib/features/auth/authThunks";
 
 function makeToken(payload: object) {
   const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64");
@@ -17,82 +9,95 @@ function makeToken(payload: object) {
 }
 
 describe("authSlice", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.resetModules();
-  });
-
-  it("starts unauthenticated when no token is stored", async () => {
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(null);
-    const { default: authReducer } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
-
+  it("starts unauthenticated and initializing (no token is ever persisted)", () => {
     const state = authReducer(undefined, { type: "@@INIT" });
-    expect(state).toEqual({ user: null, accessToken: null, isAuthenticated: false });
+    expect(state).toEqual({
+      user: null,
+      accessToken: null,
+      expiresAt: null,
+      isAuthenticated: false,
+      initializing: true,
+    });
   });
 
-  it("hydrates the user from a persisted, valid token", async () => {
-    const token = makeToken({ sub: "1", email: "a@b.com", full_name: "Ada" });
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(token);
-    const { default: authReducer } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
-
-    const state = authReducer(undefined, { type: "@@INIT" });
-    expect(state.isAuthenticated).toBe(true);
-    expect(state.user).toEqual({ id: "1", email: "a@b.com", fullName: "Ada" });
-  });
-
-  it("falls back to unauthenticated when the persisted token is malformed", async () => {
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue("not-a-jwt");
-    const { default: authReducer } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
-
-    const state = authReducer(undefined, { type: "@@INIT" });
-    expect(state.isAuthenticated).toBe(false);
-  });
-
-  it("logs the user in and persists the access token", async () => {
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(null);
-    const { default: authReducer, loginSuccess } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
+  it("logs the user in from a valid access token", () => {
     const token = makeToken({ sub: "2", email: "c@d.com" });
+    const before = Date.now();
 
-    const state = authReducer(undefined, loginSuccess({ accessToken: token }));
+    const state = authReducer(undefined, loginSuccess({ accessToken: token, expiresIn: 3600 }));
 
     expect(state.isAuthenticated).toBe(true);
-    expect(state.user).toEqual({ id: "2", email: "c@d.com", fullName: null });
-    expect(tokenStorage.setAccessToken).toHaveBeenCalledWith(token);
-  });
-
-  it("refreshes the token and updates the user", async () => {
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(null);
-    const { default: authReducer, tokenRefreshed } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
-    const token = makeToken({ sub: "3", email: "e@f.com" });
-
-    const state = authReducer(undefined, tokenRefreshed({ accessToken: token }));
-
+    expect(state.initializing).toBe(false);
     expect(state.accessToken).toBe(token);
-    expect(state.user?.id).toBe("3");
+    expect(state.user).toEqual({ id: "2", email: "c@d.com", fullName: null });
+    expect(state.expiresAt).toBeGreaterThanOrEqual(before + 3600 * 1000);
   });
 
-  it("clears the session on logout", async () => {
-    vi.mocked(tokenStorage.getAccessToken).mockReturnValue(null);
-    const { default: authReducer, logout } = await import(
-      "../../../app/lib/features/auth/authSlice"
-    );
+  it("falls back to no user when the access token cannot be decoded", () => {
+    const state = authReducer(undefined, loginSuccess({ accessToken: "not-a-jwt", expiresIn: 60 }));
+
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.user).toBeNull();
+  });
+
+  it("restores the session on refreshSession.fulfilled (silent bootstrap/rotation)", () => {
+    const token = makeToken({ sub: "3", email: "e@f.com", full_name: "Ева" });
 
     const state = authReducer(
-      { user: { id: "1", email: "a@b.com", fullName: null }, accessToken: "x", isAuthenticated: true },
+      { user: null, accessToken: null, expiresAt: null, isAuthenticated: false, initializing: true },
+      refreshSession.fulfilled(
+        { access_token: token, token_type: "bearer", expires_in: 30 },
+        "requestId",
+      ),
+    );
+
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.initializing).toBe(false);
+    expect(state.accessToken).toBe(token);
+    expect(state.user?.email).toBe("e@f.com");
+  });
+
+  it("clears the session on refreshSession.rejected (no/expired refresh cookie)", () => {
+    const token = makeToken({ sub: "1", email: "a@b.com" });
+
+    const state = authReducer(
+      {
+        user: { id: "1", email: "a@b.com", fullName: null },
+        accessToken: token,
+        expiresAt: Date.now() + 1000,
+        isAuthenticated: true,
+        initializing: false,
+      },
+      refreshSession.rejected(new Error("expired"), "requestId"),
+    );
+
+    expect(state).toEqual({
+      user: null,
+      accessToken: null,
+      expiresAt: null,
+      isAuthenticated: false,
+      initializing: false,
+    });
+  });
+
+  it("clears the session on logout", () => {
+    const state = authReducer(
+      {
+        user: { id: "1", email: "a@b.com", fullName: null },
+        accessToken: "x",
+        expiresAt: Date.now() + 1000,
+        isAuthenticated: true,
+        initializing: false,
+      },
       logout(),
     );
 
-    expect(state).toEqual({ user: null, accessToken: null, isAuthenticated: false });
-    expect(tokenStorage.clearTokens).toHaveBeenCalled();
+    expect(state).toEqual({
+      user: null,
+      accessToken: null,
+      expiresAt: null,
+      isAuthenticated: false,
+      initializing: false,
+    });
   });
 });

@@ -8,6 +8,9 @@ vi.mock("../../app/lib/initSocket", () => ({
 vi.mock("@react-oauth/google", () => ({
   GoogleOAuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
+vi.mock("../../app/lib/auth/api", () => ({
+  refreshAccessToken: vi.fn(() => Promise.reject(new Error("no session"))),
+}));
 
 import { Providers } from "../../app/providers/root-providers";
 

@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from jose import JWTError
 
-from app.core.jwt_config import JWT_EXPIRATION_HOURS, TOKEN_TYPE_REFRESH
+from app.core.jwt_config import ACCESS_TOKEN_EXPIRE_DELTA, TOKEN_TYPE_REFRESH
 from app.models.user import User
 from app.repositories.users.user_repository import UserRepositoryProtocol
 from app.clients.google_auth_provider import GoogleAuthProvider
@@ -33,7 +33,7 @@ class AuthService:
             access_token=access_token,
             refresh_token=refresh_token,
             token_type="bearer",
-            expires_in=JWT_EXPIRATION_HOURS * 3600,
+            expires_in=int(ACCESS_TOKEN_EXPIRE_DELTA.total_seconds()),
         )
     
     async def register_user(self, registration_data: AuthRegistrationRequest) -> User:

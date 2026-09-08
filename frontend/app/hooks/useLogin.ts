@@ -10,7 +10,7 @@ export function useLogin() {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<LoginResult | null>(null);
-
+  
   const login = async (data: LoginData): Promise<LoginResult> => {
     const validation = validateLogin(data);
     if (!validation.success) {
@@ -22,7 +22,7 @@ export function useLogin() {
     try {
       const tokens = await loginUser(validation.payload!);
 
-      dispatch(loginSuccess({ accessToken: tokens.access_token }));
+      dispatch(loginSuccess({ accessToken: tokens.access_token, expiresIn: tokens.expires_in }));
 
       const successResult: LoginResult = {
         success: true,

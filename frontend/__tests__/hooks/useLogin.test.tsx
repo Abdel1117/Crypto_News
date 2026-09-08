@@ -7,13 +7,6 @@ import { configureStore } from "@reduxjs/toolkit";
 vi.mock("../../app/lib/auth/api", () => ({
   loginUser: vi.fn(),
 }));
-vi.mock("../../app/lib/auth/tokenStorage", () => ({
-  tokenStorage: {
-    getAccessToken: vi.fn(() => null),
-    setAccessToken: vi.fn(),
-    clearTokens: vi.fn(),
-  },
-}));
 
 import { loginUser } from "../../app/lib/auth/api";
 import authReducer from "../../app/lib/features/auth/authSlice";
