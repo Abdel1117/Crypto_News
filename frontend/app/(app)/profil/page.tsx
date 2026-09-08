@@ -2,6 +2,7 @@
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import { logout } from "@/app/lib/features/auth/authSlice";
 import { useRouter } from "next/navigation";
+import AuthGuard from "@/app/components/AuthGuard/AuthGuard";
 
 function Card({
   title,
@@ -50,6 +51,7 @@ export default function ProfilPage() {
   }
 
   return (
+    <AuthGuard>
     <section className="min-w-0 space-y-6 py-6">
       {/* Identity header — always full width */}
       <div className="bg-surface rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6">
@@ -110,5 +112,6 @@ export default function ProfilPage() {
         </Card>
       </div>
     </section>
+    </AuthGuard>
   );
 }
