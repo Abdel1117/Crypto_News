@@ -19,7 +19,7 @@ import {
   BrandMark,
   EyeIcon,
   EyeSlashIcon,
-} from "@/app/components/Landing/LandingIcons";
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 
 const tabs = ["Connexion", "Inscription"] as const;
 
@@ -110,7 +110,12 @@ export default function Login() {
 
   const { loginGoogle, loading: googleLoading } = useGoogleLogin();
 
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, initializing } = useAppSelector(
+    (state) => state.auth,
+  );
+  // Set while this page logs the user in: its own redirect (/dashboard) wins
+  // over the « already signed in » one below.
+  const signingInHere = useRef(false);
 
   const [activeTab, setActiveTab] = useState<Tab>("Connexion");
   const [formData, setFormData] = useState({
@@ -159,10 +164,13 @@ export default function Login() {
       email: formData.email,
       password: formData.password,
     };
+    signingInHere.current = true;
     const result = await login(data);
     setNotice(result?.message ?? "");
     if (result.success) {
       router.push("/dashboard");
+    } else {
+      signingInHere.current = false;
     }
   };
 
@@ -170,10 +178,13 @@ export default function Login() {
     credentialResponse: CredentialResponse,
   ) => {
     if (credentialResponse.credential != undefined) {
+      signingInHere.current = true;
       const result = await loginGoogle(credentialResponse?.credential);
       setNotice(result.message);
       if (result.success) {
         router.push("/dashboard");
+      } else {
+        signingInHere.current = false;
       }
     }
   };
@@ -183,9 +194,13 @@ export default function Login() {
     : registerResult?.fieldErrors;
   const hasError = (field: FieldName) => Boolean(fieldErrors?.[field]);
 
+  // Already signed in (session restored from the refresh cookie): leave the
+  // page once the session check is over, not just on mount.
   useEffect(() => {
-    if (isAuthenticated) router.push("/profil");
-  }, []);
+    if (!initializing && isAuthenticated && !signingInHere.current) {
+      router.replace("/profil");
+    }
+  }, [initializing, isAuthenticated, router]);
 
   return (
     <div className="min-h-screen lg:h-screen lg:min-h-[640px] lg:grid lg:grid-cols-[600px_minmax(0,1fr)]">

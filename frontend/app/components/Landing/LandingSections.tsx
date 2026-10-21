@@ -7,12 +7,13 @@ import partner04 from "@/public/images/partners/04.png";
 import partner05 from "@/public/images/partners/05.png";
 import partner06 from "@/public/images/partners/06.png";
 import { getCurrentYear } from "@/app/utils/Date/DateFormater";
+import CookieSettingsLink from "./CookieSettingsLink";
 import {
   ArrowRightIcon,
   EnvelopeIcon,
   GithubLogoIcon,
   LinkedinLogoIcon,
-} from "./LandingIcons";
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 
 const CONTACT_EMAIL = "abdel.pp@gmail.com";
 const GITHUB_URL = "https://github.com/Abdel1117";
@@ -245,6 +246,7 @@ export function LandingFooter() {
         >
           Politique de confidentialité
         </Link>
+        <CookieSettingsLink className="inline-flex items-center min-h-11 lg:min-h-0 text-(--n-neutral-400) hover:text-(--n-accent)" />
       </nav>
     </footer>
   );

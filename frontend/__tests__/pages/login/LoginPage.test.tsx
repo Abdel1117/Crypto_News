@@ -1,5 +1,5 @@
 import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
@@ -55,6 +55,7 @@ vi.mock("@react-oauth/google", () => ({
 }));
 
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/app/lib/hooks";
 import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Login from "../../../app/(landing)/login/page";
@@ -70,12 +71,13 @@ function renderLogin() {
 describe("Login page", () => {
   const mockPush = vi.fn();
   const mockLoginGoogle = vi.fn();
+  const mockReplace = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-      replace: vi.fn(),
+      replace: mockReplace,
       back: vi.fn(),
     } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(useGoogleLogin).mockReturnValue({
@@ -197,6 +199,55 @@ describe("Login page", () => {
       );
 
       expect(mockLoginGoogle).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("already signed in", () => {
+    type Auth = { isAuthenticated: boolean; initializing: boolean };
+    const setAuth = (auth: Auth) =>
+      vi.mocked(useAppSelector).mockImplementation((selector) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        selector({ auth: { ...auth, user: null } } as any),
+      );
+
+    afterEach(() => {
+      setAuth({ isAuthenticated: false, initializing: false });
+    });
+
+    it("leaves /login once the restored session is known", () => {
+      setAuth({ isAuthenticated: false, initializing: true });
+      const { rerender } = renderLogin();
+      expect(mockReplace).not.toHaveBeenCalled();
+
+      setAuth({ isAuthenticated: true, initializing: false });
+      rerender(
+        <GoogleOAuthProvider clientId="test-client-id">
+          <Login />
+        </GoogleOAuthProvider>,
+      );
+      expect(mockReplace).toHaveBeenCalledWith("/profil");
+    });
+
+    it("stays on /login for signed-out visitors", () => {
+      setAuth({ isAuthenticated: false, initializing: false });
+      renderLogin();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("lets a fresh login go to the dashboard, not the profile", async () => {
+      setAuth({ isAuthenticated: false, initializing: false });
+      mockLoginGoogle.mockImplementation(async () => {
+        setAuth({ isAuthenticated: true, initializing: false });
+        return { success: true, message: "Connexion réussi. Bienvenu !" };
+      });
+      renderLogin();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "MockGoogleLogin-Success" }),
+      );
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      expect(mockReplace).not.toHaveBeenCalledWith("/profil");
     });
   });
 });

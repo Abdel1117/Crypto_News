@@ -1,4 +1,7 @@
-import { LightningIcon, ShieldCheckIcon } from "./LandingIcons";
+import {
+  LightningIcon,
+  ShieldCheckIcon,
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 import { previewFavorites } from "./previewData";
 
 const trend = (up: boolean) => (up ? "var(--n-up)" : "var(--n-down)");

@@ -1,45 +1,35 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
-import dynamic from "next/dynamic";
 import { send } from "@/app/lib/ws/socket";
-
-import { useEffect, useState, useMemo } from "react";
-
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 
 import { getMarketCoin } from "@/app/lib/features/prices/pricesThunks";
 import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
 import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
 import { initWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
+import type { CoinSummary } from "@/app/types/Crypto/Crypto";
 
-import CryptoInfoCard, {
-  CryptoInfoCardData,
-} from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
-
-import TopGainersLosers from "@/app/components/TopGainersLosers/TopGainersLosers";
-import MarketOverView from "@/app/components/MarketOverView/MarketOverView";
-import Loading from "./loading";
-import HeatMap from "@/app/components/HeatMap/HeatMap";
-const CandleStickGraph = dynamic(
-  () => import("@/app/components/CandleStickGraph/CandleStickGraph"),
-  { ssr: false },
-);
+import Favorites from "@/app/components/Dashboard/Favorites";
+import PriceChart from "@/app/components/Dashboard/PriceChart";
+import MarketStats from "@/app/components/Dashboard/MarketStats";
+import HeatmapPreview from "@/app/components/Dashboard/HeatmapPreview";
+import MoversTable from "@/app/components/Dashboard/MoversTable";
 
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
-  const { coins, loading } = useAppSelector((state) => state.prices);
+  const { coins } = useAppSelector((state) => state.prices);
   const { symbols } = useAppSelector((state) => state.symbols);
   const { topGainers, topLosers } = useAppSelector(
     (state) => state.topGainersLosers,
   );
   const { coins: trendingCoins } = useAppSelector((state) => state.trending);
   const watchlistIds = useAppSelector((state) => state.watchlist.ids);
-
-  const [selectedId, setSelectedId] = useState<string | number | null>(null);
-
-  const preferedNumberOfCrypto = 6;
+  const selectedSymbol = useAppSelector(
+    (state) => state.marketView.selectedSymbol,
+  );
 
   const priceMap = useMemo(
     () =>
@@ -68,90 +58,83 @@ export default function DashboardPage() {
     });
   }, [dispatch, currency, watchlistIds, priceMap]);
 
-  const topCrypto = Array.isArray(coins)
-    ? coins.slice(0, preferedNumberOfCrypto)
-    : [];
+  // Coins seen anywhere on the page, so a click on any of them can resolve
+  // its name / icon even if it is not in the symbols store yet.
+  const knownCoins = useMemo(
+    () => [
+      ...coins.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+      })),
+      ...topGainers.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+      })),
+      ...topLosers.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+      })),
+      ...trendingCoins.map((c) => ({
+        id: c.id,
+        name: c.name,
+        symbol: c.symbol,
+        image: c.image,
+      })),
+    ],
+    [coins, topGainers, topLosers, trendingCoins],
+  );
 
-  const watchlistCoins: CryptoInfoCardData[] = watchlistIds
+  const watchlistCoins: CoinSummary[] = watchlistIds
     .map((id) => priceMap[id] ?? symbolMap[id])
     .filter((coin) => coin !== undefined);
 
-  const handleSymbolChange = (symbolId: string) => {
-    setSelectedId(symbolId);
-    dispatch(setSelectedSymbol(symbolId));
+  const selectedCoin: CoinSummary | undefined =
+    priceMap[selectedSymbol] ??
+    symbolMap[selectedSymbol] ??
+    knownCoins.find((c) => c.id === selectedSymbol);
 
+  const handleSymbolChange = (symbolId: string) => {
+    dispatch(setSelectedSymbol(symbolId));
+    if (!priceMap[symbolId]) {
+      dispatch(getMarketCoin({ currency, cryptoId: symbolId }));
+    }
     if (!symbols.some((s) => s.id === symbolId)) {
-      const allCoins = [
-        ...coins.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...topGainers.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...topLosers.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...trendingCoins.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-      ];
-      const coin = allCoins.find((c) => c.id === symbolId);
-      if (coin) {
-        dispatch(addSymbolIfMissing(coin));
-      }
+      const coin = knownCoins.find((c) => c.id === symbolId);
+      if (coin) dispatch(addSymbolIfMissing(coin));
+    }
+    // On mobile the chart sits below the favourites: bring it into view.
+    if (!window.matchMedia("(min-width: 1024px)").matches) {
+      document
+        .getElementById("dashboard-chart")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   return (
-    <section className="min-w-0 space-y-6">
-      <h1 className="text-3xl font-semibold hidden">Dashboard</h1>
-      {watchlistCoins?.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-3 flex items-center gap-2">
-            <span className="text-yellow-400">⭐</span> Your Watchlist
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
-            {watchlistCoins?.map((coin) => (
-              <CryptoInfoCard
-                key={coin.id}
-                coin={coin}
-                selected={selectedId === coin.id}
-                onSelect={() => handleSymbolChange(coin.id)}
-              />
-            ))}
-          </div>
+    <div className="flex flex-col gap-[22px] lg:gap-6 min-w-0">
+      <Favorites
+        coins={watchlistCoins}
+        selectedId={selectedSymbol}
+        onSelect={handleSymbolChange}
+      />
+
+      <div className="grid gap-[22px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_360px] items-stretch">
+        <div id="dashboard-chart" className="scroll-mt-4 flex flex-col min-w-0">
+          <PriceChart coin={selectedCoin} />
         </div>
-      )}
-      <MarketOverView />
-      <div className="grid min-w-0  grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ">
-        {loading
-          ? Array.from({ length: preferedNumberOfCrypto }).map((_, i) => (
-              <Loading key={i} />
-            ))
-          : topCrypto.map((coin) => (
-              <CryptoInfoCard
-                key={coin.id}
-                coin={coin}
-                selected={selectedId === coin.id}
-                onSelect={() => handleSymbolChange(coin.id)}
-              />
-            ))}
+        <div className="flex flex-col gap-[22px] lg:gap-4 min-w-0 lg:max-xl:grid lg:max-xl:grid-cols-2">
+          <MarketStats />
+          <HeatmapPreview onSelect={handleSymbolChange} />
+        </div>
       </div>
-      <CandleStickGraph symbols={symbols} onSymbolChange={handleSymbolChange} />
-      <HeatMap onSelectCrypto={handleSymbolChange} />
-      <TopGainersLosers onSymbolChange={handleSymbolChange} />
-    </section>
+
+      <MoversTable onSelect={handleSymbolChange} />
+    </div>
   );
 }

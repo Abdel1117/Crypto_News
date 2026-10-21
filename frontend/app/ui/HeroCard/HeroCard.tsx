@@ -1,35 +1,43 @@
 import Link from "next/link";
 import type { Article } from "@/app/(public)/blog/data";
-import { CategoryBadge } from "../CategoryBadge/CategoryBadge";
+import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
+/** Large cover card for the featured article. */
 export function HeroCard({
   article,
   className = "",
+  showExcerpt = false,
 }: {
   article: Article;
   className?: string;
+  showExcerpt?: boolean;
 }) {
   return (
     <Link
       href={`/blog/${article.id}`}
-      className={`group relative overflow-hidden rounded-2xl flex flex-col justify-end ${className}`}
+      className={`group relative overflow-hidden rounded-[14px] flex flex-col justify-end no-underline n-cover ${className}`}
+      style={categoryStyle(article.category)}
     >
       <div
-        className={`absolute inset-0 bg-gradient-to-br ${article.gradient}`}
+        aria-hidden="true"
+        className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent"
       />
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="relative z-10 p-5">
-        <CategoryBadge category={article.category} />
-        <h3 className="mt-2 text-sm text-white font-bold leading-snug group-hover:text-primary transition-colors line-clamp-3">
+      <div className="relative flex flex-col gap-2.5 p-5 lg:p-7">
+        <CategoryBadge category={article.category} onCover />
+        <h3 className="m-0 text-xl lg:text-[28px] leading-tight text-white group-hover:underline decoration-1 underline-offset-4">
           {article.title}
         </h3>
+        {showExcerpt && (
+          <p className="m-0 max-w-[60ch] text-sm lg:text-[15px] leading-relaxed text-white/70 line-clamp-2">
+            {article.excerpt}
+          </p>
+        )}
         <AuthorChip
           initial={article.authorInitial}
           name={article.author}
-          date={article.date}
           readTime={article.readTime}
+          onCover
         />
       </div>
     </Link>

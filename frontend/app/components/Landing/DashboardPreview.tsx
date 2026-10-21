@@ -1,4 +1,8 @@
-import { CaretDownIcon, SearchIcon, StarIcon } from "./LandingIcons";
+import {
+  CaretDownIcon,
+  SearchIcon,
+  StarIcon,
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 import { previewChart, previewFavorites } from "./previewData";
 
 const trend = (up: boolean) => (up ? "var(--n-up)" : "var(--n-down)");

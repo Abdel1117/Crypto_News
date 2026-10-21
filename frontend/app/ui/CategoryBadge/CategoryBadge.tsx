@@ -1,12 +1,29 @@
-import { CATEGORY_META } from "@/app/(public)/blog/data";
+import type { CSSProperties } from "react";
+import { categoryHue } from "@/app/(public)/blog/data";
 
-export function CategoryBadge({ category }: { category: string }) {
-  const meta = CATEGORY_META[category];
+/** Style that tints an element (cover, label) with a category's hue. */
+export const categoryStyle = (category: string) =>
+  ({ "--cat-h": categoryHue(category) }) as CSSProperties;
+
+/** Category label, tinted with the category hue (or light, over a cover). */
+export function CategoryBadge({
+  category,
+  onCover = false,
+}: {
+  category: string;
+  onCover?: boolean;
+}) {
   return (
     <span
-      className={`text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5 ${meta?.color ?? "text-primary"}`}
+      className={`inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[0.08em] uppercase ${
+        onCover ? "text-white/85" : "n-cat"
+      }`}
+      style={categoryStyle(category)}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      <span
+        aria-hidden="true"
+        className={`w-1.5 h-1.5 rounded-full ${onCover ? "bg-white/85" : "bg-current"}`}
+      />
       {category}
     </span>
   );

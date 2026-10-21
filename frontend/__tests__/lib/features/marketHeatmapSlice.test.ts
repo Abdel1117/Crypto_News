@@ -24,7 +24,17 @@ describe("marketHeatmapSlice", () => {
       coins: [],
       loading: false,
       error: null,
+      updatedAt: null,
     });
+  });
+
+  it("records the request time as the update time", async () => {
+    vi.mocked(fetchPrices).mockResolvedValue([{ id: "bitcoin" }]);
+    const store = makeStore();
+    await store.dispatch(
+      getMarketHeatmap({ currency: "usd", limit: 50, requestedAt: 1234 }) as any,
+    );
+    expect(store.getState().marketHeatmap.updatedAt).toBe(1234);
   });
 
   it("sets loading and populates coins on success", async () => {

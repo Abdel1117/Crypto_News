@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { useAppSelector } from "@/app/lib/hooks";
 import { useTheme } from "@/app/context/Theme/ThemeContext";
@@ -11,12 +12,13 @@ import {
   ListIcon,
   MoonIcon,
   SunIcon,
-} from "./LandingIcons";
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 
 const NAV_LINKS = [
-  { label: "Accueil", href: "/", current: true },
+  { label: "Accueil", href: "/" },
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Contact", href: "#contact" },
+  // The contact block lives on the landing page.
+  { label: "Contact", href: "/#contact" },
 ];
 
 const noopSubscribe = () => () => {};
@@ -57,6 +59,7 @@ function AuthAction() {
 }
 
 export default function LandingNav() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -83,7 +86,7 @@ export default function LandingNav() {
               key={l.href}
               href={l.href}
               className="n-nav-link"
-              aria-current={l.current ? "page" : undefined}
+              aria-current={pathname === l.href ? "page" : undefined}
             >
               {l.label}
             </Link>
@@ -116,7 +119,7 @@ export default function LandingNav() {
               key={l.href}
               href={l.href}
               className="n-nav-link flex items-center min-h-11 px-2 text-[15px]!"
-              aria-current={l.current ? "page" : undefined}
+              aria-current={pathname === l.href ? "page" : undefined}
               onClick={close}
             >
               {l.label}

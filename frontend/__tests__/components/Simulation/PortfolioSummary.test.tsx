@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 vi.mock("../../../app/lib/hooks", () => ({
   useAppSelector: vi.fn(),
@@ -19,7 +19,15 @@ import { useCurrency } from "../../../app/context/Curency/CurrencyContext";
 import PortfolioSummary from "../../../app/components/Simulation/PortfolioSummary";
 
 const coins = [
-  { id: "btc", symbol: "btc", name: "Bitcoin", image: "/btc.png", price: 110, market_cap: 1, change_24h: 0 },
+  {
+    id: "btc",
+    symbol: "btc",
+    name: "Bitcoin",
+    image: "/btc.png",
+    price: 110,
+    market_cap: 1,
+    change_24h: 0,
+  },
 ];
 
 function setupState(simulation: any, pricesLoading = false) {
@@ -34,7 +42,10 @@ function setupState(simulation: any, pricesLoading = false) {
 
 describe("PortfolioSummary", () => {
   beforeEach(() => {
-    vi.mocked(useCurrency).mockReturnValue({ currency: "usd", setCurrency: vi.fn() });
+    vi.mocked(useCurrency).mockReturnValue({
+      currency: "usd",
+      setCurrency: vi.fn(),
+    });
   });
 
   it("shows a positive total pnl when holdings gained value", () => {
@@ -42,21 +53,38 @@ describe("PortfolioSummary", () => {
       balance: 500,
       initialBalance: 1000,
       realizedPnl: 0,
-      holdings: [{ coinId: "btc", coinName: "Bitcoin", coinSymbol: "btc", coinImage: "/btc.png", amount: 5, avgBuyPrice: 100 }],
+      holdings: [
+        {
+          coinId: "btc",
+          coinName: "Bitcoin",
+          coinSymbol: "btc",
+          coinImage: "/btc.png",
+          amount: 5,
+          avgBuyPrice: 100,
+        },
+      ],
     });
 
     render(<PortfolioSummary coins={coins} />);
 
-    // totalValue = 500 + 5*110 = 1050, pnl = +50 (+5.00%)
-    expect(screen.getByText(/\+50,00\$ \(5\.00%\)/)).toBeTruthy();
-    expect(screen.getByText("Bitcoin")).toBeTruthy();
+    // totalValue = 500 + 5*110 = 1050, pnl = +50 (+5,00 %)
+    const band = screen.getAllByRole("region", { name: "Résumé du portefeuille" })[0];
+    expect(within(band).getByText(/1\s050,00\s\$/)).toBeTruthy();
+    expect(within(band).getByText(/^\+50,00\s\$$/)).toBeTruthy();
+    expect(within(band).getByText(/^\+5,00\s%$/)).toBeTruthy();
+    expect(within(band).getByText(/sur 1\s000,00\s\$ de départ/)).toBeTruthy();
   });
 
-  it("shows no positions section when there are no holdings", () => {
-    setupState({ balance: 1000, initialBalance: 1000, realizedPnl: 0, holdings: [] });
+  it("shows a true minus for losses", () => {
+    setupState({
+      balance: 900,
+      initialBalance: 1000,
+      realizedPnl: -100,
+      holdings: [],
+    });
 
     render(<PortfolioSummary coins={coins} />);
 
-    expect(screen.queryByText("Vos positions")).toBeNull();
+    expect(screen.getAllByText(/−100,00\s\$/).length).toBeGreaterThan(0);
   });
 });

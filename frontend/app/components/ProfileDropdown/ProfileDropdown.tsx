@@ -1,62 +1,91 @@
 "use client";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
-import { logout } from "@/app/lib/features/auth/authSlice";
-import { logoutUser } from "@/app/lib/auth/api";
-import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/app/lib/hooks";
+import { useLogout } from "@/app/hooks/useLogout";
+import {
+  SignOutIcon,
+  SquaresFourIcon,
+  UserIcon,
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 
+/** Account menu of the public navigation (signed-in visitors). */
 export default function ProfileDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   const { user } = useAppSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
-  const router = useRouter();
-  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? "?";
+  const logout = useLogout();
+  const avatarLetter = (user?.fullName || user?.email || "?")
+    .charAt(0)
+    .toUpperCase();
+  const label = user?.fullName || user?.email || "Mon compte";
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+    if (!open) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
     };
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-    } catch {
-      /* cookie déjà expiré ou réseau */
-    }
-    dispatch(logout());
+  const handleLogout = () => {
     setOpen(false);
-    router.push("/login");
+    logout();
   };
 
   return (
     <div className="relative" ref={ref}>
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-sm hover:opacity-80 transition-opacity cursor-pointer shadow-xl"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Menu du compte (${label})`}
+        className="w-10 h-10 rounded-full grid place-items-center border-0 cursor-pointer font-[inherit] text-sm font-medium bg-(--n-accent-800) text-(--n-accent-100) shadow-[0_0_0_1px_color-mix(in_srgb,var(--n-accent)_50%,transparent)] hover:shadow-[0_0_0_1px_var(--n-accent),0_0_18px_-6px_var(--n-accent)]"
       >
         {avatarLetter}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-44 bg-surface rounded-xl shadow-lg overflow-hidden z-50 border border-border">
+        <div role="menu" className="n-menu right-0 top-[calc(100%+8px)] w-56">
+          {user?.email && (
+            <p className="m-0 px-2.5 pt-1.5 pb-2 text-xs text-(--n-neutral-500) truncate">
+              {user.email}
+            </p>
+          )}
           <Link
             href="/profil"
+            role="menuitem"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-3 text-sm hover:bg-primary/10 transition-colors"
+            className="n-menu-item"
           >
+            <UserIcon size={16} />
             Mon profil
           </Link>
-          <button
-            onClick={handleLogout}
-            className="w-full text-left flex items-center gap-2 px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 transition-colors hover:cursor-pointer"
+          <Link
+            href="/dashboard"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="n-menu-item"
           >
+            <SquaresFourIcon size={16} />
+            Dashboard
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={handleLogout}
+            className="n-menu-item text-(--n-down)!"
+          >
+            <SignOutIcon size={16} />
             Se déconnecter
           </button>
         </div>

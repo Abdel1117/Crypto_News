@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAppSelector } from "@/app/lib/hooks";
-import { PlayIcon } from "./LandingIcons";
+import { PlayIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
 
 export default function LandingHero() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
