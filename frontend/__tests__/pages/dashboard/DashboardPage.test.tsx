@@ -1,13 +1,16 @@
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 // ─── External dependency mocks ────────────────────────────────────────────────
 
 vi.mock("@/app/lib/ws/socket", () => ({ send: vi.fn() }));
 
 vi.mock("@/app/lib/features/prices/pricesThunks", () => ({
-  getMarketCoin: vi.fn(() => ({ type: "prices/getMarketCoin" })),
+  getMarketCoin: vi.fn((args: { cryptoId: string }) => ({
+    type: "prices/getMarketCoin",
+    payload: args.cryptoId,
+  })),
 }));
 vi.mock("@/app/lib/features/marketView/marketViewSlice", () => ({
   setSelectedSymbol: vi.fn((id: string) => ({
@@ -16,14 +19,14 @@ vi.mock("@/app/lib/features/marketView/marketViewSlice", () => ({
   })),
 }));
 vi.mock("@/app/lib/features/symbol/symbolSlice", () => ({
-  addSymbolIfMissing: vi.fn(() => ({ type: "symbols/addSymbolIfMissing" })),
+  addSymbolIfMissing: vi.fn((coin: { id: string }) => ({
+    type: "symbols/addSymbolIfMissing",
+    payload: coin,
+  })),
 }));
 vi.mock("@/app/lib/features/watchlist/watchlistSlice", () => ({
   initWatchlist: vi.fn(() => ({ type: "watchlist/initWatchlist" })),
-  toggleWatchlist: vi.fn(() => ({ type: "watchlist/toggleWatchlist" })),
 }));
-
-// ─── Context / store mocks ────────────────────────────────────────────────────
 
 vi.mock("@/app/context/Curency/CurrencyContext", () => ({
   useCurrency: () => ({ currency: "eur", setCurrency: vi.fn() }),
@@ -34,179 +37,161 @@ vi.mock("@/app/lib/hooks", () => ({
   useAppDispatch: vi.fn(),
 }));
 
-// ─── Heavy component mocks ────────────────────────────────────────────────────
+// ─── Section mocks (each section has its own tests) ───────────────────────────
 
-vi.mock("@/app/ui/CryptoInfoCard/CryptoInfoCard", () => ({
-  default: ({ coin }: { coin: { id: string; name: string } }) => (
-    <div data-testid="crypto-info-card" data-id={coin.id}>
-      {coin.name}
-    </div>
+type Coin = { id: string; name: string };
+
+vi.mock("@/app/components/Dashboard/Favorites", () => ({
+  default: ({
+    coins,
+    selectedId,
+    onSelect,
+  }: {
+    coins: Coin[];
+    selectedId: string;
+    onSelect: (id: string) => void;
+  }) => (
+    <section data-testid="favorites" data-selected={selectedId}>
+      {coins.map((c) => (
+        <button key={c.id} type="button" onClick={() => onSelect(c.id)}>
+          fav-{c.id}
+        </button>
+      ))}
+    </section>
   ),
 }));
-vi.mock("@/app/components/CandleStickGraph/CandleStickGraph", () => ({
-  default: () => <div data-testid="candlestick-graph">CandleStickGraph</div>,
-}));
-vi.mock("@/app/components/TopGainersLosers/TopGainersLosers", () => ({
-  default: () => (
-    <div data-testid="top-gainers-losers">TopGainersLosers</div>
+vi.mock("@/app/components/Dashboard/PriceChart", () => ({
+  default: ({ coin }: { coin?: Coin }) => (
+    <section data-testid="price-chart">{coin?.name ?? "none"}</section>
   ),
 }));
-vi.mock("@/app/components/MarketOverView/MarketOverView", () => ({
-  default: () => <div data-testid="market-overview">MarketOverView</div>,
+vi.mock("@/app/components/Dashboard/MarketStats", () => ({
+  default: () => <section data-testid="market-stats" />,
+}));
+vi.mock("@/app/components/Dashboard/HeatmapPreview", () => ({
+  default: ({ onSelect }: { onSelect: (id: string) => void }) => (
+    <button
+      type="button"
+      data-testid="heatmap-preview"
+      onClick={() => onSelect("solana")}
+    >
+      heatmap
+    </button>
+  ),
+}));
+vi.mock("@/app/components/Dashboard/MoversTable", () => ({
+  default: () => <section data-testid="movers-table" />,
 }));
 
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
 import DashboardPage from "../../../app/(app)/dashboard/page";
 
-// ─── Shared fixtures ──────────────────────────────────────────────────────────
+// ─── Fixtures ─────────────────────────────────────────────────────────────────
 
-const mockCoinA = { id: "bitcoin",  name: "Bitcoin",  symbol: "btc" };
-const mockCoinB = { id: "ethereum", name: "Ethereum", symbol: "eth" };
+const bitcoin = { id: "bitcoin", name: "Bitcoin", symbol: "btc", image: "" };
+const ethereum = { id: "ethereum", name: "Ethereum", symbol: "eth", image: "" };
+const solana = { id: "solana", name: "Solana", symbol: "sol", image: "" };
 
-const defaultState = {
-  prices:           { coins: [], loading: false },
-  symbols:          { symbols: [] },
-  topGainersLosers: { topGainers: [], topLosers: [] },
-  trending:         { coins: [] },
-  watchlist:        { ids: [] },
+const baseState = {
+  prices: { coins: [bitcoin, ethereum], loading: false },
+  symbols: { symbols: [] as { id: string }[] },
+  topGainersLosers: { topGainers: [solana], topLosers: [] },
+  trending: { coins: [] },
+  watchlist: { ids: [] as string[] },
+  marketView: { selectedSymbol: "bitcoin" },
 };
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+function withState(patch: Partial<typeof baseState>) {
+  const state = { ...baseState, ...patch };
+  vi.mocked(useAppSelector).mockImplementation((selector) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    selector(state as any),
+  );
+}
 
 describe("DashboardPage", () => {
-  const mockDispatch = vi.fn();
+  const dispatch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
-    vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector(defaultState as any),
-    );
+    vi.mocked(useAppDispatch).mockReturnValue(dispatch);
+    withState({});
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
   });
 
-  describe("static structure", () => {
-    it("renders without crashing", () => {
-      const { container } = render(<DashboardPage />);
-      expect(container.firstChild).toBeTruthy();
-    });
-
-    it("always renders MarketOverView", () => {
-      render(<DashboardPage />);
-      expect(screen.getByTestId("market-overview")).toBeTruthy();
-    });
-
-    it("always renders CandleStickGraph", () => {
-      render(<DashboardPage />);
-      expect(screen.getByTestId("candlestick-graph")).toBeTruthy();
-    });
-
-    it("always renders TopGainersLosers", () => {
-      render(<DashboardPage />);
-      expect(screen.getByTestId("top-gainers-losers")).toBeTruthy();
-    });
+  it("renders every section", () => {
+    render(<DashboardPage />);
+    for (const id of [
+      "favorites",
+      "price-chart",
+      "market-stats",
+      "heatmap-preview",
+      "movers-table",
+    ]) {
+      expect(screen.getByTestId(id)).toBeTruthy();
+    }
   });
 
-  describe("effects on mount", () => {
-    it("dispatches initWatchlist", () => {
-      render(<DashboardPage />);
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "watchlist/initWatchlist",
-      });
-    });
+  it("initialises the watchlist on mount", () => {
+    render(<DashboardPage />);
+    expect(dispatch).toHaveBeenCalledWith({ type: "watchlist/initWatchlist" });
   });
 
-  describe("loading state", () => {
-    it("shows 6 coin-card skeletons plus the heatmap skeleton when prices.loading is true", () => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ ...defaultState, prices: { coins: [], loading: true } } as any),
-      );
-      const { container } = render(<DashboardPage />);
-      // 6 CryptoInfoCard skeletons + 1 HeatMap skeleton (real component, not mocked).
-      expect(container.querySelectorAll(".animate-pulse").length).toBe(7);
-    });
+  it("passes the watchlist coins to Favorites, skipping unknown ids", () => {
+    withState({ watchlist: { ids: ["ethereum", "unknown-xyz"] } });
+    render(<DashboardPage />);
+    expect(screen.getByText("fav-ethereum")).toBeTruthy();
+    expect(screen.queryByText("fav-unknown-xyz")).toBeNull();
+  });
 
-    it("shows no loading skeletons when prices.loading is false", () => {
-      const { container } = render(<DashboardPage />);
-      expect(container.querySelectorAll(".animate-pulse").length).toBe(0);
+  it("fetches market data for favourites missing from the price feed", () => {
+    withState({ watchlist: { ids: ["ethereum", "cardano"] } });
+    render(<DashboardPage />);
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "prices/getMarketCoin",
+      payload: "cardano",
+    });
+    expect(dispatch).not.toHaveBeenCalledWith({
+      type: "prices/getMarketCoin",
+      payload: "ethereum",
     });
   });
 
-  describe("top crypto grid", () => {
-    it("renders a CryptoInfoCard for each top coin", () => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({
-          ...defaultState,
-          prices: { coins: [mockCoinA, mockCoinB], loading: false },
-        } as any),
-      );
-      render(<DashboardPage />);
-      expect(screen.getAllByTestId("crypto-info-card").length).toBe(2);
-    });
+  it("shows the selected coin in the chart", () => {
+    render(<DashboardPage />);
+    expect(screen.getByTestId("price-chart").textContent).toBe("Bitcoin");
+    expect(screen.getByTestId("favorites").dataset.selected).toBe("bitcoin");
+  });
 
-    it("renders no CryptoInfoCards when coins list is empty", () => {
-      render(<DashboardPage />);
-      expect(screen.queryAllByTestId("crypto-info-card")).toHaveLength(0);
-    });
-
-    it("limits the top crypto grid to 6 coins", () => {
-      const manyCoins = Array.from({ length: 10 }, (_, i) => ({
-        id: `coin-${i}`,
-        name: `Coin ${i}`,
-        symbol: `c${i}`,
-      }));
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({
-          ...defaultState,
-          prices: { coins: manyCoins, loading: false },
-        } as any),
-      );
-      render(<DashboardPage />);
-      expect(screen.getAllByTestId("crypto-info-card").length).toBe(6);
+  it("selects a coin from a favourite card", () => {
+    withState({ watchlist: { ids: ["ethereum"] } });
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByText("fav-ethereum"));
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "marketView/setSelectedSymbol",
+      payload: "ethereum",
     });
   });
 
-  describe("watchlist section", () => {
-    it("hides the watchlist heading when watchlist is empty", () => {
-      render(<DashboardPage />);
-      expect(screen.queryByText(/your watchlist/i)).toBeNull();
+  it("registers coins picked outside the price feed as symbols", () => {
+    render(<DashboardPage />);
+    fireEvent.click(screen.getByTestId("heatmap-preview"));
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "marketView/setSelectedSymbol",
+      payload: "solana",
     });
-
-    it("shows the watchlist heading when matching coins exist", () => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({
-          ...defaultState,
-          prices: { coins: [mockCoinA], loading: false },
-          watchlist: { ids: ["bitcoin"] },
-        } as any),
-      );
-      render(<DashboardPage />);
-      expect(screen.getByText("Your Watchlist")).toBeTruthy();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "symbols/addSymbolIfMissing",
+      payload: {
+        id: "solana",
+        name: "Solana",
+        symbol: "sol",
+        image: "",
+      },
     });
-
-    it("renders one CryptoInfoCard per watchlist coin", () => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({
-          ...defaultState,
-          prices: { coins: [mockCoinA, mockCoinB], loading: false },
-          watchlist: { ids: ["bitcoin", "ethereum"] },
-        } as any),
-      );
-      render(<DashboardPage />);
-      // 2 watchlist cards + 2 top-crypto cards = 4
-      expect(screen.getAllByTestId("crypto-info-card").length).toBe(4);
-    });
-
-    it("silently skips watchlist IDs not found in price or symbol maps", () => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({
-          ...defaultState,
-          prices: { coins: [mockCoinA], loading: false },
-          watchlist: { ids: ["bitcoin", "unknown-xyz"] },
-        } as any),
-      );
-      render(<DashboardPage />);
-      // 1 watchlist card (bitcoin) + 1 top-crypto card = 2
-      expect(screen.getAllByTestId("crypto-info-card").length).toBe(2);
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "prices/getMarketCoin",
+      payload: "solana",
     });
   });
 });

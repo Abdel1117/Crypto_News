@@ -1,117 +1,174 @@
 "use client";
-import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
-import { logout } from "@/app/lib/features/auth/authSlice";
-import { useRouter } from "next/navigation";
-import AuthGuard from "@/app/components/AuthGuard/AuthGuard";
 
-function Card({
-  title,
-  children,
-  className = "",
+import { useAppSelector } from "@/app/lib/hooks";
+import { useLogout } from "@/app/hooks/useLogout";
+import AuthGuard from "@/app/components/AuthGuard/AuthGuard";
+import {
+  LockSimpleIcon,
+  SignOutIcon,
+} from "@/app/ui/NocturneIcons/NocturneIcons";
+import { SettingsList, SettingsRow } from "@/app/ui/SettingsList/SettingsList";
+
+function ReadOnlyInput({
+  id,
+  label,
+  value,
+  muted = false,
 }: {
-  title: string;
-  children: React.ReactNode;
-  className?: string;
+  id: string;
+  label: string;
+  value: string;
+  muted?: boolean;
 }) {
   return (
-    <div className={`bg-surface rounded-2xl p-6 space-y-4 ${className}`}>
-      <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide border-b border-foreground/10 pb-3">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-xs text-muted">{label}</span>
-      <span className="text-sm text-foreground bg-card rounded-lg px-4 py-2.5 break-all">
-        {value}
-      </span>
+    <div className="n-field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        className={`n-text-input lg:min-h-10! ${muted ? "text-(--n-neutral-300)!" : ""}`}
+        type="text"
+        value={value}
+        readOnly
+      />
     </div>
   );
 }
 
 export default function ProfilPage() {
-  const dispatch = useAppDispatch();
-  const router = useRouter();
   const { user } = useAppSelector((state) => state.auth);
+  const logout = useLogout();
 
-  const avatarLetter = user?.email?.[0]?.toUpperCase() ?? "?";
+  const fullName = user?.fullName?.trim() || "";
+  const nameParts = fullName.split(/\s+/).filter(Boolean);
+  const firstName = nameParts[0] ?? "";
+  const lastName = nameParts.slice(1).join(" ");
+  const displayName = fullName || user?.email || "—";
+  const email = user?.email ?? "—";
+  const avatarLetter = (fullName || user?.email || "?").charAt(0).toUpperCase();
 
-  const nameParts = user?.fullName?.trim().split(/\s+/) ?? [];
-  const prenom = nameParts[0] ?? "—";
-  const nom = nameParts.slice(1).join(" ") || "—";
-
-  function handleLogout() {
-    dispatch(logout());
-    router.push("/login");
-  }
+  // No endpoint updates the name yet: the fields are shown read-only.
+  const nameHint = "Modification du nom disponible prochainement.";
 
   return (
     <AuthGuard>
-    <section className="min-w-0 space-y-6 py-6">
-      {/* Identity header — always full width */}
-      <div className="bg-surface rounded-2xl p-8 flex flex-col sm:flex-row items-center gap-6">
-        <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-3xl font-bold text-background shrink-0">
-          {avatarLetter}
-        </div>
-        <div className="text-center sm:text-left space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground">
-            {user?.fullName ?? user?.email ?? "—"}
-          </h1>
-          <p className="text-sm text-muted">{user?.email ?? "—"}</p>
-          <p className="text-xs text-muted">ID : {user?.id ?? "—"}</p>
-        </div>
-      </div>
-
-      {/* Card grid: 1 col → 2 col (sm) → 4 col (xl) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {/* Identité — 2 cols on xl */}
-        <Card title="Identité" className="xl:col-span-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Prénom" value={prenom} />
-            <Field label="Nom" value={nom} />
-          </div>
-        </Card>
-
-        {/* Compte — 1 col on xl */}
-        <Card title="Compte">
-          <Field label="Adresse e-mail" value={user?.email ?? "—"} />
-          <Field label="Identifiant" value={user?.id ?? "—"} />
-        </Card>
-
-        {/* Sécurité — 1 col on xl */}
-        <Card title="Sécurité">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-xs text-muted">Mot de passe</span>
-            <span className="text-sm text-foreground bg-card rounded-lg px-4 py-2.5 opacity-50">
-              ••••••••
-            </span>
-            <span className="text-xs text-muted mt-1">
-              Modification disponible prochainement.
-            </span>
-          </div>
-        </Card>
-
-        {/* Danger — full width at bottom */}
-        <Card title="Zone de danger" className="sm:col-span-2 xl:col-span-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-sm text-muted">
-              Se déconnecter mettra fin à votre session sur cet appareil.
+      <div className="flex flex-col gap-[18px] lg:gap-7 lg:max-w-[880px] lg:pt-2 min-h-[calc(100dvh-60px-96px-4px)] lg:min-h-0">
+        <div className="flex items-center gap-3.5 lg:gap-[18px]">
+          <span
+            aria-hidden="true"
+            className="w-[52px] h-[52px] lg:w-16 lg:h-16 flex-none rounded-full grid place-items-center text-[21px] lg:text-[26px] font-medium bg-(--n-accent-800) text-(--n-accent-100) shadow-[0_0_0_1px_var(--n-accent),0_0_32px_-10px_var(--n-accent)]"
+          >
+            {avatarLetter}
+          </span>
+          <div className="flex flex-col gap-0.5 lg:gap-1 min-w-0">
+            <p className="m-0 text-[19px] lg:text-[26px] font-medium tracking-[-0.01em] truncate">
+              {displayName}
             </p>
-            <button
-              onClick={handleLogout}
-              className="shrink-0 px-5 py-2.5 bg-danger text-white rounded-lg text-sm font-semibold hover:opacity-80 transition-opacity cursor-pointer"
-            >
-              Se déconnecter
-            </button>
+            <p className="m-0 text-[13px] lg:text-sm text-(--n-neutral-400) truncate">
+              {email}
+            </p>
           </div>
-        </Card>
+        </div>
+
+        {/* Desktop: one settings list */}
+        <SettingsList className="hidden lg:flex">
+          <SettingsRow title="Identité">
+            <div className="flex flex-col gap-3.5">
+              <div className="grid grid-cols-2 gap-3">
+                <ReadOnlyInput id="p-first" label="Prénom" value={firstName} />
+                <ReadOnlyInput id="p-last" label="Nom" value={lastName} />
+              </div>
+              <div className="flex items-center gap-3">
+                <button type="button" className="n-btn n-btn-primary" disabled>
+                  Enregistrer
+                </button>
+                <span className="text-[13px] text-(--n-neutral-500)">
+                  {nameHint}
+                </span>
+              </div>
+            </div>
+          </SettingsRow>
+          <SettingsRow title="Compte">
+            <ReadOnlyInput
+              id="p-mail"
+              label="Adresse e-mail"
+              value={email}
+              muted
+            />
+          </SettingsRow>
+          <SettingsRow title="Sécurité">
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-0.5 mr-auto">
+                <span className="text-sm">Mot de passe</span>
+                <span className="text-[13px] text-(--n-neutral-500)">
+                  Modification disponible prochainement.
+                </span>
+              </div>
+              <button type="button" className="n-btn n-btn-secondary" disabled>
+                Modifier
+              </button>
+            </div>
+          </SettingsRow>
+          <SettingsRow title="Session" last>
+            <div className="flex items-center gap-4">
+              <span className="mr-auto text-sm text-(--n-neutral-300)">
+                Se déconnecter mettra fin à votre session sur cet appareil.
+              </span>
+              <button
+                type="button"
+                className="n-btn n-btn-secondary flex-none"
+                onClick={logout}
+              >
+                <SignOutIcon />
+                Se déconnecter
+              </button>
+            </div>
+          </SettingsRow>
+        </SettingsList>
+
+        {/* Mobile */}
+        <section
+          className="lg:hidden flex flex-col gap-3 p-3.5 n-panel"
+          aria-labelledby="identity-title"
+        >
+          <h2 id="identity-title" className="n-kicker m-0 font-normal!">
+            Identité
+          </h2>
+          <ReadOnlyInput id="pm-first" label="Prénom" value={firstName} />
+          <ReadOnlyInput id="pm-last" label="Nom" value={lastName} />
+          <p className="m-0 text-xs text-(--n-neutral-500)">{nameHint}</p>
+        </section>
+        <ul
+          className="lg:hidden m-0 p-0 list-none flex flex-col gap-px rounded-lg overflow-hidden"
+          style={{
+            background:
+              "color-mix(in srgb, var(--n-text) 7%, var(--n-surface))",
+          }}
+        >
+          <li className="flex flex-col justify-center gap-0.5 min-h-[60px] px-3.5 bg-(--n-surface)">
+            <span className="text-xs text-(--n-neutral-400)">
+              Adresse e-mail
+            </span>
+            <span className="text-[15px] truncate">{email}</span>
+          </li>
+          <li className="flex items-center min-h-[60px] px-3.5 bg-(--n-surface)">
+            <div className="flex flex-col gap-0.5 mr-auto">
+              <span className="text-[15px]">Mot de passe</span>
+              <span className="text-xs text-(--n-neutral-500)">
+                Modification disponible prochainement.
+              </span>
+            </div>
+            <LockSimpleIcon size={18} className="text-(--n-neutral-500)" />
+          </li>
+        </ul>
+        <button
+          type="button"
+          className="lg:hidden n-btn n-btn-secondary mt-auto w-full min-h-12 text-[15px]!"
+          onClick={logout}
+        >
+          <SignOutIcon />
+          Se déconnecter
+        </button>
       </div>
-    </section>
     </AuthGuard>
   );
 }

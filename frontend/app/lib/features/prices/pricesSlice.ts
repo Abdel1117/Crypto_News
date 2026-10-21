@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { getPrices, getMarketCoin } from "./pricesThunks"
-import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard"
+import { CryptoMarketData } from "@/app/types/Crypto/Crypto"
 
 
 

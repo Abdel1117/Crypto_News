@@ -3,7 +3,7 @@
  * Receives market data from WS and dispatches to Redux.
  */
 
-import type { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
+import type { CryptoMarketData } from "@/app/types/Crypto/Crypto";
 import { setCoins, setConnected } from "@/app/lib/features/prices/pricesSlice";
 import type { AppDispatch } from "@/app/lib/store";
 

@@ -9,6 +9,6 @@ describe("AuthorChip", () => {
 
     expect(screen.getByText("A")).toBeTruthy();
     expect(screen.getByText("Alice Dupont")).toBeTruthy();
-    expect(screen.getByText("5 min")).toBeTruthy();
+    expect(screen.getByText("5 min de lecture")).toBeTruthy();
   });
 });

@@ -22,7 +22,6 @@ const article: Article = {
   date: "12 juin 2025",
   readTime: "5 min",
   excerpt: "excerpt",
-  gradient: "from-yellow-950 via-orange-900 to-yellow-800",
 };
 
 describe("HeroCard", () => {

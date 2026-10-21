@@ -1,6 +1,9 @@
 import React from "react";
-import { SectionHeader } from "@/app/ui/SectionHeader/SectionHeader";
 
+const RULE =
+  "linear-gradient(to right, transparent, var(--n-divider) 48px, var(--n-divider) calc(100% - 48px), transparent) no-repeat top / 100% 1px";
+
+/** One numbered-free block of a legal page: title, then prose. */
 export function LegalSection({
   title,
   children,
@@ -9,9 +12,12 @@ export function LegalSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-6 rounded-2xl border border-surface bg-card p-6 sm:p-8">
-      <SectionHeader title={title} />
-      <div className="space-y-3 text-sm leading-relaxed text-muted">
+    <section
+      className="flex flex-col gap-3 py-7 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:py-9"
+      style={{ background: RULE }}
+    >
+      <h2 className="m-0 text-lg lg:text-[19px] leading-snug">{title}</h2>
+      <div className="flex flex-col gap-3 text-[15px] leading-7 text-[color-mix(in_srgb,var(--n-text)_78%,transparent)] [&_p]:m-0 [&_ul]:m-0 marker:text-(--n-accent) [&_strong]:font-medium [&_strong]:text-(--n-text)">
         {children}
       </div>
     </section>
@@ -30,14 +36,14 @@ export function LegalPageHeader({
   updatedAt: string;
 }) {
   return (
-    <div className="mb-8">
-      <p className="mb-1 text-xs font-bold uppercase tracking-widest text-primary">
-        {eyebrow}
-      </p>
-      <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-        {title} <span className="text-primary">{highlight}</span>
+    <header className="pb-8 lg:pb-12">
+      <span className="n-eyebrow">{eyebrow}</span>
+      <h1 className="mt-3.5 mb-0 text-[32px] leading-[1.1] lg:mt-4 lg:text-[44px]">
+        {title} <span className="text-(--n-accent-400)">{highlight}</span>
       </h1>
-      <p className="mt-2 text-sm text-muted">Dernière mise à jour : {updatedAt}</p>
-    </div>
+      <p className="mt-3 mb-0 text-sm text-(--n-neutral-500)">
+        Dernière mise à jour : {updatedAt}
+      </p>
+    </header>
   );
 }

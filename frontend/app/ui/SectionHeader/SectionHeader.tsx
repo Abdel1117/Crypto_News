@@ -1,18 +1,29 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
 
-export function SectionHeader({ title, href }: { title: string; href?: string }) {
+/** Section title with an optional count and « Voir tout » link. */
+export function SectionHeader({
+  title,
+  href,
+  count,
+}: {
+  title: string;
+  href?: string;
+  count?: number;
+}) {
   return (
-    <div className="flex items-center justify-between mb-5">
-      <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-        <span className="w-1 h-5 rounded-full bg-primary inline-block" />
-        {title}
-      </h2>
+    <div className="flex items-center gap-2.5 mb-4">
+      <h2 className="m-0 text-lg">{title}</h2>
+      {typeof count === "number" && (
+        <span className="text-[13px] text-(--n-neutral-500)">{count}</span>
+      )}
       {href && (
         <Link
           href={href}
-          className="text-xs text-primary hover:underline font-medium"
+          className="ml-auto inline-flex items-center gap-1 text-[13px] no-underline"
         >
-          Voir tout →
+          Voir tout
+          <ArrowRightIcon size={14} />
         </Link>
       )}
     </div>

@@ -56,7 +56,7 @@ describe("ProfileDropdown", () => {
     render(<ProfileDropdown />);
     fireEvent.click(screen.getByText("A"));
 
-    const profileLink = screen.getByRole("link", { name: "Mon profil" });
+    const profileLink = screen.getByRole("menuitem", { name: "Mon profil" });
     expect(profileLink.getAttribute("href")).toBe("/profil");
   });
 
@@ -83,5 +83,32 @@ describe("ProfileDropdown", () => {
     await waitFor(() => {
       expect(pushMock).toHaveBeenCalledWith("/login");
     });
+  });
+
+  it("is an accessible menu that closes with Escape", () => {
+    render(<ProfileDropdown />);
+    const trigger = screen.getByRole("button", { name: /Menu du compte/ });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(
+      screen.getByRole("menuitem", { name: "Dashboard" }).getAttribute("href"),
+    ).toBe("/dashboard");
+    expect(screen.getByText("ada@example.com")).toBeTruthy();
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("uses the full name initial when there is one", () => {
+    vi.mocked(useAppSelector).mockImplementation((selector: any) =>
+      selector({
+        auth: { user: { email: "z@example.com", fullName: "Bob Martin" } },
+      }),
+    );
+    render(<ProfileDropdown />);
+    expect(screen.getByText("B")).toBeTruthy();
   });
 });

@@ -13,143 +13,165 @@ vi.mock("@/app/lib/hooks", () => ({
   useAppDispatch: vi.fn(),
 }));
 
+vi.mock("@/app/hooks/useMediaQuery", () => ({
+  useIsDesktop: vi.fn(() => true),
+  useMediaQuery: vi.fn(() => true),
+}));
+
 vi.mock("@/app/lib/features/simulation/simulationSlice", () => ({
   initSimulation: vi.fn(() => ({ type: "simulation/initSimulation" })),
   resetSimulation: vi.fn(() => ({ type: "simulation/resetSimulation" })),
 }));
-
 vi.mock("@/app/lib/features/prices/pricesThunks", () => ({
   getPrices: vi.fn(() => ({ type: "prices/getPrices" })),
 }));
+vi.mock("@/app/lib/features/exchangeRate/exchangeRateThunks", () => ({
+  getExchangeRate: vi.fn(() => ({ type: "exchangeRate/get" })),
+}));
 
-// Sub-component mocks — avoids pulling in charts, Redux, etc.
+// The header slot renders in place so the reset button is reachable.
+vi.mock("@/app/components/AppShell/HeaderSlots", () => ({
+  HeaderActions: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="header-actions">{children}</div>
+  ),
+}));
+
 vi.mock("@/app/components/Simulation/PortfolioSummary", () => ({
-  default: () => <div data-testid="portfolio-summary">PortfolioSummary</div>,
+  default: ({ chart }: { chart?: React.ReactNode }) => (
+    <div data-testid="portfolio-summary">{chart}</div>
+  ),
 }));
 vi.mock("@/app/components/Simulation/PerformanceChart", () => ({
-  default: () => <div data-testid="performance-chart">PerformanceChart</div>,
+  default: ({ variant = "card" }: { variant?: string }) => (
+    <div data-testid={`performance-chart-${variant}`} />
+  ),
 }));
 vi.mock("@/app/components/Simulation/TradeForm", () => ({
-  default: () => <div data-testid="trade-form">TradeForm</div>,
+  default: ({
+    selectedId,
+    inSheet,
+  }: {
+    selectedId: string | null;
+    inSheet?: boolean;
+  }) => (
+    <div data-testid="trade-form" data-selected={selectedId ?? ""}>
+      {inSheet ? "sheet" : "panel"}
+    </div>
+  ),
 }));
-vi.mock("@/app/components/Simulation/PortfolioChart", () => ({
-  default: () => <div data-testid="portfolio-chart">PortfolioChart</div>,
-}));
-vi.mock("@/app/components/Simulation/WithdrawalForm", () => ({
-  default: () => <div data-testid="withdrawal-form">WithdrawalForm</div>,
+vi.mock("@/app/components/Simulation/Positions", () => ({
+  default: ({ onSelect }: { onSelect: (id: string) => void }) => (
+    <button
+      type="button"
+      data-testid="positions"
+      onClick={() => onSelect("btc")}
+    >
+      Positions
+    </button>
+  ),
 }));
 vi.mock("@/app/components/Simulation/TradeHistory", () => ({
-  default: () => <div data-testid="trade-history">TradeHistory</div>,
+  default: () => <div data-testid="trade-history" />,
 }));
-vi.mock("@/app/components/CandleStickGraph/CandleStickGraph", () => ({
-  default: () => <div data-testid="candlestick-graph">CandleStickGraph</div>,
+vi.mock("@/app/components/Simulation/OrderSheet", () => ({
+  default: ({
+    open,
+    children,
+  }: {
+    open: boolean;
+    children: React.ReactNode;
+  }) => (open ? <div role="dialog">{children}</div> : null),
 }));
 
 import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
+import { useIsDesktop, useMediaQuery } from "@/app/hooks/useMediaQuery";
 import SimulationPage from "../../../app/(app)/simulation/page";
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("SimulationPage", () => {
-  const mockDispatch = vi.fn();
+  const dispatch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
+    vi.mocked(useAppDispatch).mockReturnValue(dispatch);
+    vi.mocked(useIsDesktop).mockReturnValue(true);
+    vi.mocked(useMediaQuery).mockReturnValue(true);
     vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector({
-        prices: { coins: [] },
-        symbols: { symbols: [] },
-        topGainersLosers: { topGainers: [], topLosers: [] },
-        trending: { coins: [] },
-      } as any),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      selector({ prices: { coins: [] } } as any),
     );
   });
 
-  describe("structure", () => {
-    it("renders without crashing", () => {
-      const { container } = render(<SimulationPage />);
-      expect(container.firstChild).toBeTruthy();
-    });
+  it("initialises the portfolio, the exchange rate and the prices", () => {
+    render(<SimulationPage />);
+    expect(dispatch).toHaveBeenCalledWith({ type: "simulation/initSimulation" });
+    expect(dispatch).toHaveBeenCalledWith({ type: "exchangeRate/get" });
+    expect(dispatch).toHaveBeenCalledWith({ type: "prices/getPrices" });
+  });
 
-    it("renders the page heading 'Portefeuille virtuel'", () => {
-      render(<SimulationPage />);
-      expect(
-        screen.getByRole("heading", { name: "Portefeuille virtuel" }),
-      ).toBeTruthy();
-    });
-
-    it("renders the reset button", () => {
-      render(<SimulationPage />);
-      expect(
-        screen.getByRole("button", { name: /réinitialiser/i }),
-      ).toBeTruthy();
-    });
-
-    it("renders PortfolioSummary", () => {
+  describe("desktop", () => {
+    it("shows the summary, one performance chart, positions, history and the order panel", () => {
       render(<SimulationPage />);
       expect(screen.getByTestId("portfolio-summary")).toBeTruthy();
-    });
-
-    it("renders PerformanceChart", () => {
-      render(<SimulationPage />);
-      expect(screen.getByTestId("performance-chart")).toBeTruthy();
-    });
-
-    it("renders TradeForm", () => {
-      render(<SimulationPage />);
-      expect(screen.getByTestId("trade-form")).toBeTruthy();
-    });
-
-    it("renders PortfolioChart", () => {
-      render(<SimulationPage />);
-      expect(screen.getByTestId("portfolio-chart")).toBeTruthy();
-    });
-
-    it("renders TradeHistory", () => {
-      render(<SimulationPage />);
+      expect(screen.getByTestId("performance-chart-card")).toBeTruthy();
+      expect(screen.queryByTestId("performance-chart-compact")).toBeNull();
+      expect(screen.getByTestId("positions")).toBeTruthy();
       expect(screen.getByTestId("trade-history")).toBeTruthy();
+      expect(screen.getByTestId("trade-form").textContent).toBe("panel");
+    });
+
+    it("loads a position in the order form", () => {
+      render(<SimulationPage />);
+      fireEvent.click(screen.getByTestId("positions"));
+      expect(screen.getByTestId("trade-form").dataset.selected).toBe("btc");
     });
   });
 
-  describe("effects on mount", () => {
-    it("dispatches initSimulation", () => {
-      render(<SimulationPage />);
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "simulation/initSimulation",
-      });
+  describe("mobile", () => {
+    beforeEach(() => {
+      vi.mocked(useIsDesktop).mockReturnValue(false);
+      vi.mocked(useMediaQuery).mockReturnValue(false);
     });
 
-    it("dispatches getPrices with the current currency", () => {
+    it("puts the chart in the summary card and the form in a bottom sheet", () => {
       render(<SimulationPage />);
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "prices/getPrices",
-      });
+      expect(screen.getByTestId("performance-chart-compact")).toBeTruthy();
+      expect(screen.queryByTestId("performance-chart-card")).toBeNull();
+      expect(screen.queryByTestId("trade-form")).toBeNull();
+
+      fireEvent.click(screen.getByRole("button", { name: "Passer un ordre" }));
+      expect(screen.getByRole("dialog").textContent).toBe("sheet");
+    });
+
+    it("opens the sheet on the tapped position", () => {
+      render(<SimulationPage />);
+      fireEvent.click(screen.getByTestId("positions"));
+      expect(screen.getByTestId("trade-form").dataset.selected).toBe("btc");
     });
   });
 
-  describe("reset button", () => {
-    it("shows a confirmation dialog when reset is clicked", () => {
-      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
-      render(<SimulationPage />);
-      fireEvent.click(screen.getByRole("button", { name: /réinitialiser/i }));
-      expect(confirmSpy).toHaveBeenCalledOnce();
-    });
+  describe("reset", () => {
+    const reset = () =>
+      fireEvent.click(
+        screen.getByRole("button", { name: "Réinitialiser le portefeuille" }),
+      );
 
-    it("dispatches resetSimulation when the user confirms", () => {
+    it("asks for confirmation then resets", () => {
       vi.spyOn(window, "confirm").mockReturnValue(true);
       render(<SimulationPage />);
-      fireEvent.click(screen.getByRole("button", { name: /réinitialiser/i }));
-      expect(mockDispatch).toHaveBeenCalledWith({
+      reset();
+      expect(window.confirm).toHaveBeenCalled();
+      expect(dispatch).toHaveBeenCalledWith({
         type: "simulation/resetSimulation",
       });
     });
 
-    it("does NOT dispatch resetSimulation when the user cancels", () => {
+    it("does nothing when the user cancels", () => {
       vi.spyOn(window, "confirm").mockReturnValue(false);
       render(<SimulationPage />);
-      fireEvent.click(screen.getByRole("button", { name: /réinitialiser/i }));
-      expect(mockDispatch).not.toHaveBeenCalledWith({
+      reset();
+      expect(dispatch).not.toHaveBeenCalledWith({
         type: "simulation/resetSimulation",
       });
     });

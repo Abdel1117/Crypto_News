@@ -2,172 +2,99 @@ import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-// ─── Mocks ────────────────────────────────────────────────────────────────────
+vi.mock("next/navigation", () => ({ useRouter: vi.fn(() => ({ replace: vi.fn() })) }));
+vi.mock("@/app/lib/hooks", () => ({ useAppSelector: vi.fn() }));
+vi.mock("@/app/hooks/useLogout", () => ({ useLogout: vi.fn() }));
 
-vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(),
-}));
-
-vi.mock("@/app/lib/features/auth/authSlice", () => ({
-  logout: vi.fn(() => ({ type: "auth/logout" })),
-}));
-
-vi.mock("@/app/lib/hooks", () => ({
-  useAppSelector: vi.fn(),
-  useAppDispatch: vi.fn(),
-}));
-
-import { useRouter } from "next/navigation";
-import { useAppSelector, useAppDispatch } from "@/app/lib/hooks";
+import { useAppSelector } from "@/app/lib/hooks";
+import { useLogout } from "@/app/hooks/useLogout";
 import ProfilPage from "../../../app/(app)/profil/page";
 
-// ─── Fixtures ─────────────────────────────────────────────────────────────────
+type User = { id: string; email: string; fullName: string | null } | null;
 
-const mockUser = {
-  id: "user-123",
-  email: "alice@example.com",
-  fullName: "Alice Dupont",
-};
-
-// ─── Tests ────────────────────────────────────────────────────────────────────
+function setUser(user: User, isAuthenticated = true) {
+  vi.mocked(useAppSelector).mockImplementation((selector) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    selector({ auth: { user, isAuthenticated, initializing: false } } as any),
+  );
+}
 
 describe("ProfilPage", () => {
-  const mockDispatch = vi.fn();
-  const mockPush = vi.fn();
+  const logout = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAppDispatch).mockReturnValue(mockDispatch);
-    vi.mocked(useRouter).mockReturnValue({
-      push: mockPush,
-      replace: vi.fn(),
-      back: vi.fn(),
-      forward: vi.fn(),
-      refresh: vi.fn(),
-      prefetch: vi.fn(),
-      bfcacheId: "test",
-    } as ReturnType<typeof useRouter>);
-    vi.mocked(useAppSelector).mockImplementation((selector) =>
-      selector({ auth: { user: mockUser } } as any),
-    );
+    vi.mocked(useLogout).mockReturnValue(logout);
+    setUser({ id: "user-123", email: "alice@example.com", fullName: "Alice Dupont" });
   });
 
-  describe("with an authenticated user", () => {
-    it("renders without crashing", () => {
-      const { container } = render(<ProfilPage />);
-      expect(container.firstChild).toBeTruthy();
-    });
-
-    it("displays the user full name as the h1 heading", () => {
-      render(<ProfilPage />);
-      expect(
-        screen.getByRole("heading", { level: 1, name: "Alice Dupont" }),
-      ).toBeTruthy();
-    });
-
-    it("displays the user email", () => {
-      render(<ProfilPage />);
-      const emails = screen.getAllByText("alice@example.com");
-      expect(emails.length).toBeGreaterThan(0);
-    });
-
-    it("displays the user ID", () => {
-      render(<ProfilPage />);
-      // ID appears in both the identity header and the Compte card
-      expect(screen.getAllByText(/user-123/).length).toBeGreaterThan(0);
-    });
-
-    it("shows the avatar letter (first letter of email, uppercased)", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("A")).toBeTruthy();
-    });
-
-    it("splits fullName into Prénom and Nom fields", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("Alice")).toBeTruthy();
-      expect(screen.getByText("Dupont")).toBeTruthy();
-    });
-
-    it("renders the Identité card", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("Identité")).toBeTruthy();
-    });
-
-    it("renders the Compte card", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("Compte")).toBeTruthy();
-    });
-
-    it("renders the Sécurité card with a password mask", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("Sécurité")).toBeTruthy();
-      expect(screen.getByText("••••••••")).toBeTruthy();
-    });
-
-    it("renders the Zone de danger card", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("Zone de danger")).toBeTruthy();
-    });
-
-    it("renders a single logout button", () => {
-      render(<ProfilPage />);
-      expect(screen.getByRole("button", { name: /déconnecter/i })).toBeTruthy();
-    });
-
-    it("dispatches logout action when logout button is clicked", () => {
-      render(<ProfilPage />);
-      fireEvent.click(screen.getByRole("button", { name: /déconnecter/i }));
-      expect(mockDispatch).toHaveBeenCalledWith({ type: "auth/logout" });
-    });
-
-    it("redirects to /login after logout", () => {
-      render(<ProfilPage />);
-      fireEvent.click(screen.getByRole("button", { name: /déconnecter/i }));
-      expect(mockPush).toHaveBeenCalledWith("/login");
-    });
+  it("shows the name, the e-mail and the avatar letter", () => {
+    render(<ProfilPage />);
+    expect(screen.getByText("Alice Dupont")).toBeTruthy();
+    expect(screen.getAllByText("alice@example.com").length).toBeGreaterThan(0);
+    expect(screen.getByText("A")).toBeTruthy();
   });
 
-  describe("with a single-word fullName", () => {
-    beforeEach(() => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ auth: { user: { ...mockUser, fullName: "Alice" } } } as any),
-      );
-    });
-
-    it("shows the first name correctly", () => {
-      render(<ProfilPage />);
-      // Single word → appears in both h1 and Prénom field
-      expect(screen.getAllByText("Alice").length).toBeGreaterThanOrEqual(1);
-    });
-
-    it("shows '—' as the last name when missing", () => {
-      render(<ProfilPage />);
-      const dashes = screen.getAllByText("—");
-      expect(dashes.length).toBeGreaterThan(0);
-    });
+  it("splits the full name into first and last name", () => {
+    render(<ProfilPage />);
+    const [first] = screen.getAllByLabelText("Prénom") as HTMLInputElement[];
+    const [last] = screen.getAllByLabelText("Nom") as HTMLInputElement[];
+    expect(first.value).toBe("Alice");
+    expect(last.value).toBe("Dupont");
   });
 
-  describe("with no authenticated user (user = null)", () => {
-    beforeEach(() => {
-      vi.mocked(useAppSelector).mockImplementation((selector) =>
-        selector({ auth: { user: null } } as any),
-      );
-    });
+  it("keeps the e-mail read-only", () => {
+    render(<ProfilPage />);
+    const email = screen.getByLabelText("Adresse e-mail") as HTMLInputElement;
+    expect(email.readOnly).toBe(true);
+  });
 
-    it("renders without crashing", () => {
-      const { container } = render(<ProfilPage />);
-      expect(container.firstChild).toBeTruthy();
-    });
+  it("no longer shows the internal id", () => {
+    render(<ProfilPage />);
+    expect(screen.queryByText(/user-123/)).toBeNull();
+  });
 
-    it("shows '?' as the avatar letter", () => {
-      render(<ProfilPage />);
-      expect(screen.getByText("?")).toBeTruthy();
-    });
+  it("presents the settings as one list", () => {
+    render(<ProfilPage />);
+    for (const title of ["Identité", "Compte", "Sécurité", "Session"]) {
+      expect(screen.getAllByRole("heading", { name: title }).length).toBeGreaterThan(0);
+    }
+    expect(screen.queryByText("Zone de danger")).toBeNull();
+  });
 
-    it("shows '—' fallbacks for name, email and ID", () => {
-      render(<ProfilPage />);
-      const dashes = screen.getAllByText("—");
-      expect(dashes.length).toBeGreaterThanOrEqual(3);
-    });
+  it("disables what the backend can't do yet", () => {
+    render(<ProfilPage />);
+    expect(
+      (screen.getByRole("button", { name: "Enregistrer" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole("button", { name: "Modifier" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it("logs out from the Session row", () => {
+    render(<ProfilPage />);
+    fireEvent.click(screen.getAllByRole("button", { name: "Se déconnecter" })[0]);
+    expect(logout).toHaveBeenCalled();
+  });
+
+  it("handles a single-word name and a missing name", () => {
+    setUser({ id: "1", email: "bob@example.com", fullName: "Bob" });
+    const { unmount } = render(<ProfilPage />);
+    expect((screen.getAllByLabelText("Nom")[0] as HTMLInputElement).value).toBe("");
+    unmount();
+
+    setUser({ id: "1", email: "carl@example.com", fullName: null });
+    render(<ProfilPage />);
+    expect(screen.getAllByText("carl@example.com").length).toBeGreaterThan(0);
+    expect(screen.getByText("C")).toBeTruthy();
+  });
+
+  it("waits for the session before showing anything", () => {
+    setUser(null, false);
+    render(<ProfilPage />);
+    expect(screen.queryByText("Identité")).toBeNull();
   });
 });

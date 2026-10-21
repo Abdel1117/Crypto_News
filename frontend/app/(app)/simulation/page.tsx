@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import {
@@ -9,64 +9,31 @@ import {
 } from "@/app/lib/features/simulation/simulationSlice";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
 import { getExchangeRate } from "@/app/lib/features/exchangeRate/exchangeRateThunks";
+import { useIsDesktop, useMediaQuery } from "@/app/hooks/useMediaQuery";
+import { HeaderActions } from "@/app/components/AppShell/HeaderSlots";
 import PortfolioSummary from "@/app/components/Simulation/PortfolioSummary";
-import TradeForm from "@/app/components/Simulation/TradeForm";
-import TradeHistory from "@/app/components/Simulation/TradeHistory";
-import PortfolioChart from "@/app/components/Simulation/PortfolioChart";
 import PerformanceChart from "@/app/components/Simulation/PerformanceChart";
-import CandleStickGraph from "@/app/components/CandleStickGraph/CandleStickGraph";
-import { setSelectedSymbol } from "@/app/lib/features/marketView/marketViewSlice";
-import { addSymbolIfMissing } from "@/app/lib/features/symbol/symbolSlice";
+import Positions from "@/app/components/Simulation/Positions";
+import TradeHistory from "@/app/components/Simulation/TradeHistory";
+import TradeForm from "@/app/components/Simulation/TradeForm";
+import OrderSheet from "@/app/components/Simulation/OrderSheet";
+import {
+  ArrowCounterClockwiseIcon,
+  ArrowsLeftRightIcon,
+} from "@/app/ui/NocturneIcons/NocturneIcons";
 
 export default function SimulationPage() {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
   const { coins } = useAppSelector((state) => state.prices);
-  const { symbols } = useAppSelector((state) => state.symbols);
-  const { topGainers, topLosers } = useAppSelector(
-    (state) => state.topGainersLosers,
-  );
-  const { coins: trendingCoins } = useAppSelector((state) => state.trending);
+  // ≥ lg: desktop layout; ≥ xl: the order form sits in a sticky side column.
+  const isDesktop = useIsDesktop();
+  const isWide = useMediaQuery("(min-width: 1280px)");
 
-  const [selectedId, setSelectedId] = useState<string | number | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  const handleSymbolChange = (symbolId: string) => {
-    setSelectedId(symbolId);
-    dispatch(setSelectedSymbol(symbolId));
-
-    if (!symbols.some((s) => s.id === symbolId)) {
-      const allCoins = [
-        ...coins.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...topGainers.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...topLosers.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-        ...trendingCoins.map((c) => ({
-          id: c.id,
-          name: c.name,
-          symbol: c.symbol,
-          image: c.image,
-        })),
-      ];
-      const coin = allCoins.find((c) => c.id === symbolId);
-      if (coin) {
-        dispatch(addSymbolIfMissing(coin));
-      }
-    }
-  };
+  const allCoins = useMemo(() => (Array.isArray(coins) ? coins : []), [coins]);
 
   useEffect(() => {
     dispatch(initSimulation());
@@ -77,8 +44,18 @@ export default function SimulationPage() {
     dispatch(getPrices(currency));
   }, [dispatch, currency]);
 
-  const allCoins = Array.isArray(coins) ? coins : [];
-  const resetSimultation = (): void => {
+  const handleSymbolChange = (symbolId: string) => {
+    setSelectedId(symbolId || null);
+  };
+
+  const handlePositionSelect = (coinId: string) => {
+    setSelectedId(coinId);
+    if (!isDesktop) setSheetOpen(true);
+  };
+
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
+
+  const resetPortfolio = (): void => {
     if (
       window.confirm(
         "Réinitialiser le portefeuille ? Toutes les positions et l'historique seront perdus.",
@@ -87,49 +64,69 @@ export default function SimulationPage() {
       dispatch(resetSimulation());
     }
   };
+
+  const form = (
+    <TradeForm
+      coins={allCoins}
+      selectedId={selectedId}
+      handleSymbolChange={handleSymbolChange}
+      inSheet={!isDesktop}
+      onTraded={isDesktop ? undefined : closeSheet}
+    />
+  );
+
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-foreground">
-          Portefeuille virtuel
-        </h1>
+    <>
+      <HeaderActions>
         <button
-          onClick={() => {
-            resetSimultation();
-          }}
-          className="text-sm px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:border-red-500 transition-colors cursor-pointer"
+          type="button"
+          onClick={resetPortfolio}
+          className="n-btn n-btn-icon w-11! h-11! lg:w-auto! lg:h-auto! lg:px-1.5! lg:text-(--n-neutral-400)! lg:hover:text-(--n-text)!"
+          aria-label="Réinitialiser le portefeuille"
         >
-          Réinitialiser
+          <ArrowCounterClockwiseIcon size={isDesktop ? 16 : 20} />
+          <span className="hidden lg:inline">Réinitialiser</span>
         </button>
-      </div>
+      </HeaderActions>
 
-      <PortfolioSummary coins={allCoins} />
-
-      {/* Performance du portefeuille */}
-      <PerformanceChart coins={allCoins} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-4">
-          <TradeForm
+      <div className="grid gap-[18px] lg:gap-4 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
+        <div className="flex flex-col gap-[18px] lg:gap-4 min-w-0">
+          <PortfolioSummary
             coins={allCoins}
-            selectedId={selectedId}
-            handleSymbolChange={handleSymbolChange}
+            chart={
+              isDesktop ? undefined : (
+                <PerformanceChart coins={allCoins} variant="compact" />
+              )
+            }
           />
-          <PortfolioChart coins={allCoins} />
-          {/*           <WithdrawalForm />
-           */}{" "}
-        </div>
-        <div className="lg:col-span-2">
+          {isDesktop && <PerformanceChart coins={allCoins} />}
+          {isDesktop && !isWide && form}
+          <Positions
+            coins={allCoins}
+            selectedId={selectedId ?? ""}
+            onSelect={handlePositionSelect}
+          />
           <TradeHistory />
-          <br />
-          <hr />
-          <br />
-          <CandleStickGraph
-            symbols={allCoins}
-            onSymbolChange={handleSymbolChange}
-          />
+          {!isDesktop && (
+            <button
+              type="button"
+              className="n-btn n-btn-primary w-full min-h-12 text-[15px]! bg-(--n-bg)!"
+              onClick={() => setSheetOpen(true)}
+            >
+              <ArrowsLeftRightIcon />
+              Passer un ordre
+            </button>
+          )}
         </div>
+
+        {isWide && <div className="sticky top-4">{form}</div>}
       </div>
-    </section>
+
+      {!isDesktop && (
+        <OrderSheet open={sheetOpen} onClose={closeSheet}>
+          {form}
+        </OrderSheet>
+      )}
+    </>
   );
 }

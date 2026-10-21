@@ -4,7 +4,10 @@ import { render, screen, fireEvent } from "@testing-library/react";
 
 const useConsentMock = vi.fn();
 vi.mock("../../app/context/Consent/ConsentContext", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../app/context/Consent/ConsentContext")>();
+  const actual =
+    await importOriginal<
+      typeof import("../../app/context/Consent/ConsentContext")
+    >();
   return {
     ...actual,
     useConsent: () => useConsentMock(),
@@ -40,21 +43,29 @@ describe("ConsentPreferencesPanel", () => {
     expect(screen.getByText("Strictement nécessaires")).toBeTruthy();
     expect(screen.getAllByText("Toujours actif")).toHaveLength(1);
     expect(
-      screen.getByRole("switch", { name: "Strictement nécessaires (toujours actif)" }),
+      screen.getByRole("switch", {
+        name: "Strictement nécessaires (toujours actif)",
+      }),
     ).toHaveProperty("disabled", true);
   });
 
   it("starts each optional category from the current preferences", () => {
     useConsentMock.mockReturnValue(
-      baseConsent({ preferences: { necessary: true, analytics: true, marketing: false } }),
+      baseConsent({
+        preferences: { necessary: true, analytics: true, marketing: false },
+      }),
     );
     render(<ConsentPreferencesPanel />);
 
     expect(
-      screen.getByRole("switch", { name: "Mesure d'audience" }).getAttribute("aria-checked"),
+      screen
+        .getByRole("switch", { name: "Mesure d'audience" })
+        .getAttribute("aria-checked"),
     ).toBe("true");
     expect(
-      screen.getByRole("switch", { name: "Marketing et publicité" }).getAttribute("aria-checked"),
+      screen
+        .getByRole("switch", { name: "Marketing et publicité" })
+        .getAttribute("aria-checked"),
     ).toBe("false");
   });
 
@@ -65,7 +76,9 @@ describe("ConsentPreferencesPanel", () => {
     fireEvent.click(screen.getByRole("switch", { name: "Mesure d'audience" }));
 
     expect(
-      screen.getByRole("switch", { name: "Mesure d'audience" }).getAttribute("aria-checked"),
+      screen
+        .getByRole("switch", { name: "Mesure d'audience" })
+        .getAttribute("aria-checked"),
     ).toBe("true");
   });
 
@@ -77,7 +90,10 @@ describe("ConsentPreferencesPanel", () => {
     fireEvent.click(screen.getByRole("switch", { name: "Mesure d'audience" }));
     fireEvent.click(screen.getByText("Enregistrer mes choix"));
 
-    expect(consent.savePreferences).toHaveBeenCalledWith({ analytics: true, marketing: false });
+    expect(consent.savePreferences).toHaveBeenCalledWith({
+      analytics: true,
+      marketing: false,
+    });
   });
 
   it("calls closePreferencesPanel when the close button is clicked", () => {
@@ -87,5 +103,16 @@ describe("ConsentPreferencesPanel", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Fermer" }));
     expect(consent.closePreferencesPanel).toHaveBeenCalledTimes(1);
+  });
+
+  it("closes with Escape and starts with focus on the close button", () => {
+    const consent = baseConsent();
+    useConsentMock.mockReturnValue(consent);
+    render(<ConsentPreferencesPanel />);
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Fermer" }),
+    );
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(consent.closePreferencesPanel).toHaveBeenCalled();
   });
 });

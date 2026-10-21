@@ -1,21 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "./styles/nocturne.css";
+import { inter } from "./styles/fonts";
 import { ThemeScript } from "./components/ThemeScript/ThemeScript";
 import { Providers } from "./providers/root-providers";
 import TopLoader from "./components/TopLoader/TopLoader";
 import { ConsentProvider } from "./context/Consent/ConsentContext";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -73,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className="light bg-background" suppressHydrationWarning>
+    <html lang="fr" className="light" suppressHydrationWarning>
       <head>
         <ThemeScript />
         <style
@@ -85,13 +76,8 @@ export default function RootLayout({
         />
       </head>
 
-      <body
-        className={[
-          geistSans.variable,
-          geistMono.variable,
-          "antialiased bg-background text-foreground",
-        ].join(" ")}
-      >
+      {/* The whole site uses the Nocturne design system. */}
+      <body className={`nocturne ${inter.variable} antialiased`}>
         <ConsentProvider>
           <Providers>
             <TopLoader />
