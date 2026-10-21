@@ -57,7 +57,7 @@ vi.mock("@react-oauth/google", () => ({
 import { useRouter } from "next/navigation";
 import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Login from "../../../app/(public)/login/page";
+import Login from "../../../app/(landing)/login/page";
 
 function renderLogin() {
   return render(
@@ -88,28 +88,50 @@ describe("Login page", () => {
   it("renders the login form and tab controls", () => {
     renderLogin();
 
-    expect(screen.getByText("Bienvenue de retour")).toBeTruthy();
+    expect(screen.getByText("Bon retour")).toBeTruthy();
     expect(
       screen.getByRole("button", { name: /^Se connecter$/i }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: /^Inscrivez-vous$/i }),
-    ).toBeTruthy();
+      screen
+        .getByRole("button", { name: /^Connexion$/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByRole("button", { name: /^Inscription$/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
     expect(screen.getByLabelText(/adresse e-mail/i)).toBeTruthy();
-    expect(screen.getByLabelText(/mot de passe/i)).toBeTruthy();
+    expect(screen.getByLabelText("Mot de passe")).toBeTruthy();
   });
 
   it("switches to inscription tab when the inscription button is clicked", () => {
     renderLogin();
 
-    const registerTabButton = screen.getByRole("button", {
-      name: /inscrivez-vous/i,
-    });
-    fireEvent.click(registerTabButton);
+    fireEvent.click(screen.getByRole("button", { name: /^Inscription$/ }));
 
     expect(screen.getByText("Créez votre compte")).toBeTruthy();
     expect(screen.getByLabelText(/nom complet/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /s'inscrire/i })).toBeTruthy();
+    expect(screen.getByLabelText(/confirmer le mot de passe/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /s’inscrire/i })).toBeTruthy();
+  });
+
+  it("toggles the password visibility", () => {
+    renderLogin();
+
+    const input = screen.getByLabelText("Mot de passe") as HTMLInputElement;
+    expect(input.type).toBe("password");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Afficher le mot de passe" }),
+    );
+    expect(input.type).toBe("text");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Masquer le mot de passe" }),
+    );
+    expect(input.type).toBe("password");
   });
 
   describe("Google login", () => {
@@ -127,9 +149,7 @@ describe("Login page", () => {
       await waitFor(() =>
         expect(mockLoginGoogle).toHaveBeenCalledWith("fake-google-credential"),
       );
-      await waitFor(() =>
-        expect(mockPush).toHaveBeenCalledWith("/dashboard"),
-      );
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
       expect(screen.getByText("Connexion réussi. Bienvenu !")).toBeTruthy();
     });
 
@@ -146,7 +166,9 @@ describe("Login page", () => {
 
       await waitFor(() =>
         expect(
-          screen.getByText("Une erreur est survenu lors pendant la connexxion."),
+          screen.getByText(
+            "Une erreur est survenu lors pendant la connexxion.",
+          ),
         ).toBeTruthy(),
       );
       expect(mockPush).not.toHaveBeenCalled();

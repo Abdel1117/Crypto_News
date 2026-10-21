@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import LoginLayout, { metadata } from "../../app/(public)/login/layout";
+import LoginLayout, { metadata } from "../../app/(landing)/login/layout";
 
 describe("LoginLayout", () => {
   it("renders its children", () => {
