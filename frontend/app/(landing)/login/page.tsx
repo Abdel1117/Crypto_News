@@ -208,7 +208,7 @@ export default function Login() {
         <div className="flex items-center gap-2 h-[52px] lg:gap-2.5 lg:h-auto">
           <Link
             href="/"
-            className="n-btn n-btn-icon w-11! h-11! -ml-3 text-(--n-neutral-300)! lg:hidden"
+            className="n-btn n-btn-icon w-11! h-11! -ml-3 text-(--n-neutral-300)! lg:hidden!"
             aria-label="Retour à l’accueil"
           >
             <ArrowLeftIcon size={20} />
@@ -224,7 +224,7 @@ export default function Login() {
           </Link>
           <Link
             href="/"
-            className="n-btn ml-auto hidden lg:inline-flex px-1! text-(--n-neutral-400)! hover:bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]"
+            className="n-btn ml-auto max-lg:hidden! px-1! text-(--n-neutral-400)! hover:bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]"
           >
             <ArrowLeftIcon />
             Accueil
