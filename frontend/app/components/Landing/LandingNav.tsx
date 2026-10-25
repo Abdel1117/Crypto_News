@@ -98,7 +98,7 @@ export default function LandingNav() {
 
         <button
           type="button"
-          className="n-btn n-btn-icon w-11! h-11! lg:hidden"
+          className="n-btn n-btn-icon w-11! h-11! lg:hidden!"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
           aria-expanded={open}

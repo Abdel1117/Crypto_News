@@ -107,7 +107,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               {page.search && (
                 <button
                   type="button"
-                  className="n-btn n-btn-icon w-11! h-11! lg:hidden"
+                  className="n-btn n-btn-icon w-11! h-11! lg:hidden!"
                   aria-label={
                     mobileSearchOpen
                       ? "Fermer la recherche"
