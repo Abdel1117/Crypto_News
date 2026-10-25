@@ -19,3 +19,4 @@ pytest-mock
 pytest-cov
 aiosqlite
 requests
+sqlalchemy[asyncio]
