@@ -1,0 +1,494 @@
+/* Nocturne — design-system tokens and component classes (landing, login, app shell).
+   Scoped under .nocturne so pages not yet redesigned keep their own theme. */
+
+/* Page ground behind the body (overscroll, short pages). */
+html.dark { background: #161826; }
+html:not(.dark) { background: #f4f4f9; }
+
+/* Light theme (the design system is dark-first; this mirrors its ramps). */
+html:not(.dark) .nocturne {
+  --n-bg: #f4f4f9;
+  --n-surface: #ffffff;
+  --n-text: #1b1d29;
+  --n-accent: #6a5cc4;
+  --n-divider: color-mix(in srgb, #1b1d29 14%, transparent);
+
+  --n-neutral-100: #292b31;
+  --n-neutral-200: #3f424d;
+  --n-neutral-300: #4b4f5e;
+  --n-neutral-400: #595d6c;
+  --n-neutral-500: #6b6f82;
+  --n-neutral-600: #9397ab;
+  --n-neutral-700: #cfd3e5;
+  --n-neutral-800: #e4e7f5;
+  --n-neutral-900: #f3f5fe;
+
+  --n-accent-100: #2b2741;
+  --n-accent-200: #423a6a;
+  --n-accent-300: #5d5294;
+  --n-accent-400: #6a5cc4;
+  --n-accent-800: #e7e5fe;
+  --n-accent-900: #e7e5fe;
+
+  --n-up: #008856; /* oklch(0.55 0.13 160) — hex so the chart lib can parse it */
+  --n-down: #c43e45; /* oklch(0.56 0.17 22) */
+
+  --n-shadow-sm: 0 0 0 1px #e4e7f5, 0 4px 14px rgba(27, 29, 41, 0.06);
+  --n-shadow-md: 0 0 0 1px #cfd3e5, 0 6px 18px rgba(27, 29, 41, 0.08);
+}
+
+/* Dark theme (default). `.n-force-dark` keeps the saturated beta band dark
+   in both themes — it is the one deliberately coloured zone of the page. */
+.nocturne,
+html .nocturne .n-force-dark {
+  --n-bg: #161826;
+  --n-surface: #232532;
+  --n-text: #e9e9ed;
+  --n-accent: #9184d9;
+  --n-divider: color-mix(in srgb, #e9e9ed 16%, transparent);
+
+  --n-neutral-100: #f3f5fe;
+  --n-neutral-200: #e4e7f5;
+  --n-neutral-300: #cfd3e5;
+  --n-neutral-400: #b2b6ca;
+  --n-neutral-500: #9397ab;
+  --n-neutral-600: #75798c;
+  --n-neutral-700: #595d6c;
+  --n-neutral-800: #3f424d;
+  --n-neutral-900: #292b31;
+
+  --n-accent-100: #f5f4ff;
+  --n-accent-200: #e7e5fe;
+  --n-accent-300: #d2cefd;
+  --n-accent-400: #b5abfc;
+  --n-accent-800: #423a6a;
+  --n-accent-900: #2b2741;
+
+  --n-up: #6bcf9d; /* oklch(0.78 0.12 160) */
+  --n-down: #ef7e7c; /* oklch(0.72 0.14 22) */
+
+  --n-shadow-sm: 0 0 0 1px #3f424d;
+  --n-shadow-md: 0 0 0 1px #595d6c, 0 6px 18px rgba(0, 0, 0, 0.55);
+}
+
+.nocturne {
+  --n-section: #262a60;
+  --n-section-glow: #353b80;
+  --n-radius-md: 8px;
+  --n-radius-lg: 14px;
+
+  min-height: 100vh;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--n-text);
+  background:
+    radial-gradient(
+      1200px 720px at 82% -160px,
+      color-mix(in srgb, var(--n-accent-900) 75%, transparent),
+      transparent 60%
+    ),
+    var(--n-bg);
+}
+.nocturne h1,
+.nocturne h2,
+.nocturne h3 {
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.nocturne a {
+  color: var(--n-accent);
+  text-underline-offset: 3px;
+}
+.nocturne :focus-visible {
+  outline: 2px solid var(--n-accent);
+  outline-offset: 2px;
+}
+.nocturne ::selection {
+  background: color-mix(in srgb, var(--n-accent) 30%, transparent);
+}
+.n-tnum {
+  font-feature-settings: "tnum" 1;
+}
+
+/* Rules fade to transparent at both ends — a Nocturne signature. */
+.n-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--n-rule-color, var(--n-divider)) 48px,
+    var(--n-rule-color, var(--n-divider)) calc(100% - 48px),
+    transparent
+  );
+}
+.n-rule-strong {
+  --n-rule-color: var(--n-neutral-700);
+}
+
+/* — buttons — */
+.nocturne .n-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--n-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--n-radius-md);
+  padding: 5.6px 10px;
+  transition: background-color 150ms ease;
+}
+.nocturne .n-btn-lg {
+  padding: 10px 18px;
+  font-size: 15px;
+}
+.nocturne .n-btn-primary {
+  color: var(--n-accent);
+  border-color: var(--n-accent);
+}
+.nocturne .n-btn-primary:hover {
+  background: color-mix(in srgb, var(--n-accent) 12%, transparent);
+}
+.nocturne .n-btn-primary:active {
+  background: color-mix(in srgb, var(--n-accent) 22%, transparent);
+}
+.nocturne .n-btn-secondary {
+  color: var(--n-text);
+  border-color: var(--n-divider);
+}
+.nocturne .n-btn-secondary:hover {
+  background: color-mix(in srgb, var(--n-text) 7%, transparent);
+}
+.nocturne .n-btn-secondary:active {
+  background: color-mix(in srgb, var(--n-text) 14%, transparent);
+}
+.nocturne .n-btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+.nocturne .n-btn-icon:hover {
+  background: color-mix(in srgb, var(--n-text) 7%, transparent);
+}
+
+/* — preview-only controls (static, not interactive) — */
+.n-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 14px;
+  color: var(--n-neutral-500);
+  background: var(--n-surface);
+  border: 1px solid var(--n-divider);
+  border-radius: var(--n-radius-md);
+}
+.n-seg {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid var(--n-divider);
+  border-radius: var(--n-radius-md);
+}
+.n-seg-opt {
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.n-seg-opt + .n-seg-opt {
+  border-left: 1px solid var(--n-divider);
+}
+.n-seg-opt[data-active] {
+  color: var(--n-accent);
+  box-shadow: inset 0 0 0 1px var(--n-accent);
+}
+
+/* — cards & tags — */
+.n-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--n-radius-md);
+  background: var(--n-surface);
+  box-shadow: var(--n-shadow-sm);
+}
+.n-kicker {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--n-accent);
+}
+.n-eyebrow {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--n-accent);
+}
+@media (min-width: 1024px) {
+  .n-eyebrow {
+    font-size: 13px;
+  }
+}
+.n-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+.n-tag-neutral {
+  background: var(--n-neutral-800);
+  color: var(--n-neutral-100);
+}
+.n-tag-outline {
+  border: 1px solid var(--n-accent);
+  color: var(--n-accent);
+}
+
+/* — navigation — */
+.nocturne .n-nav-link {
+  color: inherit;
+  text-decoration: none;
+  font-size: 14px;
+}
+.nocturne .n-nav-link:hover,
+.nocturne .n-nav-link[aria-current="page"] {
+  color: var(--n-accent);
+}
+
+.nocturne .n-link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  font-size: 14px;
+  text-decoration: none;
+}
+@media (min-width: 1024px) {
+  .nocturne .n-link-arrow {
+    min-height: 0;
+  }
+}
+.nocturne .n-link-arrow:hover {
+  color: var(--n-accent-300);
+}
+
+/* — forms — */
+.n-field > label,
+.n-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 5px;
+  color: color-mix(in srgb, var(--n-text) 70%, transparent);
+}
+.nocturne .n-text-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 16px; /* 16px on mobile avoids the iOS auto-zoom */
+  color: var(--n-text);
+  caret-color: var(--n-accent);
+  background: var(--n-surface);
+  border: 1px solid var(--n-divider);
+  border-radius: var(--n-radius-md);
+}
+@media (min-width: 1024px) {
+  .nocturne .n-text-input {
+    min-height: 42px;
+    font-size: 14px;
+  }
+}
+.nocturne .n-text-input::placeholder {
+  color: var(--n-neutral-500);
+}
+.nocturne .n-text-input:hover {
+  border-color: color-mix(in srgb, var(--n-text) 45%, transparent);
+}
+.nocturne .n-text-input:focus-visible {
+  border-color: var(--n-accent);
+  outline-offset: 0;
+}
+.nocturne .n-text-input[aria-invalid="true"] {
+  border-color: var(--n-down);
+}
+.n-field-error {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--n-down);
+}
+
+.nocturne .n-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Interactive segmented control (buttons, not radio inputs). */
+.nocturne .n-seg-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  color: var(--n-text);
+  background: transparent;
+  border: 0;
+}
+@media (min-width: 1024px) {
+  .nocturne .n-seg-btn {
+    min-height: 0;
+  }
+}
+.nocturne .n-seg-btn + .n-seg-btn {
+  border-left: 1px solid var(--n-divider);
+}
+.nocturne .n-seg-btn[aria-pressed="true"] {
+  color: var(--n-accent);
+  box-shadow: inset 0 0 0 1px var(--n-accent);
+}
+.nocturne .n-seg-btn[aria-pressed="false"]:hover {
+  background: color-mix(in srgb, var(--n-text) 7%, transparent);
+}
+
+/* — app shell — */
+.nocturne .n-side-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--n-radius-md);
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--n-neutral-400);
+  background: transparent;
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  font-family: inherit;
+}
+.nocturne .n-side-link:hover {
+  background: color-mix(in srgb, var(--n-text) 6%, transparent);
+  color: var(--n-text);
+}
+.nocturne .n-side-link[aria-current="page"] {
+  color: var(--n-accent-200);
+  background: color-mix(in srgb, var(--n-accent) 14%, transparent);
+}
+.nocturne .n-side-link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: -14px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--n-accent);
+}
+.nocturne .n-tab-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 50px;
+  font-size: 11px;
+  text-decoration: none;
+  color: var(--n-neutral-500);
+}
+.nocturne .n-tab-link[aria-current="page"] {
+  color: var(--n-accent-300);
+}
+
+.n-menu {
+  position: absolute;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: var(--n-radius-lg);
+  background: var(--n-surface);
+  box-shadow: var(--n-shadow-md);
+}
+.nocturne .n-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--n-radius-md);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: none;
+  color: var(--n-text);
+}
+.nocturne .n-menu-item:hover,
+.nocturne .n-menu-item[aria-selected="true"] {
+  background: color-mix(in srgb, var(--n-text) 7%, transparent);
+}
+
+.n-panel {
+  border-radius: var(--n-radius-md);
+  background: var(--n-surface);
+}
+.n-skeleton {
+  border-radius: var(--n-radius-md);
+  background: color-mix(in srgb, var(--n-text) 6%, transparent);
+  animation: n-pulse 1.4s ease-in-out infinite;
+}
+@keyframes n-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .n-skeleton {
+    animation: none;
+  }
+}
+
+/* Interactive pressable rows / cards. */
+.nocturne .n-row-btn {
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+.nocturne .n-row-btn:hover {
+  background-color: color-mix(in srgb, var(--n-text) 4%, transparent);
+}
+
+/* — blog categories: one hue per category (--cat-h), theme-aware lightness — */
+.nocturne { --n-cat-l: 0.8; }
+html:not(.dark) .nocturne { --n-cat-l: 0.5; }
+.n-cat { color: oklch(var(--n-cat-l) 0.12 var(--cat-h, 289)); }
+.n-cover {
+  background:
+    radial-gradient(120% 90% at 88% 0%, oklch(0.62 0.13 var(--cat-h, 289) / 0.55), transparent 62%),
+    linear-gradient(160deg, oklch(0.34 0.07 var(--cat-h, 289)), oklch(0.2 0.035 var(--cat-h, 289)));
+}
+
+/* Cookie preferences button: above the mobile tab bar when there is one. */
+.n-cookie-fab { bottom: 16px; }
+@media (max-width: 1023px) {
+  body:has(.n-tabbar) .n-cookie-fab { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}

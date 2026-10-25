@@ -2,12 +2,17 @@
 
 import Link from "next/link";
 import { useConsent } from "@/app/context/Consent/ConsentContext";
-import { ParamIcons } from "@/app/components/Icons";
+import { CookieIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
 import ConsentPreferencesPanel from "../ConsentPreferencesPanel/ConsentPreferencesPanel";
 
 export default function CookieBanner() {
-  const { needsConsent, acceptAll, rejectAll, openPreferencesPanel, isPreferencesPanelOpen } =
-    useConsent();
+  const {
+    needsConsent,
+    acceptAll,
+    rejectAll,
+    openPreferencesPanel,
+    isPreferencesPanelOpen,
+  } = useConsent();
 
   if (isPreferencesPanelOpen) {
     return <ConsentPreferencesPanel />;
@@ -21,9 +26,9 @@ export default function CookieBanner() {
         type="button"
         onClick={openPreferencesPanel}
         aria-label="Gérer mes préférences de cookies"
-        className="fixed bottom-4 left-4 z-40 rounded-full border border-foreground/10 bg-card p-2.5 text-muted shadow-md transition-colors hover:text-foreground"
+        className="n-cookie-fab n-btn n-btn-icon fixed left-4 lg:left-auto lg:right-5 lg:bottom-5! z-40 rounded-full! bg-(--n-surface)! text-(--n-neutral-400)! hover:text-(--n-text)! shadow-(--n-shadow-sm)"
       >
-        <ParamIcons className="h-4 w-4" />
+        <CookieIcon size={18} />
       </button>
     );
   }
@@ -33,47 +38,59 @@ export default function CookieBanner() {
       role="dialog"
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-foreground/10 bg-card px-4 py-4 sm:px-6"
+      aria-describedby="cookie-banner-text"
+      className="fixed inset-x-3 bottom-3 z-[75] flex flex-col gap-4 p-4 rounded-[14px] bg-(--n-surface) lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[460px] lg:p-5"
+      style={{ boxShadow: "var(--n-shadow-md)" }}
     >
-      <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="max-w-2xl">
-          <p id="cookie-banner-title" className="text-sm font-semibold text-foreground">
+      <div className="flex gap-3">
+        <span
+          aria-hidden="true"
+          className="flex-none w-9 h-9 rounded-full grid place-items-center bg-(--n-accent-800) text-(--n-accent-100)"
+        >
+          <CookieIcon size={18} />
+        </span>
+        <div className="flex flex-col gap-1">
+          <p id="cookie-banner-title" className="m-0 text-[15px] font-medium">
             Respect de votre vie privée
           </p>
-          <p className="mt-1 text-sm text-muted">
-            Nous utilisons des cookies strictement nécessaires au fonctionnement et à la
-            sécurité du site. Ces cookies ne nécessitent pas votre consentement. Avec votre
-            accord, nous pouvons également utiliser des cookies de mesure d&rsquo;audience et
-            marketing. En savoir plus dans notre{" "}
-            <Link href="/politique-de-confidentialite" className="underline hover:text-foreground">
+          <p
+            id="cookie-banner-text"
+            className="m-0 text-[13px] leading-relaxed text-(--n-neutral-400)"
+          >
+            Nous utilisons des cookies strictement nécessaires au fonctionnement
+            et à la sécurité du site, sans votre consentement. Avec votre
+            accord, nous pouvons aussi mesurer l’audience et utiliser des
+            cookies marketing. En savoir plus dans notre{" "}
+            <Link href="/politique-de-confidentialite">
               politique de confidentialité
             </Link>
             .
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={rejectAll}
-            className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
-          >
-            Tout refuser
-          </button>
-          <button
-            type="button"
-            onClick={openPreferencesPanel}
-            className="rounded-md border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
-          >
-            Personnaliser
-          </button>
-          <button
-            type="button"
-            onClick={acceptAll}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-foreground transition-opacity hover:opacity-90"
-          >
-            Tout accepter
-          </button>
-        </div>
+      </div>
+      {/* Refusing is exactly as easy and as visible as accepting (CNIL). */}
+      <div className="grid grid-cols-2 gap-2 lg:flex lg:justify-end">
+        <button
+          type="button"
+          onClick={openPreferencesPanel}
+          className="n-btn col-span-2 lg:mr-auto min-h-11 lg:min-h-9 lg:px-1.5! text-(--n-accent)! hover:bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]"
+        >
+          Personnaliser
+        </button>
+        <button
+          type="button"
+          onClick={rejectAll}
+          className="n-btn n-btn-primary min-h-11 lg:min-h-9 lg:px-3.5!"
+        >
+          Tout refuser
+        </button>
+        <button
+          type="button"
+          onClick={acceptAll}
+          className="n-btn n-btn-primary min-h-11 lg:min-h-9 lg:px-3.5!"
+        >
+          Tout accepter
+        </button>
       </div>
     </div>
   );

@@ -3,12 +3,13 @@
 import { useCallback, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { getMarketHeatmap } from "@/app/lib/features/marketHeatmap/marketHeatmapThunks";
-import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
+import { CryptoMarketData } from "@/app/types/Crypto/Crypto";
 
 interface UseDenseMarketHeatmapResult {
   data: CryptoMarketData[];
   loading: boolean;
   error: string | null;
+  updatedAt: number | null;
   refresh: () => void;
 }
 
@@ -22,12 +23,12 @@ export function useDenseMarketHeatmap(
   limit: number,
 ): UseDenseMarketHeatmapResult {
   const dispatch = useAppDispatch();
-  const { coins, loading, error } = useAppSelector(
+  const { coins, loading, error, updatedAt } = useAppSelector(
     (state) => state.marketHeatmap,
   );
 
   const refresh = useCallback(() => {
-    dispatch(getMarketHeatmap({ currency, limit }));
+    dispatch(getMarketHeatmap({ currency, limit, requestedAt: Date.now() }));
   }, [dispatch, currency, limit]);
 
   useEffect(() => {
@@ -38,6 +39,7 @@ export function useDenseMarketHeatmap(
     data: coins,
     loading: loading && coins.length === 0,
     error,
+    updatedAt,
     refresh,
   };
 }

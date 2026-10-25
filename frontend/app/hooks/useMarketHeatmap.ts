@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
 import { getPrices } from "@/app/lib/features/prices/pricesThunks";
-import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
+import { CryptoMarketData } from "@/app/types/Crypto/Crypto";
 
 interface UseMarketHeatmapResult {
   data: CryptoMarketData[];

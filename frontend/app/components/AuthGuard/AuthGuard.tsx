@@ -9,7 +9,9 @@ import { useAppSelector } from "@/app/lib/hooks";
 // so a valid session restored from the httpOnly refresh cookie isn't bounced to /login.
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isAuthenticated, initializing } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, initializing } = useAppSelector(
+    (state) => state.auth,
+  );
 
   useEffect(() => {
     if (!initializing && !isAuthenticated) {
@@ -19,7 +21,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (initializing || !isAuthenticated) {
     return (
-      <div className="bg-card border-l-3 border-primary rounded-lg p-4 min-w-[220px] min-h-[120px] animate-pulse" />
+      <div
+        className="n-skeleton min-h-[120px]"
+        aria-busy="true"
+        aria-label="Chargement"
+      />
     );
   }
 

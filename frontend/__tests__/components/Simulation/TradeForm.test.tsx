@@ -49,7 +49,7 @@ describe("TradeForm", () => {
     render(<TradeForm coins={coins} selectedId="btc" handleSymbolChange={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText("Quantité"), { target: { value: "5" } });
-    fireEvent.click(screen.getByRole("button", { name: "Acheter BTC" }));
+    fireEvent.click(screen.getByRole("button", { name: "Acheter du Bitcoin" }));
 
     expect(dispatch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -63,7 +63,40 @@ describe("TradeForm", () => {
 
     fireEvent.change(screen.getByLabelText("Quantité"), { target: { value: "1000" } });
 
-    expect((screen.getByRole("button", { name: "Acheter BTC" }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole("button", { name: "Acheter du Bitcoin" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByText("Montant supérieur au solde disponible.")).toBeTruthy();
+  });
+
+  it("explains why buying is impossible with an empty balance", () => {
+    setupSelector({
+      simulation: { balance: 0, holdings: [] },
+      exchangeRate: { usdPerEur: 1.1 },
+    });
+    render(<TradeForm coins={coins} selectedId="btc" handleSymbolChange={vi.fn()} />);
+
+    expect(
+      screen.getByText(
+        "Solde insuffisant. Vendez une position ou réinitialisez le portefeuille.",
+      ),
+    ).toBeTruthy();
+  });
+
+  it("shows the coin icon and current price of the selected coin", () => {
+    const { container } = render(
+      <TradeForm coins={coins} selectedId="btc" handleSymbolChange={vi.fn()} />,
+    );
+    expect(container.querySelector('img[src*="btc.png"]')).toBeTruthy();
+    expect(screen.getByText(/Prix actuel 100,00\s\$/)).toBeTruthy();
+  });
+
+  it("picks a coin from the list", () => {
+    const handleSymbolChange = vi.fn();
+    render(
+      <TradeForm coins={coins} selectedId={null} handleSymbolChange={handleSymbolChange} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Crypto/ }));
+    fireEvent.click(screen.getByRole("option", { name: /Ethereum/ }));
+    expect(handleSymbolChange).toHaveBeenCalledWith("eth");
   });
 
   it("switches to sell mode and restricts to sellable coins", () => {
@@ -115,5 +148,6 @@ describe("TradeForm", () => {
     fireEvent.click(screen.getByText("Max"));
 
     expect((screen.getByLabelText("Quantité") as HTMLInputElement).value).toBe("2");
+    expect(screen.getByRole("button", { name: /Vendre 2,000000 BTC/ })).toBeTruthy();
   });
 });

@@ -2,161 +2,131 @@
 
 import React from "react";
 import { useAppSelector } from "@/app/lib/hooks";
-import { useCurrency } from "@/app/context/Curency/CurrencyContext";
-import { CURRENCY_SYMBOLS } from "@/app/utils/constants/currency";
-import { formatPrice } from "@/app/utils/Format/PriceFormat/PriceFormat";
-import InfoCard from "@/app/ui/InfoCard/InfoCard";
-import { CryptoMarketData } from "@/app/ui/CryptoInfoCard/CryptoInfoCard";
-import Image from "next/image";
+import { CryptoMarketData } from "@/app/types/Crypto/Crypto";
+import {
+  formatFiatPrice,
+  formatSignedPercent,
+} from "@/app/utils/Format/FrFormat/FrFormat";
+import { signedFiat, trendColor, usePortfolio } from "./usePortfolio";
 
 interface PortfolioSummaryProps {
   coins: CryptoMarketData[];
+  /** Mobile only: the performance chart, shown inside the summary card. */
+  chart?: React.ReactNode;
 }
 
-export default function PortfolioSummary({ coins }: PortfolioSummaryProps) {
-  const { currency } = useCurrency();
-  const symbol = CURRENCY_SYMBOLS[currency];
-  const {
-    balance: balanceEur,
-    initialBalance: initialBalanceEur,
-    holdings,
-    realizedPnl: realizedPnlEur,
-  } = useAppSelector((state) => state.simulation);
+const ROW_RULE =
+  "linear-gradient(to right, transparent, color-mix(in srgb, var(--n-text) 8%, transparent) 48px, color-mix(in srgb, var(--n-text) 8%, transparent) calc(100% - 48px), transparent) no-repeat top / 100% 1px";
+
+/**
+ * Headline figures: one band on desktop; on mobile a card that also holds
+ * the performance chart.
+ */
+export default function PortfolioSummary({
+  coins,
+  chart,
+}: PortfolioSummaryProps) {
   const loading = useAppSelector((state) => state.prices.loading);
-  const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
-
-  // The portfolio is stored in EUR internally; convert to the display
-  // currency here so the numbers stay consistent when the toggle changes.
-  const displayMultiplier = currency === "usd" ? (usdPerEur ?? 1) : 1;
-  const balance = balanceEur * displayMultiplier;
-  const initialBalance = initialBalanceEur * displayMultiplier;
-  const realizedPnl = realizedPnlEur * displayMultiplier;
-
-  const holdingsValue = holdings.reduce((sum, h) => {
-    const coin = coins.find((c) => c.id === h.coinId);
-    const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
-    const price = coin?.price ?? avgBuyPrice;
-    return sum + h.amount * price;
-  }, 0);
-
-  const totalValue = balance + holdingsValue;
-  const unrealizedPnl = holdings.reduce((sum, h) => {
-    const coin = coins.find((c) => c.id === h.coinId);
-    const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
-    const price = coin?.price ?? avgBuyPrice;
-    return sum + (price - avgBuyPrice) * h.amount;
-  }, 0);
-  const pnl = totalValue - initialBalance;
-  const pnlPercent = initialBalance > 0 ? (pnl / initialBalance) * 100 : 0;
-  const isPositive = pnl >= 0;
+  const p = usePortfolio(coins);
+  const money = (v: number) => formatFiatPrice(v, p.currency);
+  const pnlColor = trendColor(p.pnl);
+  const valueClass = loading ? "opacity-50" : "";
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <InfoCard
-          value={balance}
-          symbol={symbol}
-          label="Solde disponible"
-          loading={loading}
-        />
-        <InfoCard
-          value={totalValue}
-          symbol={symbol}
-          label="Valeur du portefeuille"
-          loading={loading}
-        />
-        <div className="bg-card rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">Profit / Perte</p>
-          <p
-            className={`text-2xl font-bold ${isPositive ? "text-success" : "text-red-500"}`}
+    <>
+      {/* Desktop band */}
+      <section
+        className="hidden lg:grid grid-cols-[1.4fr_1.3fr_1fr] py-[18px] n-panel n-tnum"
+        aria-label="Résumé du portefeuille"
+      >
+        <div className="flex flex-col gap-1.5 px-[22px]">
+          <span className="text-[13px] text-(--n-neutral-400)">
+            Valeur du portefeuille
+          </span>
+          <span
+            className={`text-[32px] leading-tight font-medium tracking-[-0.015em] whitespace-nowrap ${valueClass}`}
           >
-            {isPositive ? "+" : ""}
-            {formatPrice(pnl, symbol, 2)} ({pnlPercent.toFixed(2)}%)
-          </p>
+            {money(p.totalValue)}
+          </span>
         </div>
-      </div>
+        <div className="flex flex-col gap-1.5 px-[22px] shadow-[inset_1px_0_0_color-mix(in_srgb,var(--n-text)_8%,transparent)]">
+          <span className="text-[13px] text-(--n-neutral-400)">
+            Profit / Perte
+          </span>
+          <span
+            className="flex items-baseline gap-2 whitespace-nowrap"
+            style={{ color: pnlColor }}
+          >
+            <span className="text-2xl font-medium">
+              {signedFiat(p.pnl, p.currency)}
+            </span>
+            <span className="text-sm">{formatSignedPercent(p.pnlPercent)}</span>
+          </span>
+          <span className="text-xs text-(--n-neutral-500)">
+            Non réalisé {signedFiat(p.unrealizedPnl, p.currency)} · Réalisé{" "}
+            {signedFiat(p.realizedPnl, p.currency)}
+          </span>
+        </div>
+        <div className="flex flex-col gap-1.5 px-[22px] shadow-[inset_1px_0_0_color-mix(in_srgb,var(--n-text)_8%,transparent)]">
+          <span className="text-[13px] text-(--n-neutral-400)">
+            Solde disponible
+          </span>
+          <span className="text-2xl font-medium whitespace-nowrap">
+            {money(p.balance)}
+          </span>
+          <span className="text-xs text-(--n-neutral-500)">
+            sur {money(p.initialBalance)} de départ
+          </span>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-card rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">PnL non réalisé</p>
-          <p
-            className={`text-xl font-bold ${unrealizedPnl >= 0 ? "text-success" : "text-red-500"}`}
+      {/* Mobile card */}
+      <section
+        className="lg:hidden flex flex-col gap-3 p-3.5 n-panel n-tnum"
+        aria-label="Résumé du portefeuille"
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-[13px] text-(--n-neutral-400)">
+            Valeur du portefeuille
+          </span>
+          <span
+            className={`text-[28px] leading-tight font-medium tracking-[-0.015em] ${valueClass}`}
           >
-            {unrealizedPnl >= 0 ? "+" : ""}
-            {formatPrice(unrealizedPnl, symbol, 2)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Positions ouvertes
-          </p>
+            {money(p.totalValue)}
+          </span>
+          <span className="flex gap-2 text-sm" style={{ color: pnlColor }}>
+            {signedFiat(p.pnl, p.currency)}
+            <span>{formatSignedPercent(p.pnlPercent)}</span>
+          </span>
         </div>
-        <div className="bg-card rounded-lg p-4">
-          <p className="text-sm text-muted-foreground">PnL réalisé</p>
-          <p
-            className={`text-xl font-bold ${realizedPnl >= 0 ? "text-success" : "text-red-500"}`}
-          >
-            {realizedPnl >= 0 ? "+" : ""}
-            {formatPrice(realizedPnl, symbol, 2)}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Positions clôturées
-          </p>
-        </div>
-      </div>
-
-      {holdings.length > 0 && (
-        <div className="bg-card rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-            Vos positions
-          </h3>
-          <div className="space-y-2">
-            {holdings.map((h) => {
-              const coin = coins.find((c) => c.id === h.coinId);
-              const avgBuyPrice = h.avgBuyPrice * displayMultiplier;
-              const currentPrice = coin?.price ?? avgBuyPrice;
-              const value = h.amount * currentPrice;
-              const holdingPnl = (currentPrice - avgBuyPrice) * h.amount;
-              const holdingPositive = holdingPnl >= 0;
-              return (
-                <div
-                  key={h.coinId}
-                  className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                >
-                  <div className="flex items-center gap-2">
-                    {h.coinImage && (
-                      <Image
-                        src={h.coinImage}
-                        alt={h.coinName}
-                        width={24}
-                        height={24}
-                        className="w-6 h-6"
-                      />
-                    )}
-                    <div>
-                      <span className="font-medium text-foreground">
-                        {h.coinName}
-                      </span>
-                      <span className="text-muted-foreground text-xs ml-1">
-                        {h.coinSymbol.toUpperCase()}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-foreground">
-                      {h.amount.toFixed(6)} · {formatPrice(value, symbol, 2)}
-                    </p>
-                    <p
-                      className={`text-xs ${holdingPositive ? "text-success" : "text-red-500"}`}
-                    >
-                      {holdingPositive ? "+" : ""}
-                      {formatPrice(holdingPnl, symbol, 2)}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+        <dl
+          className="m-0 grid grid-cols-3 gap-2.5 pt-3"
+          style={{ background: ROW_RULE }}
+        >
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <dt className="text-[11px] text-(--n-neutral-400)">Solde</dt>
+            <dd className="m-0 text-sm font-medium whitespace-nowrap">
+              {money(p.balance)}
+            </dd>
           </div>
-        </div>
-      )}
-    </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <dt className="text-[11px] text-(--n-neutral-400)">Non réalisé</dt>
+            <dd
+              className="m-0 text-sm font-medium whitespace-nowrap"
+              style={{ color: trendColor(p.unrealizedPnl) }}
+            >
+              {signedFiat(p.unrealizedPnl, p.currency)}
+            </dd>
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <dt className="text-[11px] text-(--n-neutral-400)">Réalisé</dt>
+            <dd className="m-0 text-sm font-medium whitespace-nowrap">
+              {signedFiat(p.realizedPnl, p.currency)}
+            </dd>
+          </div>
+        </dl>
+        {chart}
+      </section>
+    </>
   );
 }

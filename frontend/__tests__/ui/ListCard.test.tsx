@@ -22,7 +22,6 @@ const article: Article = {
   date: "7 juin 2025",
   readTime: "8 min",
   excerpt: "excerpt",
-  gradient: "from-teal-950 via-teal-900 to-teal-700",
 };
 
 describe("ListCard", () => {
@@ -30,7 +29,7 @@ describe("ListCard", () => {
     render(<ListCard article={article} index={2} />);
 
     expect(screen.getByRole("link").getAttribute("href")).toBe("/blog/5");
-    expect(screen.getByText("3")).toBeTruthy();
+    expect(screen.getByText("03")).toBeTruthy();
     expect(screen.getByText("Solana vs Avalanche")).toBeTruthy();
     expect(screen.getByText(/8 min · 7 juin 2025/)).toBeTruthy();
   });

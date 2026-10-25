@@ -23,7 +23,6 @@ const article: Article = {
   date: "9 juin 2025",
   readTime: "6 min",
   excerpt: "excerpt",
-  gradient: "from-purple-950 via-purple-900 to-purple-700",
 };
 
 describe("SmallCard", () => {
@@ -34,7 +33,7 @@ describe("SmallCard", () => {
     expect(link.getAttribute("href")).toBe("/blog/3");
     expect(screen.getByText("DeFi yields")).toBeTruthy();
     expect(screen.getByText("Sophie Martin")).toBeTruthy();
-    expect(screen.getByText("6 min")).toBeTruthy();
+    expect(screen.getByText("6 min de lecture")).toBeTruthy();
     expect(screen.getByText("S")).toBeTruthy();
     expect(screen.getByText("DeFi")).toBeTruthy();
   });

@@ -1,5 +1,5 @@
 import React from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 vi.mock("next/navigation", () => ({
@@ -55,9 +55,10 @@ vi.mock("@react-oauth/google", () => ({
 }));
 
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/app/lib/hooks";
 import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Login from "../../../app/(public)/login/page";
+import Login from "../../../app/(landing)/login/page";
 
 function renderLogin() {
   return render(
@@ -70,12 +71,13 @@ function renderLogin() {
 describe("Login page", () => {
   const mockPush = vi.fn();
   const mockLoginGoogle = vi.fn();
+  const mockReplace = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useRouter).mockReturnValue({
       push: mockPush,
-      replace: vi.fn(),
+      replace: mockReplace,
       back: vi.fn(),
     } as unknown as ReturnType<typeof useRouter>);
     vi.mocked(useGoogleLogin).mockReturnValue({
@@ -88,28 +90,50 @@ describe("Login page", () => {
   it("renders the login form and tab controls", () => {
     renderLogin();
 
-    expect(screen.getByText("Bienvenue de retour")).toBeTruthy();
+    expect(screen.getByText("Bon retour")).toBeTruthy();
     expect(
       screen.getByRole("button", { name: /^Se connecter$/i }),
     ).toBeTruthy();
     expect(
-      screen.getByRole("button", { name: /^Inscrivez-vous$/i }),
-    ).toBeTruthy();
+      screen
+        .getByRole("button", { name: /^Connexion$/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("true");
+    expect(
+      screen
+        .getByRole("button", { name: /^Inscription$/ })
+        .getAttribute("aria-pressed"),
+    ).toBe("false");
     expect(screen.getByLabelText(/adresse e-mail/i)).toBeTruthy();
-    expect(screen.getByLabelText(/mot de passe/i)).toBeTruthy();
+    expect(screen.getByLabelText("Mot de passe")).toBeTruthy();
   });
 
   it("switches to inscription tab when the inscription button is clicked", () => {
     renderLogin();
 
-    const registerTabButton = screen.getByRole("button", {
-      name: /inscrivez-vous/i,
-    });
-    fireEvent.click(registerTabButton);
+    fireEvent.click(screen.getByRole("button", { name: /^Inscription$/ }));
 
     expect(screen.getByText("Créez votre compte")).toBeTruthy();
     expect(screen.getByLabelText(/nom complet/i)).toBeTruthy();
-    expect(screen.getByRole("button", { name: /s'inscrire/i })).toBeTruthy();
+    expect(screen.getByLabelText(/confirmer le mot de passe/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /s’inscrire/i })).toBeTruthy();
+  });
+
+  it("toggles the password visibility", () => {
+    renderLogin();
+
+    const input = screen.getByLabelText("Mot de passe") as HTMLInputElement;
+    expect(input.type).toBe("password");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Afficher le mot de passe" }),
+    );
+    expect(input.type).toBe("text");
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Masquer le mot de passe" }),
+    );
+    expect(input.type).toBe("password");
   });
 
   describe("Google login", () => {
@@ -127,9 +151,7 @@ describe("Login page", () => {
       await waitFor(() =>
         expect(mockLoginGoogle).toHaveBeenCalledWith("fake-google-credential"),
       );
-      await waitFor(() =>
-        expect(mockPush).toHaveBeenCalledWith("/dashboard"),
-      );
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
       expect(screen.getByText("Connexion réussi. Bienvenu !")).toBeTruthy();
     });
 
@@ -146,7 +168,9 @@ describe("Login page", () => {
 
       await waitFor(() =>
         expect(
-          screen.getByText("Une erreur est survenu lors pendant la connexxion."),
+          screen.getByText(
+            "Une erreur est survenu lors pendant la connexxion.",
+          ),
         ).toBeTruthy(),
       );
       expect(mockPush).not.toHaveBeenCalled();
@@ -175,6 +199,55 @@ describe("Login page", () => {
       );
 
       expect(mockLoginGoogle).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("already signed in", () => {
+    type Auth = { isAuthenticated: boolean; initializing: boolean };
+    const setAuth = (auth: Auth) =>
+      vi.mocked(useAppSelector).mockImplementation((selector) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        selector({ auth: { ...auth, user: null } } as any),
+      );
+
+    afterEach(() => {
+      setAuth({ isAuthenticated: false, initializing: false });
+    });
+
+    it("leaves /login once the restored session is known", () => {
+      setAuth({ isAuthenticated: false, initializing: true });
+      const { rerender } = renderLogin();
+      expect(mockReplace).not.toHaveBeenCalled();
+
+      setAuth({ isAuthenticated: true, initializing: false });
+      rerender(
+        <GoogleOAuthProvider clientId="test-client-id">
+          <Login />
+        </GoogleOAuthProvider>,
+      );
+      expect(mockReplace).toHaveBeenCalledWith("/profil");
+    });
+
+    it("stays on /login for signed-out visitors", () => {
+      setAuth({ isAuthenticated: false, initializing: false });
+      renderLogin();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it("lets a fresh login go to the dashboard, not the profile", async () => {
+      setAuth({ isAuthenticated: false, initializing: false });
+      mockLoginGoogle.mockImplementation(async () => {
+        setAuth({ isAuthenticated: true, initializing: false });
+        return { success: true, message: "Connexion réussi. Bienvenu !" };
+      });
+      renderLogin();
+
+      fireEvent.click(
+        screen.getByRole("button", { name: "MockGoogleLogin-Success" }),
+      );
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      expect(mockReplace).not.toHaveBeenCalledWith("/profil");
     });
   });
 });

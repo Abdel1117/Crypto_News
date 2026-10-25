@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Article } from "@/app/(public)/blog/data";
-import { CATEGORY_META } from "@/app/(public)/blog/data";
+import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 
+/** Compact numbered row (side list next to the featured article). */
 export function ListCard({
   article,
   index,
@@ -9,30 +10,27 @@ export function ListCard({
   article: Article;
   index: number;
 }) {
-  const meta = CATEGORY_META[article.category];
   return (
     <Link
       href={`/blog/${article.id}`}
-      className="group flex gap-3 items-start pb-3 border-b border-surface last:border-0 hover:opacity-80 transition-opacity"
+      className="group flex gap-3.5 items-start py-3.5 no-underline text-(--n-text)!"
     >
-      <div
-        className={`w-24 h-24 rounded-lg bg-gradient-to-br ${article.gradient} shrink-0 flex items-center justify-center`}
+      <span
+        aria-hidden="true"
+        className="n-cover w-16 h-16 flex-none rounded-lg grid place-items-center text-lg font-medium text-white/80 n-tnum"
+        style={categoryStyle(article.category)}
       >
-        <span className="text-white/60 text-xl font-bold">{index + 1}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <span
-          className={`text-[10px] font-bold uppercase tracking-wider ${meta?.color ?? "text-primary"}`}
-        >
-          {article.category}
-        </span>
-        <h4 className="text-sm font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2 mt-0.5">
+        {String(index + 1).padStart(2, "0")}
+      </span>
+      <span className="flex flex-col gap-1 min-w-0">
+        <CategoryBadge category={article.category} />
+        <span className="text-sm font-medium leading-snug line-clamp-2 group-hover:text-(--n-accent)">
           {article.title}
-        </h4>
-        <span className="text-xs text-muted mt-1 block">
+        </span>
+        <span className="text-xs text-(--n-neutral-500)">
           {article.readTime} · {article.date}
         </span>
-      </div>
+      </span>
     </Link>
   );
 }

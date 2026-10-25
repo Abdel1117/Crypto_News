@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 
 vi.mock("../../../app/lib/hooks", () => ({
   useAppSelector: vi.fn(),
@@ -20,12 +20,18 @@ import TradeHistory from "../../../app/components/Simulation/TradeHistory";
 
 describe("TradeHistory", () => {
   beforeEach(() => {
-    vi.mocked(useCurrency).mockReturnValue({ currency: "usd", setCurrency: vi.fn() });
+    vi.mocked(useCurrency).mockReturnValue({
+      currency: "usd",
+      setCurrency: vi.fn(),
+    });
   });
 
   it("shows a placeholder when there are no trades", () => {
     vi.mocked(useAppSelector).mockImplementation((selector: any) =>
-      selector({ simulation: { trades: [] }, exchangeRate: { usdPerEur: null } }),
+      selector({
+        simulation: { trades: [] },
+        exchangeRate: { usdPerEur: null },
+      }),
     );
     render(<TradeHistory />);
     expect(screen.getByText("Aucune transaction pour le moment.")).toBeTruthy();
@@ -68,9 +74,12 @@ describe("TradeHistory", () => {
 
     render(<TradeHistory />);
 
-    expect(screen.getByText("Achat")).toBeTruthy();
-    expect(screen.getByText("Vente")).toBeTruthy();
-    expect(screen.getByText("Bitcoin")).toBeTruthy();
-    expect(screen.getByText("Ethereum")).toBeTruthy();
+    const table = screen.getByRole("table", {
+      name: "Historique des transactions",
+    });
+    expect(within(table).getByText("Achat")).toBeTruthy();
+    expect(within(table).getByText("Vente")).toBeTruthy();
+    expect(within(table).getByText("Bitcoin")).toBeTruthy();
+    expect(within(table).getByText("Ethereum")).toBeTruthy();
   });
 });
