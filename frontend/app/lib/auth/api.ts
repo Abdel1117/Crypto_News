@@ -9,6 +9,8 @@ export async function loginWithGoogle(credentials : string ) : Promise<AuthToken
   return fetchJson<AuthTokens>(`${API}/auth/google` , {
     method : "POST",
     headers : {"Content-Type" : "application/json"},
+    // Lets the browser store the refresh cookie, as for a password login.
+    credentials: "include",
     body : JSON.stringify({credentials})
   })
 

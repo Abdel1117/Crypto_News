@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = ""
     DB_NAME: str = ""
     DB_PORT: int = 5432
+    # Optional full URL; overrides DB_* and the local SQLite default.
+    DATABASE_URL: str = ""
     API_KEY_COINGECKO: str = ""
     GOOGLE_CLIENT_ID : str = ""
 

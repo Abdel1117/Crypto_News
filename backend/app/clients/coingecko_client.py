@@ -4,6 +4,11 @@ from app.core.config import settings
 from typing import Optional, List, Dict
 
 _CACHE_TTL = 30  # seconds — matches the markets WS poll interval
+# Keys come from request parameters (search text, coin id...), so the cache is
+# capped: past this size, entries too old to serve as a stale fallback go first,
+# then the oldest ones.
+_CACHE_MAX_ENTRIES = 500
+_STALE_MAX_AGE = 600  # seconds
 _cache: Dict[str, tuple[float, object]] = {}
 
 
@@ -24,7 +29,15 @@ def _cache_get_stale(key: str):
 
 
 def _cache_set(key: str, value) -> None:
-    _cache[key] = (time.monotonic(), value)
+    now = time.monotonic()
+    if key not in _cache and len(_cache) >= _CACHE_MAX_ENTRIES:
+        for old_key, (stored_at, _) in list(_cache.items()):
+            if now - stored_at > _STALE_MAX_AGE:
+                del _cache[old_key]
+        while len(_cache) >= _CACHE_MAX_ENTRIES:
+            del _cache[next(iter(_cache))]  # dicts keep insertion order: oldest first
+    _cache.pop(key, None)  # re-insert so refreshed entries count as newest
+    _cache[key] = (now, value)
 
 
 def clear_cache() -> None:
@@ -179,6 +192,12 @@ class CoinGeckoClient:
         return data
 
     async def fetch_search(self, query: str) -> List[Dict]:
+        # Cached like the other calls: search runs on every keystroke in the UI.
+        key = _cache_key("fetch_search", query.strip().lower())
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.BASE_URL}/search",
@@ -186,4 +205,7 @@ class CoinGeckoClient:
                 headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
             )
             response.raise_for_status()
-            return response.json().get("coins", [])
+            coins = response.json().get("coins", [])
+
+        _cache_set(key, coins)
+        return coins
