@@ -11,6 +11,7 @@ import {
 import { DESKTOP_QUERY } from "@/app/hooks/useMediaQuery";
 import AppSidebar from "./AppSidebar";
 import MobileTabBar from "./MobileTabBar";
+import ChatWidget from "../ChatWidget/ChatWidget";
 import CoinSearch from "./CoinSearch";
 import CurrencyMenu from "./CurrencyMenu";
 import { AppSearchContext } from "./SearchContext";
@@ -141,6 +142,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <MobileTabBar />
+        <ChatWidget />
       </HeaderSlotsContext.Provider>
     </AppSearchContext.Provider>
   );

@@ -9,6 +9,7 @@ import watchlistReducer from "./features/watchlist/watchlistSlice"
 import simulationReducer from "./features/simulation/simulationSlice"
 import authReducer from "./features/auth/authSlice"
 import exchangeRateReducer from "./features/exchangeRate/exchangeRateSlice"
+import chatReducer from "./features/chat/chatSlice"
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     watchlist: watchlistReducer,
     simulation: simulationReducer,
     exchangeRate: exchangeRateReducer,
+    chat: chatReducer,
   },
   devTools: process.env.NODE_ENV !== "production"
     ? {

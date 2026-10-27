@@ -26,7 +26,7 @@ export default function CookieBanner() {
         type="button"
         onClick={openPreferencesPanel}
         aria-label="Gérer mes préférences de cookies"
-        className="n-cookie-fab n-btn n-btn-icon fixed left-4 lg:left-auto lg:right-5 lg:bottom-5! z-40 rounded-full! bg-(--n-surface)! text-(--n-neutral-400)! hover:text-(--n-text)! shadow-(--n-shadow-sm)"
+        className="n-cookie-fab n-btn n-btn-icon fixed left-4 lg:left-auto lg:right-5 z-40 rounded-full! bg-(--n-surface)! text-(--n-neutral-400)! hover:text-(--n-text)! shadow-(--n-shadow-sm)"
       >
         <CookieIcon size={18} />
       </button>

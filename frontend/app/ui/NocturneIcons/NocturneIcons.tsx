@@ -400,3 +400,23 @@ export function CookieIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function ChatDotsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M79.93,211.11a96,96,0,1,0-35-35L32.42,213.46a8,8,0,0,0,10.12,10.12Z" />
+      <circle cx="84" cy="128" r="12" fill="currentColor" stroke="none" />
+      <circle cx="128" cy="128" r="12" fill="currentColor" stroke="none" />
+      <circle cx="172" cy="128" r="12" fill="currentColor" stroke="none" />
+    </Icon>
+  );
+}
+
+export function PaperPlaneIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M48,40,224,128,48,216l32-88Z" />
+      <line x1="80" y1="128" x2="144" y2="128" />
+    </Icon>
+  );
+}

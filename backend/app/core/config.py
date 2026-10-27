@@ -20,6 +20,11 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000"
 
+    ANTHROPIC_API_KEY: str = ""
+    CHAT_MODEL: str = "claude-haiku-5-5"
+    CHAT_DAILY_LIMIT: int = 30
+    CHAT_MAX_HISTORY: int = 20
+
     model_config = {"extra": "ignore"}
 
     @property

@@ -492,3 +492,31 @@ html:not(.dark) .nocturne { --n-cat-l: 0.5; }
 @media (max-width: 1023px) {
   body:has(.n-tabbar) .n-cookie-fab { bottom: calc(76px + env(safe-area-inset-bottom)); }
 }
+@media (min-width: 1024px) {
+  .n-cookie-fab { bottom: 20px; }
+  /* The chat button takes the bottom-right corner: stack the cookie button above it. */
+  body:has(.n-chat-fab) .n-cookie-fab { bottom: 84px; }
+}
+
+/* Chat assistant button: bottom-right, above the mobile tab bar. */
+.n-chat-fab { bottom: 16px; }
+@media (max-width: 1023px) {
+  body:has(.n-tabbar) .n-chat-fab { bottom: calc(76px + env(safe-area-inset-bottom)); }
+}
+@media (min-width: 1024px) {
+  .n-chat-fab { bottom: 20px; }
+}
+.n-chat-dots span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 999px;
+  background: var(--n-neutral-400);
+  animation: n-pulse 1.2s ease-in-out infinite;
+}
+.n-chat-dots span:nth-child(2) { animation-delay: 0.2s; }
+.n-chat-dots span:nth-child(3) { animation-delay: 0.4s; }
+@media (prefers-reduced-motion: reduce) {
+  .n-chat-dots span { animation: none; }
+}

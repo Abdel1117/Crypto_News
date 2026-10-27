@@ -20,3 +20,4 @@ pytest-cov
 aiosqlite
 requests
 sqlalchemy[asyncio]
+anthropic
