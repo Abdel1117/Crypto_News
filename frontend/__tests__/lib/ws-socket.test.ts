@@ -143,20 +143,16 @@ describe("ws/socket", () => {
     expect(MockWebSocket.instances[0].closed).toBe(true);
   });
 
-  // NOTE: this documents an actual bug in ws/socket.ts rather than the intended
-  // behavior. `disconnect()` calls `ws.close()`, which (as in a real browser)
-  // fires the socket's own `onclose` handler — the same handler that
-  // unconditionally calls `scheduleReconnect()`. So an intentional disconnect
-  // still re-arms the reconnect loop and a new socket gets created shortly
-  // after. A correct fix would clear `ws.onclose` (or check an "intentional
-  // disconnect" flag) before calling `ws.close()` in `disconnect()`.
-  it("still re-arms a reconnect after disconnect (known bug)", async () => {
+  // `disconnect()` detaches the socket's handlers before closing it, so an
+  // intentional disconnect doesn't trigger the reconnect loop.
+  it("does not reconnect after an intentional disconnect", async () => {
     const { connect, disconnect } = await import("../../app/lib/ws/socket");
     connect();
 
     disconnect();
     await vi.runOnlyPendingTimersAsync();
 
-    expect(MockWebSocket.instances).toHaveLength(2);
+    expect(MockWebSocket.instances).toHaveLength(1);
+    expect(MockWebSocket.instances[0].closed).toBe(true);
   });
 });

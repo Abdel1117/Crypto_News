@@ -1,8 +1,18 @@
 import type { Currency } from "@/app/context/Curency/CurrencyContext";
 import type { Trade } from "@/app/lib/features/simulation/simulationSlice";
 
+/**
+ * Spreadsheets run a cell that starts with = + - @ (or a tab / carriage
+ * return) as a formula. Coin names come from CoinGecko, so text cells get a
+ * leading apostrophe to stay plain text. Numbers never go through this.
+ */
+export const neutralizeFormula = (value: string) =>
+  /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+
 const cell = (value: string) =>
   /[";\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+
+const textCell = (value: string) => cell(neutralizeFormula(value));
 
 const num = (value: number, decimals: number) =>
   value.toFixed(decimals).replace(".", ",");
@@ -26,15 +36,17 @@ export function tradesToCsv(
     `Total (${currency.toUpperCase()})`,
   ];
   const rows = trades.map((t) => [
-    t.date,
+    textCell(t.date),
     t.type === "buy" ? "Achat" : "Vente",
-    t.coinName,
-    t.coinSymbol.toUpperCase(),
+    textCell(t.coinName),
+    textCell(t.coinSymbol.toUpperCase()),
     num(t.amount, 6),
     num(t.priceAtTrade * multiplier, 6),
     num(t.total * multiplier, 2),
   ]);
-  return [header, ...rows].map((r) => r.map(cell).join(";")).join("\n");
+  return [header.map(cell), ...rows]
+    .map((r) => r.join(";"))
+    .join("\n");
 }
 
 /** Triggers the download of the CSV in the browser. */

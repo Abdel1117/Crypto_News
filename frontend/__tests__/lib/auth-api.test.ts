@@ -27,6 +27,7 @@ describe("auth api", () => {
       expect.stringContaining("/auth/google"),
       expect.objectContaining({
         method: "POST",
+        credentials: "include",
         body: JSON.stringify({ credentials: "cred-123" }),
       }),
     );
