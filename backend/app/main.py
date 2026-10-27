@@ -1,10 +1,15 @@
+import os
+
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.controllers import api_router
 from app.core.config import settings
+from app.core.jwt_config import JWT_SECRET_KEY, check_jwt_secret
 from app.db.session import init_db
+
+check_jwt_secret(os.getenv("ENV"), JWT_SECRET_KEY)
 
 app = FastAPI()
 

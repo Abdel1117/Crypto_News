@@ -35,5 +35,8 @@ async def get_current_user(
     user = await SQLUserRepository(session).get_by_email(payload.email)
     if user is None or not user.is_active:
         raise credentials_exception
+    # A logout since this token was issued revokes it.
+    if payload.ver != (user.token_version or 0):
+        raise credentials_exception
 
     return user

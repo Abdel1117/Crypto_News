@@ -116,15 +116,18 @@ class TestGetOhlcRoute:
         await client.get("/markets/get_ohlc?selectedTimeFrame=1w&cryptoId=ethereum")
         mock_market_service.get_ohlc.assert_called_once_with("eur", 7, "ethereum")
 
-    async def test_returns_500_for_unknown_timeframe(self, client):
+    async def test_returns_422_for_unknown_timeframe(self, client):
         response = await client.get("/markets/get_ohlc?selectedTimeFrame=bad_value")
-        assert response.status_code == 500
+        assert response.status_code == 422
 
 
 class TestGetTopWinnersLosersRoute:
-    # top_coins must be passed explicitly: the route has a bug (default int 300 on a str param)
-    # which causes Pydantic v2 to return 422 when top_coins is omitted.
     BASE_URL = "/markets/get_top_winners_losers?top_coins=300"
+
+    async def test_top_coins_defaults_to_300_when_omitted(self, client, mock_market_service):
+        response = await client.get("/markets/get_top_winners_losers")
+        assert response.status_code == 200
+        assert mock_market_service.get_top_gainers_losers.call_args[0][3] == 300
 
     async def test_returns_200(self, client):
         response = await client.get(self.BASE_URL)
@@ -141,7 +144,7 @@ class TestGetTopWinnersLosersRoute:
         )
         call_args = mock_market_service.get_top_gainers_losers.call_args
         assert call_args[0][0] == "usd"
-        assert call_args[0][3] == "100"
+        assert call_args[0][3] == 100
 
 
 class TestGetExchangeRateRoute:
@@ -184,3 +187,43 @@ class TestGetMarketCoinRoute:
     async def test_passes_currency_and_id_to_service(self, client, mock_market_service):
         await client.get("/markets/coin?currency=usd&cryptoId=ethereum")
         mock_market_service.get_market_by_id.assert_called_once_with("usd", "ethereum")
+
+
+class TestParameterValidation:
+    """Every accepted value ends up in a CoinGecko call and in the cache key."""
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/markets?currency=gbp",
+            "/markets?per_page=100000",
+            "/markets?page=0",
+            "/markets?order=price_desc",
+            "/markets/markets_view?currency=jpy",
+            "/markets/get_ohlc?cryptoId=../../global",
+            "/markets/get_ohlc?cryptoId=Bitcoin",
+            "/markets/coin?cryptoId=a/b",
+            "/markets/get_top_winners_losers?top_coins=abc",
+            "/markets/get_top_winners_losers?top_coins=100000",
+            "/markets/exchange-rate?base=xyz",
+            "/symbols?currency=gbp",
+            "/symbols?per_page=5000",
+            "/symbols/search?query=",
+            "/symbols/search?query=" + "x" * 51,
+        ],
+    )
+    async def test_rejects_out_of_range_values(self, client, url):
+        response = await client.get(url)
+        assert response.status_code == 422
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "/markets/get_ohlc?cryptoId=usd-coin&selectedTimeFrame=1w",
+            "/markets/coin?cryptoId=wrapped-steth&currency=usd",
+            "/markets?per_page=250&page=2&order=volume_desc",
+        ],
+    )
+    async def test_accepts_values_the_app_uses(self, client, url):
+        response = await client.get(url)
+        assert response.status_code == 200
