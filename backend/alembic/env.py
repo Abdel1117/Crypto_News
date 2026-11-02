@@ -11,7 +11,8 @@ from alembic import context
 # The app decides which database to use (Postgres from DB_* variables, or the
 # local SQLite file), so migrations always target the same one as the app.
 from app.db.session import DATABASE_URL
-import app.models.user  # noqa: F401  (registers the table on SQLModel.metadata)
+import app.models.user  # noqa: F401  (registers the tables on SQLModel.metadata)
+import app.models.simulation  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

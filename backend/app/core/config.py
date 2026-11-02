@@ -22,6 +22,10 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:3000"
 
+    # How often (seconds) the daily value of every simulated portfolio is
+    # recorded; 0 turns the background task off.
+    SIM_SNAPSHOT_INTERVAL: int = 3600
+
     model_config = {"extra": "ignore"}
 
     @property

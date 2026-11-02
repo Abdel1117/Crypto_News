@@ -9,6 +9,7 @@ import {
   SearchIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
 import { DESKTOP_QUERY } from "@/app/hooks/useMediaQuery";
+import { useAppSelector } from "@/app/lib/hooks";
 import AppSidebar from "./AppSidebar";
 import MobileTabBar from "./MobileTabBar";
 import CoinSearch from "./CoinSearch";
@@ -24,7 +25,8 @@ import { pageConfig } from "./appNav";
  */
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const page = pageConfig(pathname);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const page = pageConfig(pathname, { isAuthenticated });
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

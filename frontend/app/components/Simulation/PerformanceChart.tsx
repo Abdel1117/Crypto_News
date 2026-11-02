@@ -15,6 +15,7 @@ import { useTheme } from "@/app/context/Theme/ThemeContext";
 import { callOhlc } from "@/app/lib/api/crypto";
 import type { MarketViewState } from "@/app/lib/features/marketView/marketViewSlice";
 import { CryptoMarketData } from "@/app/types/Crypto/Crypto";
+import { hexToRgba } from "@/app/utils/Chart/hexToRgba";
 import { usePortfolio } from "./usePortfolio";
 
 type Period = "1w" | "1m" | "3m" | "all";
@@ -44,13 +45,6 @@ const OHLC_TIMEFRAME: Record<Period, MarketViewState["selectedTimeFrame"]> = {
 
 type Point = { time: UTCTimestamp; value: number };
 type OhlcRow = [number, number, number, number, number];
-
-function hexToRgba(hex: string, alpha: number) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return hex;
-  const n = Number.parseInt(m[1], 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
-}
 
 /** Keeps the points inside the period, relative to the latest one. */
 function clip(points: Point[], period: Period): Point[] {
