@@ -26,13 +26,14 @@ services:
     env_file:
       - .env
     container_name: crypto_back
-    command: sh -c "uvicorn app.main:app --reload --host 0.0.0.0 --port ${PORT_BACK}"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --reload --host 0.0.0.0 --port ${PORT_BACK}"
     ports:
       - "${PORT_BACK}:${PORT_BACK}"
     volumes:
       - ./backend:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:15-alpine
@@ -45,6 +46,11 @@ services:
       - "${DB_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   nginx:
     image: nginx:alpine
     ports:

@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = ""
     DB_NAME: str = ""
     DB_PORT: int = 5432
+    # Optional full URL; overrides DB_* and the local SQLite default.
+    DATABASE_URL: str = ""
     API_KEY_COINGECKO: str = ""
     GOOGLE_CLIENT_ID : str = ""
 
@@ -19,6 +21,10 @@ class Settings(BaseSettings):
     SMTP_RECIPIENT: str = ""
 
     CORS_ORIGINS: str = "http://localhost:3000"
+
+    # How often (seconds) the daily value of every simulated portfolio is
+    # recorded; 0 turns the background task off.
+    SIM_SNAPSHOT_INTERVAL: int = 3600
 
     model_config = {"extra": "ignore"}
 

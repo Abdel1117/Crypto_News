@@ -235,3 +235,70 @@ class TestMeRoute:
             headers={"Authorization": "Bearer totally.invalid.token"},
         )
         assert response.status_code == 401
+
+
+def set_cookie_header(response) -> str:
+    return next(v for k, v in response.headers.multi_items() if k == "set-cookie")
+
+
+class TestRefreshCookiePath:
+    async def test_cookie_path_is_auth_locally(self, client):
+        mock_service = AsyncMock()
+        mock_service.login.return_value = make_token_pair()
+        app.dependency_overrides[get_auth_service] = lambda: mock_service
+
+        response = await client.post("/auth/login", json=LOGIN_PAYLOAD)
+
+        header = set_cookie_header(response)
+        assert "Path=/auth" in header
+        assert "HttpOnly" in header
+        assert "SameSite=strict" in header
+
+    async def test_cookie_path_follows_the_root_path_behind_nginx(self):
+        # In production nginx strips "/api" and uvicorn runs with --root-path /api.
+        import httpx
+        from unittest.mock import patch
+
+        mock_service = AsyncMock()
+        mock_service.login.return_value = make_token_pair()
+        app.dependency_overrides[get_auth_service] = lambda: mock_service
+
+        with patch("app.main.init_db", new_callable=AsyncMock):
+            transport = httpx.ASGITransport(app=app, root_path="/api")
+            async with httpx.AsyncClient(transport=transport, base_url="http://test") as ac:
+                response = await ac.post("/auth/login", json=LOGIN_PAYLOAD)
+
+        assert response.status_code == 200
+        assert "Path=/api/auth" in set_cookie_header(response)
+
+
+class TestGoogleRoute:
+    async def test_sets_refresh_cookie_and_hides_it_from_body(self, client):
+        mock_service = AsyncMock()
+        mock_service.google_auth.return_value = make_token_pair()
+        app.dependency_overrides[get_auth_service] = lambda: mock_service
+
+        response = await client.post("/auth/google", json={"credentials": "google-id-token"})
+
+        assert response.status_code == 201
+        assert "refresh_token" in response.cookies
+        assert "refresh_token" not in response.json()
+        assert response.json()["access_token"] == "access_token_value"
+
+
+class TestLogoutRevokes:
+    async def test_passes_the_cookie_to_the_service(self, client):
+        mock_service = AsyncMock()
+        app.dependency_overrides[get_auth_service] = lambda: mock_service
+
+        response = await client.post("/auth/logout", cookies={"refresh_token": "rt"})
+
+        assert response.status_code == 204
+        mock_service.logout.assert_awaited_once_with("rt")
+        assert 'refresh_token=""' in set_cookie_header(response)
+
+
+class TestRegisterValidation:
+    async def test_returns_422_when_password_is_null(self, client):
+        response = await client.post("/auth/register", json={**REGISTER_PAYLOAD, "password": None})
+        assert response.status_code == 422

@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.config import settings
@@ -6,6 +8,7 @@ from app.services.contact_service import ContactService
 from app.services.email.smtp_email_sender import SmtpEmailSender
 
 router = APIRouter(prefix="/contact", tags=["contact"])
+logger = logging.getLogger(__name__)
 
 
 def get_contact_service() -> ContactService:
@@ -27,7 +30,7 @@ async def send_contact(
         await service.send_contact_email(data)
         return {"message": "Message envoyé avec succès."}
     except Exception as exc:
-        print(exc)
+        logger.exception("Contact email could not be sent")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Erreur lors de l'envoi du message. Veuillez réessayer.",

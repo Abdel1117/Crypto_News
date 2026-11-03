@@ -42,6 +42,23 @@ class MarketService:
             "volume_24h": coin["total_volume"],
         }
 
+    async def get_prices(self, currency: str, coin_ids: list[str]) -> dict[str, float]:
+        """Current price of each coin, in one CoinGecko call per 250 coins.
+
+        Coins CoinGecko doesn't know (or without a price) are left out.
+        """
+        ids = sorted(set(coin_ids))
+        prices: dict[str, float] = {}
+        for start in range(0, len(ids), 250):
+            chunk = ids[start : start + 250]
+            data = await self.client.fetch_markets(
+                currency, "market_cap_desc", len(chunk), 1, False, ids=",".join(chunk)
+            )
+            for coin in data:
+                if coin.get("current_price") is not None:
+                    prices[coin["id"]] = coin["current_price"]
+        return prices
+
     async def get_market_view(self, currency: str):
         data = await self.client.fetch_markets_view(currency)
         return {

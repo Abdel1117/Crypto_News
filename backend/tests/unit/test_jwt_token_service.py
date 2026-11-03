@@ -93,3 +93,35 @@ class TestVerifyToken:
         expired_token = jwt.encode(payload, SECRET, algorithm=ALGORITHM)
         with pytest.raises(JWTError):
             service.verify_token(expired_token)
+
+
+class TestTokenVersionClaim:
+    def test_tokens_include_the_version(self):
+        svc = JWTTokenService(secret_key="k" * 32)
+        payload = svc.verify_token(svc.create_refresh_token("1", "a@b.c", None, 4))
+        assert payload.ver == 4
+
+    def test_tokens_without_version_read_as_zero(self):
+        from jose import jwt as jose_jwt
+        token = jose_jwt.encode(
+            {"sub": "1", "email": "a@b.c", "token_type": "access", "iat": 1, "exp": 9999999999},
+            "k" * 32, algorithm="HS256",
+        )
+        assert JWTTokenService(secret_key="k" * 32).verify_token(token).ver == 0
+
+
+class TestCheckJwtSecret:
+    def test_allows_anything_outside_production(self):
+        from app.core.jwt_config import DEV_SECRET_KEY, check_jwt_secret
+        check_jwt_secret("development", DEV_SECRET_KEY)
+        check_jwt_secret(None, "short")
+
+    @pytest.mark.parametrize("secret", ["dev-secret-key-change-in-production", "too-short", ""])
+    def test_refuses_weak_secrets_in_production(self, secret):
+        from app.core.jwt_config import check_jwt_secret
+        with pytest.raises(RuntimeError):
+            check_jwt_secret("production", secret)
+
+    def test_accepts_a_long_random_secret_in_production(self):
+        from app.core.jwt_config import check_jwt_secret
+        check_jwt_secret("production", "x" * 48)

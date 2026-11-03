@@ -50,9 +50,9 @@ jobs:
             - ~/.cache/pip
 
       - run:
-          name: Run unit tests
+          name: Run unit and integration tests
           command: |
-            pytest tests/unit \
+            pytest tests \
               --cov \
               --cov-report=xml:coverage.xml \
               -v

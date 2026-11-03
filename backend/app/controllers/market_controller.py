@@ -1,14 +1,29 @@
 import asyncio
 import json
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+import logging
+from typing import Annotated, Literal
+
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from app.services.market_service import MarketService
 from app.clients.coingecko_client import CoinGeckoClient
 from app.services.ws_manager import manager
 from app.utils.mapping_values import convert_Time_Frame
 
 router = APIRouter(prefix="/markets", tags=["markets"])
+logger = logging.getLogger(__name__)
 
 POLL_INTERVAL = 30  # seconds
+
+# Every value below ends up in a CoinGecko request and in the shared cache key,
+# so only values the app actually uses are accepted (anything else is a 422).
+Currency = Literal["eur", "usd"]
+Order = Literal[
+    "market_cap_desc", "market_cap_asc", "volume_desc", "volume_asc", "id_asc", "id_desc"
+]
+TimeFrame = Literal["1h", "1d", "1w", "1m", "1y", "max"]
+# CoinGecko ids: lowercase letters, digits, dots, dashes, underscores. No slash,
+# so the id can't change which CoinGecko endpoint the request goes to.
+CoinId = Annotated[str, Query(pattern=r"^[a-z0-9][a-z0-9._-]{0,99}$")]
 
 
 def get_market_service():
@@ -18,10 +33,10 @@ def get_market_service():
 
 @router.get("")
 async def get_markets(
-    currency: str = "eur",
-    order: str = "market_cap_desc",
-    per_page: int = 20,
-    page: int = 1,
+    currency: Currency = "eur",
+    order: Order = "market_cap_desc",
+    per_page: int = Query(20, ge=1, le=250),
+    page: int = Query(1, ge=1, le=100),
     service: MarketService = Depends(get_market_service),
 ):
     return await service.get_top_markets(currency, order, per_page, page)
@@ -29,7 +44,7 @@ async def get_markets(
 
 @router.get("/markets_view")
 async def getMarketView(
-    currency: str = "eur", service: MarketService = Depends(get_market_service)
+    currency: Currency = "eur", service: MarketService = Depends(get_market_service)
 ):
 
     return await service.get_market_view(currency)
@@ -37,9 +52,9 @@ async def getMarketView(
 
 @router.get("/get_ohlc")
 async def get_ohlc(
-    currency: str = "eur",
-    selectedTimeFrame: str = "1d",
-    cryptoId: str = "bitcoin",
+    currency: Currency = "eur",
+    selectedTimeFrame: TimeFrame = "1d",
+    cryptoId: CoinId = "bitcoin",
     service: MarketService = Depends(get_market_service),
 ):
     converted_time_frame = convert_Time_Frame(selectedTimeFrame)
@@ -48,10 +63,11 @@ async def get_ohlc(
 
 @router.get("/get_top_winners_losers")
 async def get_top_winners_losers(
-    currency: str = "eur",
-    duration: str = "1d",
-    price_change_percentage: str = "1d",
-    top_coins: str = 300,
+    currency: Currency = "eur",
+    # Not used by the service (moves are always over 24h); kept for compatibility.
+    duration: str = Query("1d", max_length=10),
+    price_change_percentage: str = Query("1d", max_length=10),
+    top_coins: int = Query(300, ge=10, le=300),
     service: MarketService = Depends(get_market_service),
 ):
 
@@ -62,8 +78,8 @@ async def get_top_winners_losers(
 
 @router.get("/coin")
 async def get_market_coin(
-    currency: str = "eur",
-    cryptoId: str = "bitcoin",
+    currency: Currency = "eur",
+    cryptoId: CoinId = "bitcoin",
     service: MarketService = Depends(get_market_service),
 ):
     result = await service.get_market_by_id(currency, cryptoId)
@@ -74,8 +90,8 @@ async def get_market_coin(
 
 @router.get("/exchange-rate")
 async def get_exchange_rate(
-    base: str = "eur",
-    quote: str = "usd",
+    base: Currency = "eur",
+    quote: Currency = "usd",
     service: MarketService = Depends(get_market_service),
 ):
     result = await service.get_exchange_rate(base, quote)
@@ -102,8 +118,11 @@ async def _poll_markets_loop():
                 for currency in SUPPORTED_CURRENCIES
             }
             await manager.broadcast_per_currency("markets", _last_markets_data)
+        except asyncio.CancelledError:
+            raise
         except Exception:
-            pass
+            # Keep polling (the next tick may succeed), but leave a trace.
+            logger.exception("Market poll failed")
         await asyncio.sleep(POLL_INTERVAL)
 
 
@@ -131,6 +150,11 @@ async def websocket_endpoint(websocket: WebSocket):
             if _last_markets_data is not None:
                 await manager.send_to(websocket, "markets", _last_markets_data[currency])
     except WebSocketDisconnect:
+        pass
+    except Exception:
+        logger.exception("WebSocket connection failed")
+    finally:
+        # Any way the connection ends, forget it, and stop polling when nobody listens.
         manager.disconnect(websocket)
         if not manager.has_clients() and _poller_task is not None:
             _poller_task.cancel()

@@ -31,6 +31,18 @@ describe("appNav", () => {
     expect(pageConfig("/profil").currency).toBeFalsy();
   });
 
+  it("adapts the simulation page to the login state", () => {
+    const loggedOut = pageConfig("/simulation", { isAuthenticated: false });
+    expect(loggedOut.tag?.mobile).toBe("Bêta");
+    expect(loggedOut.currency).toBe(true);
+
+    const loggedIn = pageConfig("/simulation", { isAuthenticated: true });
+    expect(loggedIn.tag?.desktop).toBe("Argent fictif");
+    expect(loggedIn.currency).toBe(false);
+
+    expect(pageConfig("/dashboard", { isAuthenticated: true }).currency).toBe(true);
+  });
+
   it("marks the current link without matching every path for /", () => {
     expect(isCurrent("/", "/")).toBe(true);
     expect(isCurrent("/dashboard", "/")).toBe(false);

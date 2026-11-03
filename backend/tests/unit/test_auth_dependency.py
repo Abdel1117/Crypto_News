@@ -95,3 +95,24 @@ class TestGetCurrentUser:
                 await get_current_user(token=token, session=session)
 
         assert exc.value.status_code == 401
+
+
+class TestTokenVersion:
+    async def test_rejects_token_issued_before_logout(self, token_service):
+        user = make_user(token_version=1)
+        token = token_service.create_access_token(USER_ID, EMAIL, FULL_NAME, 0)
+
+        with patch("app.dependencies.auth._token_service", token_service):
+            with pytest.raises(HTTPException) as exc:
+                await get_current_user(token=token, session=make_mock_session(user))
+
+        assert exc.value.status_code == 401
+
+    async def test_accepts_token_with_current_version(self, token_service):
+        user = make_user(token_version=2)
+        token = token_service.create_access_token(USER_ID, EMAIL, FULL_NAME, 2)
+
+        with patch("app.dependencies.auth._token_service", token_service):
+            result = await get_current_user(token=token, session=make_mock_session(user))
+
+        assert result == user

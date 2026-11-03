@@ -14,6 +14,10 @@ class UserBase(SQLModel):
     email: str = Field(sa_column=Column(String, unique=True, index=True, nullable=False))
     hashed_password: Optional[str] = Field(default=None, nullable=True)    
     is_active: bool = Field(default=True, nullable=False)
+    # Incremented on logout: every token carrying an older version is rejected.
+    token_version: int = Field(
+        default=0, nullable=False, sa_column_kwargs={"server_default": "0"}
+    )
     provider: AuthProvider = Field(default=AuthProvider.local)
     created_at: datetime = Field(
         default_factory=datetime.utcnow,

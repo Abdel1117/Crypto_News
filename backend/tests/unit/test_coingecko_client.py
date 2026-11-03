@@ -139,3 +139,28 @@ class TestFetchSearch:
             await client.fetch_search("ethereum")
         params = mock_http.get.call_args[1]["params"]
         assert params["query"] == "ethereum"
+
+
+class TestCacheBound:
+    def test_cache_never_grows_past_its_cap(self, monkeypatch):
+        from app.clients import coingecko_client as cg
+
+        monkeypatch.setattr(cg, "_CACHE_MAX_ENTRIES", 3)
+        cg.clear_cache()
+        for i in range(10):
+            cg._cache_set(f"k{i}", i)
+
+        assert len(cg._cache) == 3
+        assert list(cg._cache) == ["k7", "k8", "k9"]  # oldest went first
+
+    def test_refreshing_a_key_keeps_it(self, monkeypatch):
+        from app.clients import coingecko_client as cg
+
+        monkeypatch.setattr(cg, "_CACHE_MAX_ENTRIES", 2)
+        cg.clear_cache()
+        cg._cache_set("a", 1)
+        cg._cache_set("b", 2)
+        cg._cache_set("a", 3)  # refresh: "a" becomes the newest
+        cg._cache_set("c", 4)
+
+        assert set(cg._cache) == {"a", "c"}
