@@ -7,8 +7,34 @@ import {
 } from "@/app/utils/Format/FrFormat/FrFormat";
 import { signedFiat, trendColor } from "@/app/components/Simulation/usePortfolio";
 
+interface ProSummaryProps {
+  portfolio: ProPortfolio;
+  /** Real-time state (see useLivePortfolio); omitted, no indicator is shown. */
+  live?: { updatedAt: string | null; delayed: boolean };
+}
+
+function LiveIndicator({ updatedAt, delayed }: { updatedAt: string | null; delayed: boolean }) {
+  const time = updatedAt
+    ? new Date(updatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
+  return (
+    <p className="m-0 flex items-center justify-end gap-1.5 px-5 pt-3 -mb-2 text-xs text-(--n-neutral-500)">
+      <span
+        aria-hidden="true"
+        className="inline-block w-1.5 h-1.5 rounded-full"
+        style={{ background: delayed ? "var(--n-neutral-500)" : "var(--n-up)" }}
+      />
+      {delayed
+        ? `Prix différés${time ? ` · dernière mise à jour à ${time}` : ""}`
+        : time
+          ? `En direct · mis à jour à ${time}`
+          : "En direct · actualisé toutes les 30 s"}
+    </p>
+  );
+}
+
 /** Headline figures of the logged-in portfolio. */
-export default function ProSummary({ portfolio }: { portfolio: ProPortfolio }) {
+export default function ProSummary({ portfolio, live }: ProSummaryProps) {
   const { currency, pnl } = portfolio;
   const money = (v: number) => formatFiatPrice(v, currency);
 
@@ -23,6 +49,9 @@ export default function ProSummary({ portfolio }: { portfolio: ProPortfolio }) {
 
   return (
     <section className="n-panel n-tnum flex flex-col" aria-label="Résumé du portefeuille">
+      {live && portfolio.positions.length > 0 && (
+        <LiveIndicator updatedAt={live.updatedAt} delayed={live.delayed} />
+      )}
       <div className="grid gap-4 sm:grid-cols-3 px-5 py-4">
         <div className="flex flex-col gap-1">
           <span className="text-[13px] text-(--n-neutral-400)">Valeur du portefeuille</span>

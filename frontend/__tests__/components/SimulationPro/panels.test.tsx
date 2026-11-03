@@ -75,3 +75,40 @@ describe("ProSummary", () => {
     expect(screen.getByText("Impôt estimé")).toBeTruthy();
   });
 });
+
+describe("ProSummary live indicator", () => {
+  it("says the figures are live and when they were updated", () => {
+    render(
+      <ProSummary
+        portfolio={makePortfolio()}
+        live={{ updatedAt: "2026-11-03T14:05:30Z", delayed: false }}
+      />,
+    );
+    expect(screen.getByText(/^En direct · mis à jour à \d{2}:\d{2}:\d{2}$/)).toBeTruthy();
+  });
+
+  it("before the first refresh, says how often it updates", () => {
+    render(<ProSummary portfolio={makePortfolio()} live={{ updatedAt: null, delayed: false }} />);
+    expect(screen.getByText("En direct · actualisé toutes les 30 s")).toBeTruthy();
+  });
+
+  it("says when prices are delayed", () => {
+    render(
+      <ProSummary
+        portfolio={makePortfolio()}
+        live={{ updatedAt: "2026-11-03T14:05:30Z", delayed: true }}
+      />,
+    );
+    expect(screen.getByText(/^Prix différés · dernière mise à jour à/)).toBeTruthy();
+  });
+
+  it("has no indicator when nothing is held", () => {
+    render(
+      <ProSummary
+        portfolio={makePortfolio({ positions: [] })}
+        live={{ updatedAt: null, delayed: false }}
+      />,
+    );
+    expect(screen.queryByText(/En direct/)).toBeNull();
+  });
+});

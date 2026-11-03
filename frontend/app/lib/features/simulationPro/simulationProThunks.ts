@@ -5,12 +5,14 @@ import {
   createPortfolio as apiCreate,
   getCountries,
   getPortfolio,
+  getQuotes,
   getTrades,
   placeTrade as apiPlaceTrade,
   resetPortfolio as apiReset,
   updateCountry as apiUpdateCountry,
   type CountryCode,
   type CountryRule,
+  type LiveQuotes,
   type PortfolioSettings,
   type ProPortfolio,
   type ProTrade,
@@ -107,6 +109,21 @@ export const placeTrade = createAsyncThunk<ProTrade, TradeOrder, ThunkConfig>(
       const trade = await apiPlaceTrade(order, { dispatch, getState });
       await Promise.all([dispatch(fetchPortfolio()), dispatch(fetchTrades())]);
       return trade;
+    } catch (err) {
+      return rejectWithValue(toReject(err));
+    }
+  },
+);
+
+/**
+ * Live prices for the real-time display. Not stored in the slice: only the
+ * open page needs them (see components/SimulationPro/useLivePortfolio.ts).
+ */
+export const fetchQuotes = createAsyncThunk<LiveQuotes, void, ThunkConfig>(
+  "simulationPro/fetchQuotes",
+  async (_, { dispatch, getState, rejectWithValue }) => {
+    try {
+      return await getQuotes({ dispatch, getState });
     } catch (err) {
       return rejectWithValue(toReject(err));
     }

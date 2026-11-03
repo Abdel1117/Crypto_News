@@ -21,6 +21,7 @@ import ProTradeHistory from "./ProTradeHistory";
 import StatsGrid from "./StatsGrid";
 import TaxPanel from "./TaxPanel";
 import ValueChart from "./ValueChart";
+import { useLivePortfolio } from "./useLivePortfolio";
 
 /** The logged-in simulation: onboarding, then the full dashboard. */
 export default function ProSimulation() {
@@ -32,6 +33,8 @@ export default function ProSimulation() {
   const [selected, setSelected] = useState<CoinChoice | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Live prices for the summary, positions and order form (display only).
+  const live = useLivePortfolio(portfolio);
 
   useEffect(() => {
     dispatch(fetchCountries());
@@ -82,7 +85,7 @@ export default function ProSimulation() {
 
   const form = (
     <ProTradeForm
-      portfolio={portfolio}
+      portfolio={live.portfolio ?? portfolio}
       selected={selected}
       onSelect={setSelected}
       inSheet={!isDesktop}
@@ -107,10 +110,13 @@ export default function ProSimulation() {
 
       <div className="grid gap-4.5 lg:gap-4 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
         <div className="flex flex-col gap-4.5 lg:gap-4 min-w-0">
-          <ProSummary portfolio={portfolio} />
+          <ProSummary
+            portfolio={live.portfolio ?? portfolio}
+            live={{ updatedAt: live.updatedAt, delayed: live.delayed }}
+          />
           <ValueChart portfolio={portfolio} />
           {isDesktop && !isWide && form}
-          <ProPositions portfolio={portfolio} selectedId={selected?.id ?? null} onSelect={selectPosition} />
+          <ProPositions portfolio={live.portfolio ?? portfolio} selectedId={selected?.id ?? null} onSelect={selectPosition} />
           <StatsGrid portfolio={portfolio} />
           <TaxPanel portfolio={portfolio} rule={rule} />
           <ProTradeHistory trades={trades} total={tradesTotal} currency={portfolio.currency} />

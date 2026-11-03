@@ -181,3 +181,16 @@ export function getTrades(
     tools,
   );
 }
+
+export interface LiveQuotes {
+  /** coin id → price in the portfolio's currency */
+  prices: Record<string, number>;
+  /** coins held but without a live price */
+  stale: string[];
+  at: string;
+}
+
+/** Live prices of the coins held (read-only, light: safe to call every 30 s). */
+export function getQuotes(tools: ThunkTools): Promise<LiveQuotes> {
+  return authFetchJson<LiveQuotes>(`${API}/simulation/quotes`, {}, tools);
+}
