@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from app.services.market_service import MarketService
 from app.clients.coingecko_client import CoinGeckoClient
 from app.services.ws_manager import manager
-from app.utils.mapping_values import convert_Time_Frame
+from app.utils.mapping_values import convert_time_frame
 
 router = APIRouter(prefix="/markets", tags=["markets"])
 logger = logging.getLogger(__name__)
@@ -20,10 +20,13 @@ Currency = Literal["eur", "usd"]
 Order = Literal[
     "market_cap_desc", "market_cap_asc", "volume_desc", "volume_asc", "id_asc", "id_desc"
 ]
-TimeFrame = Literal["1h", "1d", "1w", "1m", "1y", "max"]
+# The aliases keep the camelCase query names the frontend sends.
+TimeFrame = Annotated[
+    Literal["1h", "1d", "1w", "1m", "1y", "max"], Query(alias="selectedTimeFrame")
+]
 # CoinGecko ids: lowercase letters, digits, dots, dashes, underscores. No slash,
 # so the id can't change which CoinGecko endpoint the request goes to.
-CoinId = Annotated[str, Query(pattern=r"^[a-z0-9][a-z0-9._-]{0,99}$")]
+CoinId = Annotated[str, Query(alias="cryptoId", pattern=r"^[a-z0-9][a-z0-9._-]{0,99}$")]
 
 
 def get_market_service():
@@ -43,7 +46,7 @@ async def get_markets(
 
 
 @router.get("/markets_view")
-async def getMarketView(
+async def get_market_view(
     currency: Currency = "eur", service: MarketService = Depends(get_market_service)
 ):
 
@@ -53,36 +56,36 @@ async def getMarketView(
 @router.get("/get_ohlc")
 async def get_ohlc(
     currency: Currency = "eur",
-    selectedTimeFrame: TimeFrame = "1d",
-    cryptoId: CoinId = "bitcoin",
+    selected_time_frame: TimeFrame = "1d",
+    crypto_id: CoinId = "bitcoin",
     service: MarketService = Depends(get_market_service),
 ):
-    converted_time_frame = convert_Time_Frame(selectedTimeFrame)
-    return await service.get_ohlc(currency, converted_time_frame, cryptoId)
+    converted_time_frame = convert_time_frame(selected_time_frame)
+    return await service.get_ohlc(currency, converted_time_frame, crypto_id)
 
 
 @router.get("/get_top_winners_losers")
 async def get_top_winners_losers(
     currency: Currency = "eur",
-    # Not used by the service (moves are always over 24h); kept for compatibility.
-    duration: str = Query("1d", max_length=10),
+    # Moves are always over 24h, so the old "duration" parameter is gone. Clients
+    # that still send it keep working: FastAPI ignores unknown query parameters.
     price_change_percentage: str = Query("1d", max_length=10),
     top_coins: int = Query(300, ge=10, le=300),
     service: MarketService = Depends(get_market_service),
 ):
 
     return await service.get_top_gainers_losers(
-        currency, duration, price_change_percentage, top_coins
+        currency, price_change_percentage, top_coins
     )
 
 
 @router.get("/coin")
 async def get_market_coin(
     currency: Currency = "eur",
-    cryptoId: CoinId = "bitcoin",
+    crypto_id: CoinId = "bitcoin",
     service: MarketService = Depends(get_market_service),
 ):
-    result = await service.get_market_by_id(currency, cryptoId)
+    result = await service.get_market_by_id(currency, crypto_id)
     if result is None:
         return {}
     return result

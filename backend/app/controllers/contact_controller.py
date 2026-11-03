@@ -1,4 +1,5 @@
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -24,7 +25,7 @@ def get_contact_service() -> ContactService:
 @router.post("/send", status_code=status.HTTP_200_OK)
 async def send_contact(
     data: ContactRequest,
-    service: ContactService = Depends(get_contact_service),
+    service: Annotated[ContactService, Depends(get_contact_service)],
 ) -> dict:
     try:
         await service.send_contact_email(data)

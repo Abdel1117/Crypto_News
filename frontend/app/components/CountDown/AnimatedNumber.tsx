@@ -5,10 +5,10 @@ import React from "react";
 export function AnimatedNumber({
   value,
   className,
-}: {
+}: Readonly<{
   value: string;
   className?: string;
-}) {
+}>) {
   // Key sur la value => remount => animation à chaque tick
   return (
     <>

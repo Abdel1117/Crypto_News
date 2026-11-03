@@ -9,22 +9,17 @@ class MarketClient(Protocol):
         per_page: int,
         page: int,
         ids: Optional[str] = None,
-    ) -> List[Dict]:
-        pass
+    ) -> List[Dict]: ...
 
-    async def fetch_symbols(self, include_platform: bool) -> List[Dict]:
-        pass
+    async def fetch_symbols(self, include_platform: bool) -> List[Dict]: ...
 
-    async def fetch_markets_view(self, currency: str) -> List[Dict]:
-        pass
+    async def fetch_markets_view(self, currency: str) -> List[Dict]: ...
 
     async def fetch_ohlc(
         self,
         currency: str,
-        selectedTimeFrame: str,
-        cryptoId: str,
-    ) -> List[Dict]:
-        pass
+        selected_time_frame: str,
+        crypto_id: str,
+    ) -> List[Dict]: ...
 
-    async def fetch_search(self, query: str) -> List[Dict]:
-        pass
+    async def fetch_search(self, query: str) -> List[Dict]: ...

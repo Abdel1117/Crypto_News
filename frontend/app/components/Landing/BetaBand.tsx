@@ -21,7 +21,7 @@ const noopSubscribe = () => () => {};
 
 const LABELS = ["Jours", "Heures", "Minutes", "Secondes"];
 
-function CountDownGrid({ values }: { values: string[] }) {
+function CountDownGrid({ values }: Readonly<{ values: string[] }>) {
   return (
     <div className="n-tnum grid grid-cols-4 gap-2 lg:gap-0 lg:grid-cols-[repeat(4,auto)] lg:justify-between">
       {LABELS.map((label, i) => (
@@ -38,7 +38,7 @@ function CountDownGrid({ values }: { values: string[] }) {
   );
 }
 
-function LiveCountDown({ target }: { target: number }) {
+function LiveCountDown({ target }: Readonly<{ target: number }>) {
   // Only rendered client-side, so reading the clock here is hydration-safe.
   const [initialNowMs] = useState(() => Date.now());
   const { parts } = useCountDown({ target, clampToZero: true, initialNowMs });
@@ -86,13 +86,11 @@ export default function BetaBand() {
               <span className="hidden lg:inline"> utilisateurs</span>
             </span>
           </div>
+          {/* Native progress for assistive tech; the bar below is its styled twin. */}
+          <progress className="sr-only" aria-label="Accès bêta activés" max={BETA_GOAL} value={BETA_CURRENT} />
           <div
             className="relative h-0.5 bg-[color-mix(in_srgb,var(--n-text)_18%,transparent)]"
-            role="progressbar"
-            aria-label="Accès bêta activés"
-            aria-valuemin={0}
-            aria-valuemax={BETA_GOAL}
-            aria-valuenow={BETA_CURRENT}
+            aria-hidden="true"
           >
             <div
               className="absolute inset-y-0 left-0 bg-(--n-accent-300) shadow-[0_0_10px_var(--n-accent-400)]"

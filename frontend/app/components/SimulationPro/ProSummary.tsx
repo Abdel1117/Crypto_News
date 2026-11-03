@@ -13,7 +13,12 @@ interface ProSummaryProps {
   live?: { updatedAt: string | null; delayed: boolean };
 }
 
-function LiveIndicator({ updatedAt, delayed }: { updatedAt: string | null; delayed: boolean }) {
+function liveLabel(delayed: boolean, time: string | null): string {
+  if (delayed) return time ? `Prix différés · dernière mise à jour à ${time}` : "Prix différés";
+  return time ? `En direct · mis à jour à ${time}` : "En direct · actualisé toutes les 30 s";
+}
+
+function LiveIndicator({ updatedAt, delayed }: Readonly<{ updatedAt: string | null; delayed: boolean }>) {
   const time = updatedAt
     ? new Date(updatedAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
     : null;
@@ -24,17 +29,13 @@ function LiveIndicator({ updatedAt, delayed }: { updatedAt: string | null; delay
         className="inline-block w-1.5 h-1.5 rounded-full"
         style={{ background: delayed ? "var(--n-neutral-500)" : "var(--n-up)" }}
       />
-      {delayed
-        ? `Prix différés${time ? ` · dernière mise à jour à ${time}` : ""}`
-        : time
-          ? `En direct · mis à jour à ${time}`
-          : "En direct · actualisé toutes les 30 s"}
+      {liveLabel(delayed, time)}
     </p>
   );
 }
 
 /** Headline figures of the logged-in portfolio. */
-export default function ProSummary({ portfolio, live }: ProSummaryProps) {
+export default function ProSummary({ portfolio, live }: Readonly<ProSummaryProps>) {
   const { currency, pnl } = portfolio;
   const money = (v: number) => formatFiatPrice(v, currency);
 

@@ -8,11 +8,11 @@ export function HeroCard({
   article,
   className = "",
   showExcerpt = false,
-}: {
+}: Readonly<{
   article: Article;
   className?: string;
   showExcerpt?: boolean;
-}) {
+}>) {
   return (
     <Link
       href={`/blog/${article.id}`}

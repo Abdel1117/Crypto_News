@@ -3,8 +3,10 @@
 import {
   createContext,
   ReactNode,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "react";
 import { syncAnalyticsConsent } from "@/app/lib/analytics/analytics";
@@ -136,7 +138,7 @@ interface ConsentContextValue {
 
 const ConsentContext = createContext<ConsentContextValue | undefined>(undefined);
 
-export function ConsentProvider({ children }: { children: ReactNode }) {
+export function ConsentProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [state, setState] = useState<ConsentState | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [isPreferencesPanelOpen, setPreferencesPanelOpen] = useState(false);
@@ -161,26 +163,30 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
     syncAnalyticsConsent(state?.preferences ?? createDefaultConsentPreferences());
   }, [state, hydrated]);
 
-  const commit = (preferences: ConsentPreferences) => {
+  const commit = useCallback((preferences: ConsentPreferences) => {
     setState({
       preferences: { ...preferences, necessary: true },
       consentedAt: new Date().toISOString(),
       policyVersion: CONSENT_POLICY_VERSION,
     });
     setPreferencesPanelOpen(false);
-  };
+  }, []);
 
-  const value: ConsentContextValue = {
-    preferences: state?.preferences ?? createDefaultConsentPreferences(),
-    consentedAt: state?.consentedAt ?? null,
-    needsConsent: hydrated && state === null,
-    isPreferencesPanelOpen,
-    acceptAll: () => commit({ necessary: true, analytics: true, marketing: true }),
-    rejectAll: () => commit({ necessary: true, analytics: false, marketing: false }),
-    savePreferences: (partial) => commit({ necessary: true, ...partial }),
-    openPreferencesPanel: () => setPreferencesPanelOpen(true),
-    closePreferencesPanel: () => setPreferencesPanelOpen(false),
-  };
+  // Same object (and same callbacks) until the consent or the panel changes.
+  const value = useMemo<ConsentContextValue>(
+    () => ({
+      preferences: state?.preferences ?? createDefaultConsentPreferences(),
+      consentedAt: state?.consentedAt ?? null,
+      needsConsent: hydrated && state === null,
+      isPreferencesPanelOpen,
+      acceptAll: () => commit({ necessary: true, analytics: true, marketing: true }),
+      rejectAll: () => commit({ necessary: true, analytics: false, marketing: false }),
+      savePreferences: (partial) => commit({ necessary: true, ...partial }),
+      openPreferencesPanel: () => setPreferencesPanelOpen(true),
+      closePreferencesPanel: () => setPreferencesPanelOpen(false),
+    }),
+    [state, hydrated, isPreferencesPanelOpen, commit],
+  );
 
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }

@@ -1,7 +1,10 @@
 @import "tailwindcss";
 
-html {
-  scroll-behavior: smooth;
+/* Motion is only added for people who haven't asked their system to reduce it. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* Colours and components live in styles/nocturne.css. */
@@ -18,8 +21,10 @@ html {
   }
 }
 
-.page-transition {
-  animation: page-fade-in 0.35s ease-out;
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition {
+    animation: page-fade-in 0.35s ease-out;
+  }
 }
 
 /* Top loader bar */
@@ -47,10 +52,22 @@ html {
   pointer-events: none;
 }
 
+/* Where each animation ends; with reduced motion the bar jumps straight there. */
 .top-loader[data-state="loading"] {
-  animation: loader-grow 1.5s ease-out forwards;
+  width: 95%;
 }
 
 .top-loader[data-state="done"] {
-  animation: loader-finish 0.3s ease-in forwards;
+  width: 100%;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .top-loader[data-state="loading"] {
+    animation: loader-grow 1.5s ease-out forwards;
+  }
+
+  .top-loader[data-state="done"] {
+    animation: loader-finish 0.3s ease-in forwards;
+  }
 }

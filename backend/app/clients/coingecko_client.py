@@ -31,9 +31,9 @@ def _cache_get_stale(key: str):
 def _cache_set(key: str, value) -> None:
     now = time.monotonic()
     if key not in _cache and len(_cache) >= _CACHE_MAX_ENTRIES:
-        for old_key, (stored_at, _) in list(_cache.items()):
-            if now - stored_at > _STALE_MAX_AGE:
-                del _cache[old_key]
+        expired = [k for k, (stored_at, _) in _cache.items() if now - stored_at > _STALE_MAX_AGE]
+        for old_key in expired:
+            del _cache[old_key]
         while len(_cache) >= _CACHE_MAX_ENTRIES:
             del _cache[next(iter(_cache))]  # dicts keep insertion order: oldest first
     _cache.pop(key, None)  # re-insert so refreshed entries count as newest
@@ -139,10 +139,10 @@ class CoinGeckoClient:
     async def fetch_ohlc(
         self,
         currency: str,
-        selectedTimeFrame: str,
-        cryptoId: str,
+        selected_time_frame: str,
+        crypto_id: str,
     ) -> List[Dict]:
-        key = _cache_key("fetch_ohlc", currency, selectedTimeFrame, cryptoId)
+        key = _cache_key("fetch_ohlc", currency, selected_time_frame, crypto_id)
         cached = _cache_get_fresh(key)
         if cached is not None:
             return cached
@@ -150,10 +150,10 @@ class CoinGeckoClient:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/coins/{cryptoId}/ohlc",
+                    f"{self.BASE_URL}/coins/{crypto_id}/ohlc",
                     params={
                         "vs_currency": currency,
-                        "days": selectedTimeFrame,
+                        "days": selected_time_frame,
                     },
                     headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
                 )

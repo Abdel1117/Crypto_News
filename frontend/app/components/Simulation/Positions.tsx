@@ -34,7 +34,7 @@ export default function Positions({
   coins,
   selectedId,
   onSelect,
-}: PositionsProps) {
+}: Readonly<PositionsProps>) {
   const { positions, currency } = usePortfolio(coins);
   const money = (v: number) => formatFiatPrice(v, currency);
 
@@ -102,7 +102,6 @@ export default function Positions({
                       ? "bg-[color-mix(in_srgb,var(--n-accent)_8%,transparent)]"
                       : ""
                   }`}
-                  onClick={() => onSelect(p.coinId)}
                 >
                   <span
                     role="cell"
@@ -114,14 +113,12 @@ export default function Positions({
                       symbol={p.coinSymbol}
                       size={26}
                     />
+                    {/* The button's ::after covers the whole row, so a click anywhere selects it. */}
                     <button
                       type="button"
-                      className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent)"
+                      className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent) after:absolute after:inset-0"
                       aria-pressed={selected}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onSelect(p.coinId);
-                      }}
+                      onClick={() => onSelect(p.coinId)}
                     >
                       {p.coinName}
                     </button>

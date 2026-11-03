@@ -6,7 +6,7 @@ import { SocketProvider } from "@/app/providers/socket-provider";
 import { CurrencyProvider } from "../context/Curency/CurrencyContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AuthBootstrap from "@/app/components/AuthBootstrap/AuthBootstrap";
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
   const CLIENT_ID: string = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID as string;
   return (
     <ReduxProvider>

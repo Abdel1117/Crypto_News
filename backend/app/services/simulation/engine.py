@@ -130,6 +130,26 @@ def replay(initial_capital: Decimal, trades: Sequence[TradeRecord]) -> ReplayRes
     return ReplayResult(cash=cash, positions=open_positions, sales=sales, total_fees=total_fees)
 
 
+def _consume_lots(
+    coin_lots: list[MatchedLot], quantity: Decimal, method: Literal["fifo", "lifo"]
+) -> list[MatchedLot]:
+    """Takes `quantity` out of `coin_lots` (in place) and returns what was taken."""
+    remaining = quantity
+    consumed: list[MatchedLot] = []
+    while remaining > 0 and coin_lots:
+        index = 0 if method == "fifo" else len(coin_lots) - 1
+        lot = coin_lots[index]
+        take = min(remaining, lot.quantity)
+        consumed.append(MatchedLot(take, lot.unit_cost, lot.acquired_at))
+        remaining -= take
+        left = lot.quantity - take
+        if left > 0:
+            coin_lots[index] = MatchedLot(left, lot.unit_cost, lot.acquired_at)
+        else:
+            coin_lots.pop(index)
+    return consumed
+
+
 def match_lots(
     trades: Sequence[TradeRecord], method: Literal["fifo", "lifo"]
 ) -> dict[int, list[MatchedLot]]:
@@ -142,26 +162,11 @@ def match_lots(
 
     for t in chronological(trades):
         coin_lots = lots.setdefault(t.coin_id, [])
-        if t.side == "buy":
-            if t.quantity > 0:
-                unit_cost = (t.gross + t.fee) / t.quantity
-                coin_lots.append(MatchedLot(t.quantity, unit_cost, t.executed_at))
-            continue
-
-        remaining = t.quantity
-        consumed: list[MatchedLot] = []
-        while remaining > 0 and coin_lots:
-            index = 0 if method == "fifo" else len(coin_lots) - 1
-            lot = coin_lots[index]
-            take = min(remaining, lot.quantity)
-            consumed.append(MatchedLot(take, lot.unit_cost, lot.acquired_at))
-            remaining -= take
-            left = lot.quantity - take
-            if left > 0:
-                coin_lots[index] = MatchedLot(left, lot.unit_cost, lot.acquired_at)
-            else:
-                coin_lots.pop(index)
-        matches[t.id] = consumed
+        if t.side == "sell":
+            matches[t.id] = _consume_lots(coin_lots, t.quantity, method)
+        elif t.quantity > 0:
+            unit_cost = (t.gross + t.fee) / t.quantity
+            coin_lots.append(MatchedLot(t.quantity, unit_cost, t.executed_at))
 
     return matches
 

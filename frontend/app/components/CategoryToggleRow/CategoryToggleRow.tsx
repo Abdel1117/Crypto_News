@@ -12,7 +12,7 @@ export default function CategoryToggleRow({
   category,
   checked,
   onChange,
-}: CategoryToggleRowProps) {
+}: Readonly<CategoryToggleRowProps>) {
   const locked = category.required;
 
   return (

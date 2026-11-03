@@ -21,7 +21,7 @@ interface BlogExplorerProps {
 export default function BlogExplorer({
   articles,
   categories,
-}: BlogExplorerProps) {
+}: Readonly<BlogExplorerProps>) {
   const [category, setCategory] = useState(ALL);
 
   const filtered =
@@ -34,9 +34,8 @@ export default function BlogExplorer({
 
   return (
     <>
-      <div
-        className="flex gap-1.5 overflow-x-auto pb-1 -mx-5 px-5 lg:mx-0 lg:px-0 lg:flex-wrap"
-        role="group"
+      <fieldset
+        className="flex gap-1.5 overflow-x-auto pb-1 -mx-5 px-5 lg:mx-0 lg:px-0 lg:flex-wrap min-w-0"
         aria-label="Filtrer par catégorie"
       >
         {[ALL, ...categories].map((c) => (
@@ -50,7 +49,7 @@ export default function BlogExplorer({
             {c}
           </button>
         ))}
-      </div>
+      </fieldset>
 
       {category === ALL ? (
         <>

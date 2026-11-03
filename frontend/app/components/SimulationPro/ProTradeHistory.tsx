@@ -16,7 +16,7 @@ interface ProTradeHistoryProps {
 }
 
 /** Every order, newest first, with its fee and (for sells) the realized PnL. */
-export default function ProTradeHistory({ trades, total, currency }: ProTradeHistoryProps) {
+export default function ProTradeHistory({ trades, total, currency }: Readonly<ProTradeHistoryProps>) {
   const money = (v: number) => formatFiatPrice(v, currency);
 
   const exportCsv = () => {

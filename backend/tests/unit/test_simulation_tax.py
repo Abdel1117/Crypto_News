@@ -27,7 +27,8 @@ class TestRules:
     def test_every_rule_has_a_summary_and_an_official_source(self, code):
         rule = TAX_RULES[code]
         assert rule.summary
-        assert rule.sources and all(s.url.startswith("https://") for s in rule.sources)
+        assert rule.sources
+        assert all(s.url.startswith("https://") for s in rule.sources)
 
     def test_only_the_us_defaults_to_dollars(self):
         defaults = {code: r.default_currency for code, r in TAX_RULES.items()}

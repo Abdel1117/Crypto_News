@@ -28,6 +28,11 @@ interface OnboardingFormProps {
 const formatCapital = (v: number) =>
   v.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 
+function submitText(saving: boolean, mode: OnboardingFormProps["mode"]): string {
+  if (saving) return "Enregistrement…";
+  return mode === "create" ? "Commencer la simulation" : "Recommencer avec ces paramètres";
+}
+
 export default function OnboardingForm({
   countries,
   mode,
@@ -35,7 +40,7 @@ export default function OnboardingForm({
   saving,
   error,
   onSubmit,
-}: OnboardingFormProps) {
+}: Readonly<OnboardingFormProps>) {
   const ids = { capital: useId(), country: useId(), hint: useId(), error: useId() };
   const firstCountry = initial?.country ?? "FR";
   const [capitalText, setCapitalText] = useState(
@@ -117,7 +122,7 @@ export default function OnboardingForm({
           className="w-full accent-(--n-accent) mt-2"
           aria-label="Capital de départ"
         />
-        <div className="flex flex-wrap gap-2 mt-1" role="group" aria-label="Montants proposés">
+        <fieldset className="flex flex-wrap gap-2 mt-1 min-w-0" aria-label="Montants proposés">
           {CAPITAL_PRESETS.map((v) => (
             <button
               key={v}
@@ -129,7 +134,7 @@ export default function OnboardingForm({
               {formatCapital(v)} {symbol}
             </button>
           ))}
-        </div>
+        </fieldset>
         <p
           id={ids.hint}
           className={`m-0 mt-1 text-xs ${capitalValid ? "text-(--n-neutral-500)" : "text-(--n-down)"}`}
@@ -140,7 +145,7 @@ export default function OnboardingForm({
 
       <div className="flex flex-col gap-2">
         <span className="text-sm">Devise du portefeuille</span>
-        <div className="n-seg flex! max-w-70" role="group" aria-label="Devise du portefeuille">
+        <fieldset className="n-seg flex! max-w-70 min-w-0" aria-label="Devise du portefeuille">
           {(
             [
               ["eur", "Euro (€)"],
@@ -157,7 +162,7 @@ export default function OnboardingForm({
               {label}
             </button>
           ))}
-        </div>
+        </fieldset>
       </div>
 
       <div className="n-field">
@@ -193,11 +198,7 @@ export default function OnboardingForm({
         className="n-btn n-btn-primary min-h-12 lg:min-h-10.5 self-start px-5!"
         disabled={!capitalValid || saving || countries.length === 0}
       >
-        {saving
-          ? "Enregistrement…"
-          : mode === "create"
-            ? "Commencer la simulation"
-            : "Recommencer avec ces paramètres"}
+        {submitText(saving, mode)}
       </button>
     </form>
   );
