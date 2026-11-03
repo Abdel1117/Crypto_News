@@ -18,6 +18,9 @@ export const ThemeScript = () => {
             } else {
               root.classList.remove('dark');
             }
+
+            // JS is running: landing sections may hide until their intro plays.
+            root.setAttribute('data-motion', '');
           })();
         `,
       }}

@@ -22,6 +22,24 @@ html {
   animation: page-fade-in 0.35s ease-out;
 }
 
+/* Landing animations (anime.js, see components/Landing/motion).
+   Before hydration, elements marked data-motion-hide stay hidden so the intro
+   doesn't flash; their section's script lifts this with data-motion-ready.
+   Applies only when JS runs (html[data-motion], set before first paint) and
+   motion is allowed. If the script never arrives, the content fades in on its
+   own after 2s. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-motion] [data-motion-root][data-motion-hide]:not([data-motion-ready]),
+  html[data-motion] [data-motion-root]:not([data-motion-ready]) [data-motion-hide] {
+    opacity: 0;
+    animation: motion-fallback 0.4s ease-out 2s forwards;
+  }
+}
+
+@keyframes motion-fallback {
+  to { opacity: 1; }
+}
+
 /* Top loader bar */
 @keyframes loader-grow {
   0%   { width: 0%; }

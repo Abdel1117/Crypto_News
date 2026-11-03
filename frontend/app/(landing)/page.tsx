@@ -3,10 +3,10 @@ import LandingNav from "../components/Landing/LandingNav";
 import LandingHero from "../components/Landing/LandingHero";
 import DashboardPreview from "../components/Landing/DashboardPreview";
 import BetaBand from "../components/Landing/BetaBand";
+import LandingFooter from "../components/Landing/LandingFooter";
 import {
   Contact,
   Features,
-  LandingFooter,
   PartnersStrip,
 } from "../components/Landing/LandingSections";
 

@@ -4,6 +4,8 @@ import { useState, useSyncExternalStore } from "react";
 import { useCountDown } from "../CountDown/useCountDown";
 import { pad2 } from "../CountDown/time";
 import { AnimatedNumber } from "../CountDown/AnimatedNumber";
+import { useLandingMotion } from "./motion/useLandingMotion";
+import { betaReveal } from "./motion/landingMotion";
 
 const BETA_CURRENT = 450000;
 const BETA_GOAL = 900000;
@@ -62,27 +64,57 @@ function BetaCountDown() {
 
 export default function BetaBand() {
   const percent = (BETA_CURRENT / BETA_GOAL) * 100;
+  const ref = useLandingMotion<HTMLElement>(betaReveal);
 
   return (
     <section
+      ref={ref}
+      data-motion-root=""
       className="n-force-dark text-(--n-text) bg-[radial-gradient(500px_300px_at_90%_-30%,color-mix(in_srgb,var(--n-section-glow)_70%,transparent),transparent_64%),var(--n-section)] lg:bg-[radial-gradient(900px_420px_at_85%_-40%,color-mix(in_srgb,var(--n-section-glow)_70%,transparent),transparent_64%),var(--n-section)]"
       aria-labelledby="beta-title"
     >
-      <div className="mx-auto max-w-[1440px] grid gap-7 px-5 py-11 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-24 lg:gap-y-6 lg:items-end lg:px-[120px] lg:py-[68px]">
+      {/* The band's background stays; only its content waits for the intro. */}
+      <div
+        data-motion-hide=""
+        className="mx-auto max-w-[1440px] grid gap-7 px-5 py-11 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-x-24 lg:gap-y-6 lg:items-end lg:px-[120px] lg:py-[68px]"
+      >
         <h2
           id="beta-title"
+          data-anim="beta-title"
           className="m-0 text-[26px] lg:text-[32px] lg:col-start-1 lg:row-start-1"
         >
           Accès bêta
         </h2>
-        <div className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-end">
+        <div
+          data-anim="beta-countdown"
+          className="lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-end"
+        >
           <BetaCountDown />
         </div>
-        <div className="flex flex-col gap-2.5 lg:gap-3 lg:col-start-1 lg:row-start-2">
+        <div
+          data-anim="beta-progress"
+          className="flex flex-col gap-2.5 lg:gap-3 lg:col-start-1 lg:row-start-2"
+        >
           <div className="n-tnum flex justify-between gap-3 lg:gap-4 text-[13px] lg:text-sm">
             <span>Accès bêta activés</span>
             <span className="text-[color-mix(in_srgb,var(--n-text)_72%,transparent)]">
-              {fmt(BETA_CURRENT)} / {fmt(BETA_GOAL)}
+              {/* The hidden copy reserves the final width while the count rises. */}
+              <span className="inline-grid justify-items-end">
+                <span
+                  aria-hidden="true"
+                  className="invisible col-start-1 row-start-1"
+                >
+                  {fmt(BETA_CURRENT)}
+                </span>
+                <span
+                  data-anim="beta-count"
+                  data-value={BETA_CURRENT}
+                  className="col-start-1 row-start-1"
+                >
+                  {fmt(BETA_CURRENT)}
+                </span>
+              </span>{" "}
+              / {fmt(BETA_GOAL)}
               <span className="hidden lg:inline"> utilisateurs</span>
             </span>
           </div>
@@ -95,7 +127,8 @@ export default function BetaBand() {
             aria-valuenow={BETA_CURRENT}
           >
             <div
-              className="absolute inset-y-0 left-0 bg-(--n-accent-300) shadow-[0_0_10px_var(--n-accent-400)]"
+              data-anim="beta-fill"
+              className="absolute inset-y-0 left-0 origin-left bg-(--n-accent-300) shadow-[0_0_10px_var(--n-accent-400)]"
               style={{ width: `${percent}%` }}
             />
           </div>

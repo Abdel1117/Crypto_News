@@ -26,7 +26,10 @@ vi.mock("../../../app/components/Landing/LandingSections", () => ({
   ),
   Features: () => <section data-testid="landing-features">Features</section>,
   Contact: () => <section data-testid="landing-contact">Contact</section>,
-  LandingFooter: () => <footer data-testid="landing-footer">Footer</footer>,
+}));
+
+vi.mock("../../../app/components/Landing/LandingFooter", () => ({
+  default: () => <footer data-testid="landing-footer">Footer</footer>,
 }));
 
 import Home from "../../../app/(landing)/page";
