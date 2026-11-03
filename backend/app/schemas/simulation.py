@@ -167,3 +167,11 @@ class TradeOut(BaseModel):
 class TradesPage(BaseModel):
     items: list[TradeOut]
     total: int
+
+
+class QuotesOut(BaseModel):
+    """Live prices of the coins held, for the real-time display (read-only)."""
+
+    prices: dict[str, float]  # coin id → price in the portfolio's currency
+    stale: list[str]  # coins held but without a live price
+    at: datetime
