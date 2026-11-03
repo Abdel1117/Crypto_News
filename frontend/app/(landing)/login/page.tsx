@@ -330,7 +330,9 @@ export default function Login() {
             <span className="flex-1 h-px bg-[linear-gradient(to_left,transparent,var(--n-divider))]" />
           </div>
 
+          {/* POST: a submit before React loads must not put the password in the URL. */}
           <form
+            method="post"
             onSubmit={handleSubmit}
             className="flex flex-col gap-3.5"
             noValidate

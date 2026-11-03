@@ -125,6 +125,13 @@ describe("Login page", () => {
     expect(screen.getByRole("button", { name: /s’inscrire/i })).toBeTruthy();
   });
 
+  it("posts the form, so a submit before hydration keeps the password out of the URL", () => {
+    renderLogin();
+
+    const form = screen.getByLabelText("Mot de passe").closest("form");
+    expect(form?.getAttribute("method")).toBe("post");
+  });
+
   it("clears the notice and updates the title when switching tab", () => {
     renderLogin();
 
