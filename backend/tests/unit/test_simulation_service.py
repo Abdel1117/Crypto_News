@@ -98,8 +98,9 @@ class TestPortfolio:
 
     async def test_only_one_portfolio_per_user(self, service, user_id):
         await service.create(user_id, create())
+        second = create()
         with pytest.raises(SimulationError) as exc:
-            await service.create(user_id, create())
+            await service.create(user_id, second)
         assert exc.value.status_code == 409
 
     async def test_missing_portfolio_is_404(self, service, user_id):
@@ -129,8 +130,9 @@ class TestTrades:
 
     async def test_cannot_spend_more_than_the_cash(self, service, user_id):
         await service.create(user_id, create("1000"))
+        order = buy(quantity=10)  # 1000 + 1 fee
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, buy(quantity=10))  # 1000 + 1 fee
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 409
 
     async def test_price_comes_from_the_server(self, service, user_id, market):
@@ -156,14 +158,16 @@ class TestTrades:
     async def test_cannot_sell_more_than_held(self, service, user_id):
         await service.create(user_id, create())
         await service.place_trade(user_id, buy(quantity=1))
+        order = sell(quantity=2)
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, sell(quantity=2))
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 409
 
     async def test_cannot_sell_a_coin_not_held(self, service, user_id):
         await service.create(user_id, create())
+        order = sell(coin="ethereum")
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, sell(coin="ethereum"))
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 409
 
     async def test_selling_everything_closes_the_position(self, service, user_id):
@@ -175,21 +179,24 @@ class TestTrades:
 
     async def test_unknown_coin_is_404(self, service, user_id):
         await service.create(user_id, create())
+        order = buy(coin="nope", quantity=1)
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, buy(coin="nope", quantity=1))
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 404
 
     async def test_no_price_service_is_503(self, service, user_id, market):
         await service.create(user_id, create())
         market.fail = True
+        order = buy(quantity=1)
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, buy(quantity=1))
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 503
 
     async def test_tiny_orders_are_refused(self, service, user_id):
         await service.create(user_id, create())
+        order = buy(amount="0.5")
         with pytest.raises(SimulationError) as exc:
-            await service.place_trade(user_id, buy(amount="0.5"))
+            await service.place_trade(user_id, order)
         assert exc.value.status_code == 422
 
     async def test_history_lists_newest_first_with_gains(self, service, user_id, market):

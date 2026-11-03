@@ -14,7 +14,7 @@ export default function OrderSheet({
   open,
   onClose,
   children,
-}: OrderSheetProps) {
+}: Readonly<OrderSheetProps>) {
   const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -43,11 +43,11 @@ export default function OrderSheet({
         aria-hidden="true"
         onClick={onClose}
       />
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="order-sheet-title"
-        className="relative flex flex-col gap-4 max-h-[92vh] overflow-y-auto px-4 pt-2.5 pb-[max(28px,env(safe-area-inset-bottom))] rounded-t-[20px] bg-(--n-surface)"
+        className="relative w-full flex flex-col gap-4 max-h-[92vh] overflow-y-auto px-4 pt-2.5 pb-[max(28px,env(safe-area-inset-bottom))] rounded-t-[20px] bg-(--n-surface) text-inherit"
         style={{ boxShadow: "var(--n-shadow-md)" }}
       >
         <span
@@ -69,7 +69,7 @@ export default function OrderSheet({
           </button>
         </div>
         {children}
-      </div>
+      </dialog>
     </div>
   );
 }

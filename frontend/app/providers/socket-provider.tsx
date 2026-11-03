@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { initSocket } from "@/app/lib/initSocket";
 
-export function SocketProvider({ children }: { children: React.ReactNode }) {
+export function SocketProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   useEffect(() => {
     initSocket();
   }, []);

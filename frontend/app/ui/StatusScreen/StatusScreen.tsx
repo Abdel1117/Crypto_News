@@ -7,12 +7,12 @@ export function StatusScreen({
   title,
   children,
   actions,
-}: {
+}: Readonly<{
   code: string;
   title: string;
   children: React.ReactNode;
   actions: React.ReactNode;
-}) {
+}>) {
   return (
     <div className="flex flex-col min-h-screen px-5 pt-3 pb-8 lg:px-[72px] lg:py-7">
       <Link

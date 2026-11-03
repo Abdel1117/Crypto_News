@@ -10,7 +10,8 @@ export const contentType = "image/png";
 export default function AppleIcon() {
   return new ImageResponse(
     (
-      <svg width="180" height="180" viewBox="-5 -5 42 42">
+      // Rendered to a PNG, never into the page: nothing for a screen reader.
+      <svg width="180" height="180" viewBox="-5 -5 42 42" aria-hidden="true">
         <rect x="-5" y="-5" width="42" height="42" fill="#9184d9" />
         <path
           fill="#161826"

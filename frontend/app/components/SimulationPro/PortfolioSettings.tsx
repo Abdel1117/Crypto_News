@@ -18,7 +18,7 @@ interface PortfolioSettingsProps {
 }
 
 /** Change the country (re-estimates the tax), or start again with new settings. */
-export default function PortfolioSettings({ portfolio, countries, onClose }: PortfolioSettingsProps) {
+export default function PortfolioSettings({ portfolio, countries, onClose }: Readonly<PortfolioSettingsProps>) {
   const dispatch = useAppDispatch();
   const { saving, saveError } = useAppSelector((state) => state.simulationPro);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -44,15 +44,20 @@ export default function PortfolioSettings({ portfolio, countries, onClose }: Por
   };
 
   return (
-    <div
-      className="fixed inset-0 z-90 grid place-items-center p-4 bg-[color-mix(in_srgb,var(--n-bg)_70%,transparent)] backdrop-blur-sm"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div
-        role="dialog"
+    <div className="fixed inset-0 z-90 grid place-items-center p-4">
+      {/* Clicking outside the panel closes it (Escape and the close button too). */}
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-hidden="true"
+        className="absolute inset-0 cursor-default bg-[color-mix(in_srgb,var(--n-bg)_70%,transparent)] backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="settings-title"
-        className="w-full max-w-170 max-h-[90vh] overflow-y-auto flex flex-col gap-5 p-5 rounded-[14px] bg-(--n-surface)"
+        className="relative w-full max-w-170 max-h-[90vh] overflow-y-auto flex flex-col gap-5 p-5 rounded-[14px] bg-(--n-surface) text-inherit"
         style={{ boxShadow: "var(--n-shadow-md)" }}
       >
         <div className="flex items-center gap-2">
@@ -142,7 +147,7 @@ export default function PortfolioSettings({ portfolio, countries, onClose }: Por
             </button>
           )}
         </section>
-      </div>
+      </dialog>
     </div>
   );
 }

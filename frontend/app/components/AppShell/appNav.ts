@@ -1,5 +1,4 @@
-import type { ComponentType } from "react";
-import type { SVGProps } from "react";
+import type { ComponentType, SVGProps } from "react";
 import {
   ChartLineUpIcon,
   GridFourIcon,

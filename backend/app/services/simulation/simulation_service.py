@@ -35,7 +35,7 @@ from app.schemas.simulation import (
     TradeStatsOut,
 )
 from app.services.market_service import MarketService
-from app.services.simulation.engine import ZERO, ReplayResult, TradeRecord, replay
+from app.services.simulation.engine import ZERO, Position, ReplayResult, TradeRecord, replay
 from app.services.simulation.metrics import risk_stats, trade_stats
 from app.services.simulation.tax import estimate_tax
 from app.services.simulation.tax_rules import TAX_RULES, VERIFIED_ON, TaxRule, get_rule
@@ -68,6 +68,52 @@ def _today() -> date:
 
 def _money(value: Decimal) -> Decimal:
     return value.quantize(MONEY_STEP, rounding=ROUND_HALF_UP)
+
+
+def _too_small() -> SimulationError:
+    return SimulationError(
+        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        f"Montant trop petit : minimum {MIN_TRADE} par ordre.",
+    )
+
+
+def _buy_order(
+    data: TradeCreate, price: Decimal, fee_rate: Decimal, cash: Decimal
+) -> tuple[Decimal, Decimal, Decimal]:
+    """Quantity, gross and fee of a buy, checked against the minimum and the cash."""
+    if data.amount is not None:
+        gross_budget = data.amount / (1 + fee_rate)
+        quantity = (gross_budget / price).quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
+    else:
+        quantity = data.quantity.quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
+    gross = _money(quantity * price)
+    fee = _money(gross * fee_rate)
+    if quantity <= 0 or gross < MIN_TRADE:
+        raise _too_small()
+    if gross + fee > cash:
+        raise SimulationError(status.HTTP_409_CONFLICT, "Solde insuffisant pour cet achat.")
+    return quantity, gross, fee
+
+
+def _sell_order(
+    position: Position | None, requested: Decimal, price: Decimal, fee_rate: Decimal
+) -> tuple[Decimal, Decimal, Decimal]:
+    """Quantity, gross and fee of a sale, checked against the position held."""
+    if position is None:
+        raise SimulationError(status.HTTP_409_CONFLICT, "Tu ne détiens pas cette crypto.")
+    quantity = requested
+    if quantity > position.quantity:
+        # Rounding on the client side: accept a hair more than held as "all".
+        if quantity - position.quantity > QUANTITY_STEP * 10:
+            raise SimulationError(status.HTTP_409_CONFLICT, "Quantité supérieure à ta position.")
+        quantity = position.quantity
+    quantity = quantity.quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
+    gross = _money(quantity * price)
+    fee = _money(gross * fee_rate)
+    closes_position = quantity == position.quantity
+    if quantity <= 0 or (gross < MIN_TRADE and not closes_position):
+        raise _too_small()
+    return quantity, gross, fee
 
 
 def _aware(value: datetime) -> datetime:
@@ -312,64 +358,39 @@ class SimulationService:
             )
         return coin
 
+    async def _value_before_sale(
+        self,
+        currency: str,
+        rows: list[SimTrade],
+        state: ReplayResult,
+        coin_id: str,
+        price: Decimal,
+    ) -> Decimal:
+        """Value of every coin held just before the sale (France's formula)."""
+        others = [c for c in state.positions if c != coin_id]
+        live = await self._live_prices(currency, others)
+        last_price = {r.coin_id: Decimal(r.price) for r in rows}
+        others_value = sum(
+            (state.positions[c].quantity * live.get(c, last_price.get(c, ZERO)) for c in others),
+            ZERO,
+        )
+        return _money(state.positions[coin_id].quantity * price + others_value)
+
     async def place_trade(self, user_id: int, data: TradeCreate) -> TradeOut:
         portfolio = await self._portfolio(user_id, lock=True)
         rows, records, state = await self._state(portfolio)
         coin = await self._coin(portfolio.currency, data.coin_id)
         price = Decimal(str(coin["price"]))
         fee_rate = Decimal(portfolio.fee_rate)
-        value_before = None
 
         if data.side == "buy":
-            if data.amount is not None:
-                gross_budget = data.amount / (1 + fee_rate)
-                quantity = (gross_budget / price).quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
-            else:
-                quantity = data.quantity.quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
-            gross = _money(quantity * price)
-            fee = _money(gross * fee_rate)
-            if quantity <= 0 or gross < MIN_TRADE:
-                raise SimulationError(
-                    status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    f"Montant trop petit : minimum {MIN_TRADE} par ordre.",
-                )
-            if gross + fee > state.cash:
-                raise SimulationError(status.HTTP_409_CONFLICT, "Solde insuffisant pour cet achat.")
+            quantity, gross, fee = _buy_order(data, price, fee_rate, state.cash)
+            value_before = None
         else:
             position = state.positions.get(data.coin_id)
-            if position is None:
-                raise SimulationError(status.HTTP_409_CONFLICT, "Tu ne détiens pas cette crypto.")
-            quantity = data.quantity
-            if quantity > position.quantity:
-                # Rounding on the client side: accept a hair more than held as "all".
-                if quantity - position.quantity > QUANTITY_STEP * 10:
-                    raise SimulationError(
-                        status.HTTP_409_CONFLICT, "Quantité supérieure à ta position."
-                    )
-                quantity = position.quantity
-            quantity = quantity.quantize(QUANTITY_STEP, rounding=ROUND_DOWN)
-            gross = _money(quantity * price)
-            fee = _money(gross * fee_rate)
-            closes_position = quantity == position.quantity
-            if quantity <= 0 or (gross < MIN_TRADE and not closes_position):
-                raise SimulationError(
-                    status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    f"Montant trop petit : minimum {MIN_TRADE} par ordre.",
-                )
-            # Value of every coin held just before the sale (France's formula).
-            others = [c for c in state.positions if c != data.coin_id]
-            live = await self._live_prices(portfolio.currency, others)
-            last_price = {r.coin_id: Decimal(r.price) for r in rows}
-            value_before = _money(
-                position.quantity * price
-                + sum(
-                    (
-                        p.quantity * live.get(c, last_price.get(c, ZERO))
-                        for c, p in state.positions.items()
-                        if c != data.coin_id
-                    ),
-                    ZERO,
-                )
+            quantity, gross, fee = _sell_order(position, data.quantity, price, fee_rate)
+            value_before = await self._value_before_sale(
+                portfolio.currency, rows, state, data.coin_id, price
             )
 
         trade = SimTrade(

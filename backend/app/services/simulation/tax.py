@@ -132,53 +132,70 @@ def _progressive(base: Decimal, brackets, fx: Decimal) -> Decimal:
     return tax
 
 
+def _net_buckets(short: Decimal, long: Decimal, long_rate: Decimal) -> tuple[Decimal, Decimal]:
+    """Taxable short- and long-term gains, after losses offset gains."""
+    if long_rate == 0:
+        # Long-term disposals are outside the tax (Germany): only the
+        # short-term result counts, and long-term losses don't offset it.
+        return max(short, ZERO), ZERO
+    # US-style netting: a net loss in one bucket reduces the other.
+    if short < 0 < long:
+        return ZERO, max(long + short, ZERO)
+    if long < 0 < short:
+        return max(short + long, ZERO), ZERO
+    return max(short, ZERO), max(long, ZERO)
+
+
+def _split_rate_tax(
+    rule: TaxRule, short: Decimal, long: Decimal, fx: Decimal
+) -> tuple[Decimal, Decimal, bool]:
+    """Taxable gain, tax and exemption flag when short and long term have their own rates."""
+    long_rate = rule.long_term_rate or ZERO
+    taxable_short, taxable_long = _net_buckets(short, long, long_rate)
+    exemption = rule.exemption
+    exempt = False
+    if (
+        exemption
+        and exemption.kind == "short_term_free_limit"
+        and 0 < taxable_short < exemption.amount * fx
+    ):
+        taxable_short = ZERO
+        exempt = True
+    tax = taxable_short * rule.short_term_rate + taxable_long * long_rate
+    return taxable_short + taxable_long, tax, exempt
+
+
+def _single_rate_tax(
+    rule: TaxRule, net: Decimal, sales_total: Decimal, fx: Decimal
+) -> tuple[Decimal, Decimal, bool]:
+    """Taxable gain, tax and exemption flag when every gain is taxed the same way."""
+    taxable = max(net, ZERO)
+    exemption = rule.exemption
+    exempt = False
+    if exemption and taxable > 0:
+        limit = exemption.amount * fx
+        if exemption.kind == "sales_total_max" and sales_total <= limit:
+            taxable, exempt = ZERO, True
+        elif exemption.kind == "allowance":
+            exempt = taxable <= limit
+            taxable = max(taxable - limit, ZERO)
+    if rule.brackets:
+        tax = _progressive(taxable, rule.brackets, fx)
+    else:
+        tax = taxable * (rule.flat_rate or ZERO)
+    return taxable, tax, exempt
+
+
 def _year_tax(rule: TaxRule, year: str, gains: list[SaleGain], fx: Decimal) -> YearTax:
     sales_total = sum((g.gross for g in gains), ZERO)
     short = sum((g.short_term for g in gains), ZERO)
     long = sum((g.long_term for g in gains), ZERO)
     net = short + long
-    exemption = rule.exemption
-    exempt = False
 
     if rule.short_term_rate is not None:
-        long_rate = rule.long_term_rate or ZERO
-        if long_rate == 0:
-            # Long-term disposals are outside the tax (Germany): only the
-            # short-term result counts, and long-term losses don't offset it.
-            taxable_short, taxable_long = short, ZERO
-        else:
-            # US-style netting: a net loss in one bucket reduces the other.
-            taxable_short, taxable_long = short, long
-            if taxable_short < 0 < taxable_long:
-                taxable_long += taxable_short
-                taxable_short = ZERO
-            elif taxable_long < 0 < taxable_short:
-                taxable_short += taxable_long
-                taxable_long = ZERO
-        taxable_short = max(taxable_short, ZERO)
-        taxable_long = max(taxable_long, ZERO)
-        if (
-            exemption
-            and exemption.kind == "short_term_free_limit"
-            and 0 < taxable_short < exemption.amount * fx
-        ):
-            taxable_short = ZERO
-            exempt = True
-        taxable = taxable_short + taxable_long
-        tax = taxable_short * rule.short_term_rate + taxable_long * long_rate
+        taxable, tax, exempt = _split_rate_tax(rule, short, long, fx)
     else:
-        taxable = max(net, ZERO)
-        if exemption and taxable > 0:
-            limit = exemption.amount * fx
-            if exemption.kind == "sales_total_max" and sales_total <= limit:
-                taxable, exempt = ZERO, True
-            elif exemption.kind == "allowance":
-                exempt = taxable <= limit
-                taxable = max(taxable - limit, ZERO)
-        if rule.brackets:
-            tax = _progressive(taxable, rule.brackets, fx)
-        else:
-            tax = taxable * (rule.flat_rate or ZERO)
+        taxable, tax, exempt = _single_rate_tax(rule, net, sales_total, fx)
 
     return YearTax(
         year=year,

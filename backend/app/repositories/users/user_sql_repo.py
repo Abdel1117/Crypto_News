@@ -21,17 +21,17 @@ class SQLUserRepository(UserRepositoryProtocol):
         result = await self.session.execute(statement)
         return result.scalars().one_or_none()
 
-    async def create(self, user: User) -> User:
+    async def _save(self, user: User) -> User:
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
         return user
 
+    async def create(self, user: User) -> User:
+        return await self._save(user)
+
     async def update(self, user: User) -> User:
-        self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
-        return user
+        return await self._save(user)
 
     async def delete(self, user: User) -> User:
         await self.session.delete(user)

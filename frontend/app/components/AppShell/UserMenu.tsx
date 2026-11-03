@@ -32,6 +32,11 @@ function ThemeMenuItem() {
   );
 }
 
+function accountHint(isAuthenticated: boolean, onProfile: boolean): string {
+  if (!isAuthenticated) return "Se connecter";
+  return onProfile ? "Profil" : "Voir le profil";
+}
+
 /** Bottom-of-sidebar account block: profile, theme and logout in a menu. */
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
@@ -130,11 +135,7 @@ export default function UserMenu() {
           <span
             className={`text-xs ${onProfile ? "text-(--n-accent-300)" : "text-(--n-neutral-500)"}`}
           >
-            {!isAuthenticated
-              ? "Se connecter"
-              : onProfile
-                ? "Profil"
-                : "Voir le profil"}
+            {accountHint(isAuthenticated, onProfile)}
           </span>
         </span>
         <CaretUpDownIcon size={14} className="ml-auto text-(--n-neutral-500)" />

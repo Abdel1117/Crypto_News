@@ -7,6 +7,7 @@ html:not(.dark) { background: #f4f4f9; }
 
 /* Light theme (the design system is dark-first; this mirrors its ramps). */
 html:not(.dark) .nocturne {
+  --n-cat-l: 0.5; /* blog category lightness, see .n-cat */
   --n-bg: #f4f4f9;
   --n-surface: #ffffff;
   --n-text: #1b1d29;
@@ -72,6 +73,7 @@ html .nocturne .n-force-dark {
 }
 
 .nocturne {
+  --n-cat-l: 0.8; /* blog category lightness, see .n-cat */
   --n-section: #262a60;
   --n-section-glow: #353b80;
   --n-radius-md: 8px;
@@ -477,9 +479,7 @@ html .nocturne .n-force-dark {
   background-color: color-mix(in srgb, var(--n-text) 4%, transparent);
 }
 
-/* — blog categories: one hue per category (--cat-h), theme-aware lightness — */
-.nocturne { --n-cat-l: 0.8; }
-html:not(.dark) .nocturne { --n-cat-l: 0.5; }
+/* — blog categories: one hue per category (--cat-h), theme-aware lightness (--n-cat-l, set with the theme tokens above) — */
 .n-cat { color: oklch(var(--n-cat-l) 0.12 var(--cat-h, 289)); }
 .n-cover {
   background:

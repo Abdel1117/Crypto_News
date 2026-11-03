@@ -22,7 +22,7 @@ function Icon({ size = 16, children, ...props }: IconProps) {
   );
 }
 
-export function BrandMark({ size = 26 }: { size?: number }) {
+export function BrandMark({ size = 26 }: Readonly<{ size?: number }>) {
   return (
     <svg
       width={size}
@@ -285,14 +285,8 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
-export function ChartLineIcon(props: IconProps) {
-  return (
-    <Icon {...props}>
-      <polyline points="224 208 32 208 32 48" />
-      <polyline points="224 96 160 152 96 104 32 160" />
-    </Icon>
-  );
-}
+/** Same drawing as ChartLineUpIcon, under the name the chart controls use. */
+export const ChartLineIcon = ChartLineUpIcon;
 
 export function ChartBarIcon(props: IconProps) {
   return (

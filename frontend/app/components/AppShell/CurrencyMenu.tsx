@@ -15,9 +15,9 @@ const CURRENCIES: { value: Currency; label: string }[] = [
 /** Page-wide currency switch, in the top bar (it applies to every figure). */
 export default function CurrencyMenu({
   className = "",
-}: {
+}: Readonly<{
   className?: string;
-}) {
+}>) {
   const { currency, setCurrency } = useCurrency();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

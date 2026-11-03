@@ -1,1 +1,1 @@
-from .mapping_values import convert_Time_Frame
+from .mapping_values import convert_time_frame

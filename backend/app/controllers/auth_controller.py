@@ -57,11 +57,9 @@ def _access_response(token_pair) -> AccessTokenResponse:
     )
 
 
-@router.post(
-    "/register",
-    response_model=AuthRegistrationResponse,
-    status_code=status.HTTP_201_CREATED,
-)
+# The return annotations double as response models: FastAPI uses them to
+# validate and filter what each route sends back.
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(
     registration_data: AuthRegistrationRequest,
     auth_service: AuthService = Depends(get_auth_service),
@@ -69,10 +67,7 @@ async def register_user(
     return await auth_service.register_user(registration_data)
 
 
-@router.post("/google", 
-             response_model=AccessTokenResponse,
-             status_code=status.HTTP_201_CREATED
-             )
+@router.post("/google", status_code=status.HTTP_201_CREATED)
 async def register_user_google(
         credentials : AuthRegistrationRequestGoogle,
         request: Request,
@@ -87,7 +82,7 @@ async def register_user_google(
 
 
 
-@router.post("/login", response_model=AccessTokenResponse)
+@router.post("/login")
 async def login(
     login_data: LoginRequest,
     request: Request,
@@ -99,7 +94,7 @@ async def login(
     return _access_response(token_pair)
 
 
-@router.post("/refresh", response_model=AccessTokenResponse)
+@router.post("/refresh")
 async def refresh_token(
     request: Request,
     response: Response,
@@ -136,6 +131,6 @@ async def logout(
     )
 
 
-@router.get("/me", response_model=AuthRegistrationResponse)
+@router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)) -> AuthRegistrationResponse:
     return current_user

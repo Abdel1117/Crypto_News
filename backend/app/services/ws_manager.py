@@ -26,15 +26,17 @@ class ConnectionManager:
 
     async def broadcast(self, channel: str, data):
         payload = json.dumps({"channel": channel, "data": data})
-        for ws in list(self.active):
+        # Iterate over a copy: a failed send removes the socket from self.active,
+        # and other clients can connect or leave while we await.
+        for ws in self.active.copy():
             try:
                 await ws.send_text(payload)
             except Exception:
                 self.disconnect(ws)
 
     async def broadcast_per_currency(self, channel: str, data_by_currency: dict[str, object]):
-        for ws in list(self.active):
-            currency = self.currency.get(ws, "eur")
+        for ws in self.active.copy():  # copy: see broadcast()
+            currency =self.currency.get(ws, "eur")
             data = data_by_currency.get(currency, data_by_currency.get("eur"))
             payload = json.dumps({"channel": channel, "data": data})
             try:
