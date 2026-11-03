@@ -11,6 +11,7 @@ from app.schemas.simulation import (
     PortfolioCreate,
     PortfolioOut,
     PortfolioUpdate,
+    QuotesOut,
     TradeCreate,
     TradeOut,
     TradesPage,
@@ -64,6 +65,15 @@ async def reset_portfolio(
     service: SimulationService = Depends(get_simulation_service),
 ):
     return await service.reset(user.id, data)
+
+
+@router.get("/quotes", response_model=QuotesOut)
+async def get_quotes(
+    user: User = Depends(get_current_user),
+    service: SimulationService = Depends(get_simulation_service),
+):
+    """Live prices of the coins held, for the real-time display (read-only)."""
+    return await service.quotes(user.id)
 
 
 @router.post("/trades", response_model=TradeOut, status_code=status.HTTP_201_CREATED)

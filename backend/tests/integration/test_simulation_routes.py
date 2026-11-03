@@ -46,6 +46,7 @@ class TestAuth:
             ("post", "/simulation/portfolio/reset"),
             ("post", "/simulation/trades"),
             ("get", "/simulation/trades"),
+            ("get", "/simulation/quotes"),
         ],
     )
     async def test_requires_login(self, client, method, url):
@@ -113,3 +114,21 @@ class TestErrors:
         assert user_id == 7
         assert order.coin_id == "bitcoin"
         assert str(order.amount) == "500"
+
+
+class TestQuotes:
+    async def test_returns_prices_stale_coins_and_time(self, client, logged_in, service):
+        from datetime import datetime, timezone
+        from app.schemas.simulation import QuotesOut
+
+        service.quotes.return_value = QuotesOut(
+            prices={"bitcoin": 65000.5}, stale=["obscure-coin"], at=datetime(2026, 11, 3, tzinfo=timezone.utc)
+        )
+        response = await client.get("/simulation/quotes")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["prices"] == {"bitcoin": 65000.5}
+        assert body["stale"] == ["obscure-coin"]
+        assert body["at"].startswith("2026-11-03")
+        service.quotes.assert_awaited_once_with(7)

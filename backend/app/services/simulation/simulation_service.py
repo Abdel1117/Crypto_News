@@ -31,6 +31,7 @@ from app.schemas.simulation import (
     TradeCreate,
     TradeOut,
     TradesPage,
+    QuotesOut,
     TradeStatsOut,
 )
 from app.services.market_service import MarketService
@@ -416,6 +417,22 @@ class SimulationService:
         return TradesPage(
             items=[_trade_out(t, realized.get(t.id), gains.get(t.id)) for t in page],
             total=len(records),
+        )
+
+    async def quotes(self, user_id: int) -> QuotesOut:
+        """Live prices of the coins held, for the real-time display.
+
+        Read-only and light, so the page can call it every 30 seconds: no
+        snapshot is written and no tax is computed (unlike `view`).
+        """
+        portfolio = await self._portfolio(user_id)
+        _, _, state = await self._state(portfolio)
+        held = list(state.positions)
+        live = await self._live_prices(portfolio.currency, held)
+        return QuotesOut(
+            prices={coin: float(price) for coin, price in live.items() if coin in state.positions},
+            stale=sorted(coin for coin in held if coin not in live),
+            at=_utcnow(),
         )
 
     # ---------- snapshots ----------
