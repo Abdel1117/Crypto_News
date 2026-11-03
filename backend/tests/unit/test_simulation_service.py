@@ -255,3 +255,40 @@ class TestResetAndValuation:
         assert await service.snapshot_all() == 1
         count = await session.execute(select(func.count()).select_from(SimSnapshot))
         assert count.scalar_one() == 1
+
+
+class TestQuotes:
+    async def test_prices_only_the_coins_held(self, service, user_id):
+        await service.create(user_id, create())
+        await service.place_trade(user_id, buy(quantity=1))
+        quotes = await service.quotes(user_id)
+        assert quotes.prices == {"bitcoin": 100.0}  # ethereum has a price but isn't held
+        assert quotes.stale == []
+
+    async def test_lists_coins_without_a_live_price(self, service, user_id, market):
+        await service.create(user_id, create())
+        await service.place_trade(user_id, buy(quantity=1))
+        del market.prices["bitcoin"]
+        quotes = await service.quotes(user_id)
+        assert quotes.prices == {}
+        assert quotes.stale == ["bitcoin"]
+
+    async def test_writes_nothing(self, service, session, user_id):
+        await service.create(user_id, create())
+        await service.place_trade(user_id, buy(quantity=1))
+        before = (await session.execute(select(func.count()).select_from(SimSnapshot))).scalar_one()
+        for _ in range(3):
+            await service.quotes(user_id)
+        after = (await session.execute(select(func.count()).select_from(SimSnapshot))).scalar_one()
+        assert after == before
+
+    async def test_nothing_held_means_nothing_to_price(self, service, user_id):
+        await service.create(user_id, create())
+        quotes = await service.quotes(user_id)
+        assert quotes.prices == {}
+        assert quotes.stale == []
+
+    async def test_missing_portfolio_is_404(self, service, user_id):
+        with pytest.raises(SimulationError) as exc:
+            await service.quotes(user_id)
+        assert exc.value.status_code == 404
