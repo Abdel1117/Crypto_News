@@ -43,11 +43,22 @@ const PAGES: Record<string, PageConfig> = {
 
 const FALLBACK: PageConfig = { title: "Crypto-Explorer", currency: true };
 
-export function pageConfig(pathname: string): PageConfig {
+export function pageConfig(
+  pathname: string,
+  auth?: { isAuthenticated: boolean },
+): PageConfig {
   const match = Object.keys(PAGES).find(
     (path) => pathname === path || pathname.startsWith(path + "/"),
   );
-  return match ? PAGES[match] : FALLBACK;
+  const config = match ? PAGES[match] : FALLBACK;
+  if (match === "/simulation" && auth) {
+    // Logged in: the portfolio has its own fixed currency, so no switch.
+    // Logged out: the browser-only beta.
+    return auth.isAuthenticated
+      ? { ...config, currency: false }
+      : { ...config, tag: { desktop: "Bêta · argent fictif", mobile: "Bêta" } };
+  }
+  return config;
 }
 
 export function pageTitle(pathname: string): string {
