@@ -7,10 +7,10 @@ const RULE =
 export function LegalSection({
   title,
   children,
-}: {
+}: Readonly<{
   title: string;
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <section
       className="flex flex-col gap-3 py-7 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:py-9"
@@ -29,12 +29,12 @@ export function LegalPageHeader({
   title,
   highlight,
   updatedAt,
-}: {
+}: Readonly<{
   eyebrow: string;
   title: string;
   highlight: string;
   updatedAt: string;
-}) {
+}>) {
   return (
     <header className="pb-8 lg:pb-12">
       <span className="n-eyebrow">{eyebrow}</span>

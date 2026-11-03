@@ -31,7 +31,7 @@ interface HeatmapPreviewProps {
 }
 
 /** Compact, readable preview; the full treemap lives on /heatmap. */
-export default function HeatmapPreview({ onSelect }: HeatmapPreviewProps) {
+export default function HeatmapPreview({ onSelect }: Readonly<HeatmapPreviewProps>) {
   const { currency } = useCurrency();
   const { data: coins, loading } = useMarketHeatmap(currency, SLOTS.length);
 

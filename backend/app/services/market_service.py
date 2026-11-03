@@ -68,20 +68,20 @@ class MarketService:
                 "btc", None
             ),
             "market_cap_change_percentage_24h": data["data"].get(
-                f"market_cap_change_percentage_24h_usd", None
+                "market_cap_change_percentage_24h_usd", None
             ),
             "volume_change_percentage_24h": data["data"].get(
-                f"volume_change_percentage_24h_usd", None
+                "volume_change_percentage_24h_usd", None
             ),
         }
 
     async def get_ohlc(
         self,
         currency: str,
-        selectedTimeFrame: str,
-        cryptoId: str,
+        selected_time_frame: str,
+        crypto_id: str,
     ):
-        data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
+        data = await self.client.fetch_ohlc(currency, selected_time_frame, crypto_id)
         return data
 
     async def get_exchange_rate(
@@ -106,7 +106,6 @@ class MarketService:
     async def get_top_gainers_losers(
         self,
         currency: str,
-        duration: str,
         price_change_percentage: str,
         top_coins: str,
     ):

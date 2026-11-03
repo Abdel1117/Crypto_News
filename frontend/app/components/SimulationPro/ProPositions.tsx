@@ -22,7 +22,7 @@ interface ProPositionsProps {
 }
 
 /** Open positions at live prices. A click loads the coin in the order form. */
-export default function ProPositions({ portfolio, selectedId, onSelect }: ProPositionsProps) {
+export default function ProPositions({ portfolio, selectedId, onSelect }: Readonly<ProPositionsProps>) {
   const { positions, currency } = portfolio;
   const money = (v: number) => formatFiatPrice(v, currency);
 
@@ -59,21 +59,18 @@ export default function ProPositions({ portfolio, selectedId, onSelect }: ProPos
               <div
                 key={p.coin_id}
                 role="row"
-                className={`n-row-btn grid ${COLS} items-center min-h-13.5 text-sm border-b border-(--n-divider) last:border-b-0 ${
+                className={`n-row-btn relative grid ${COLS} items-center min-h-13.5 text-sm border-b border-(--n-divider) last:border-b-0 ${
                   p.coin_id === selectedId ? "bg-[color-mix(in_srgb,var(--n-accent)_8%,transparent)]" : ""
                 }`}
-                onClick={() => onSelect(p.coin_id)}
               >
                 <span role="cell" className="flex items-center gap-2.5 min-w-0">
                   <CoinAvatar image={p.image} name={p.name} symbol={p.symbol} size={26} />
+                  {/* The button's ::after covers the whole row, so a click anywhere selects it. */}
                   <button
                     type="button"
-                    className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent)"
+                    className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent) after:absolute after:inset-0"
                     aria-pressed={p.coin_id === selectedId}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect(p.coin_id);
-                    }}
+                    onClick={() => onSelect(p.coin_id)}
                   >
                     {p.name}
                   </button>

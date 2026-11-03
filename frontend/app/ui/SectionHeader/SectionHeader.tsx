@@ -6,11 +6,11 @@ export function SectionHeader({
   title,
   href,
   count,
-}: {
+}: Readonly<{
   title: string;
   href?: string;
   count?: number;
-}) {
+}>) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
       <h2 className="m-0 text-lg">{title}</h2>

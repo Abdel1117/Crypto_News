@@ -4,7 +4,7 @@ import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
 /** Article card for grids: cover, title, excerpt, author. */
-export function SmallCard({ article }: { article: Article }) {
+export function SmallCard({ article }: Readonly<{ article: Article }>) {
   return (
     <Link
       href={`/blog/${article.id}`}

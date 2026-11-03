@@ -30,7 +30,7 @@ export default function CoinPicker({
   currency,
   emptyLabel,
   hint,
-}: CoinPickerProps) {
+}: Readonly<CoinPickerProps>) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -52,12 +52,26 @@ export default function CoinPicker({
 
   useEffect(() => {
     if (!open) return;
+    const root = rootRef.current;
     searchRef.current?.focus();
     const onPointerDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!root?.contains(e.target as Node)) setOpen(false);
+    };
+    // Escape closes the list only: stopped here, it doesn't reach the
+    // document listener of a surrounding sheet or dialog.
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setOpen(false);
+      setQuery("");
+      triggerRef.current?.focus();
     };
     document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
+    root?.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      root?.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
 
   const close = () => {
@@ -124,15 +138,7 @@ export default function CoinPicker({
       )}
 
       {open && (
-        <div
-          className="n-menu left-0 right-0 top-[calc(100%-2px)] max-h-80 flex flex-col"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              e.stopPropagation();
-              close();
-            }
-          }}
-        >
+        <div className="n-menu left-0 right-0 top-[calc(100%-2px)] max-h-80 flex flex-col">
           <div className="relative mb-1.5">
             <SearchIcon
               size={14}

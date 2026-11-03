@@ -5,10 +5,10 @@ const ROW_RULE =
 export function SettingsList({
   children,
   className = "",
-}: {
+}: Readonly<{
   children: React.ReactNode;
   className?: string;
-}) {
+}>) {
   return <div className={`flex flex-col n-panel ${className}`}>{children}</div>;
 }
 
@@ -20,11 +20,11 @@ export function SettingsRow({
   title,
   children,
   last = false,
-}: {
+}: Readonly<{
   title: string;
   children: React.ReactNode;
   last?: boolean;
-}) {
+}>) {
   return (
     <div
       className="flex flex-col gap-3 px-3.5 py-4 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-6 lg:px-6 lg:py-[22px]"

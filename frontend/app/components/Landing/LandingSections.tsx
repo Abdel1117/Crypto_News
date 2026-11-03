@@ -35,9 +35,9 @@ export function PartnersStrip() {
       aria-label="Partenaires"
       className="grid grid-cols-3 gap-x-4 gap-y-[22px] items-center justify-items-center px-5 pt-7 pb-11 lg:flex lg:justify-between lg:gap-8 lg:px-[120px] lg:pt-10 lg:pb-[72px]"
     >
-      {PARTNERS.map((src, i) => (
+      {PARTNERS.map((src) => (
         <Image
-          key={i}
+          key={src.src}
           src={src}
           alt="Logo partenaire"
           className="h-7 lg:h-10 w-auto opacity-55"

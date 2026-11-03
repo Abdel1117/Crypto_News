@@ -27,6 +27,92 @@ interface CoinSearchProps {
   onClose?: () => void;
 }
 
+interface SearchResultsProps {
+  loading: boolean;
+  error: string | null;
+  query: string;
+  results: SymbolData[];
+  favoriteIds: string[];
+  onToggle: (coin: SymbolData) => void;
+}
+
+/** What the results menu shows: progress, error, nothing found, or the list. */
+function SearchResults({
+  loading,
+  error,
+  query,
+  results,
+  favoriteIds,
+  onToggle,
+}: Readonly<SearchResultsProps>) {
+  if (loading) {
+    return (
+      <p className="m-0 flex items-center gap-2 px-2.5 py-3 text-sm text-(--n-neutral-400)">
+        <span className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
+        <span>Recherche en cours…</span>
+      </p>
+    );
+  }
+  if (error) {
+    return <p className="m-0 px-2.5 py-3 text-sm text-(--n-down)">{error}</p>;
+  }
+  if (results.length === 0) {
+    return (
+      <p className="m-0 px-2.5 py-3 text-sm text-(--n-neutral-400)">
+        Aucune crypto trouvée pour « {query} ».
+      </p>
+    );
+  }
+  return (
+    <ul className="m-0 p-0 list-none">
+      {results.map((coin) => {
+        const isFavorite = favoriteIds.includes(coin.id);
+        return (
+          <li key={coin.id}>
+            <button
+              type="button"
+              className="n-menu-item"
+              onClick={() => onToggle(coin)}
+              aria-label={`${
+                isFavorite ? "Retirer" : "Ajouter"
+              } ${coin.name} ${isFavorite ? "des" : "aux"} favoris`}
+            >
+              <CoinAvatar
+                image={coin.image}
+                name={coin.name}
+                symbol={coin.symbol}
+                size={24}
+              />
+              <span className="flex flex-col min-w-0 leading-tight">
+                <span className="truncate font-medium">
+                  {coin.name}
+                </span>
+                <span className="text-xs text-(--n-neutral-500)">
+                  {coin.symbol.toUpperCase()}
+                </span>
+              </span>
+              <span
+                className={`ml-auto flex items-center gap-1.5 text-xs ${
+                  isFavorite
+                    ? "text-(--n-accent)"
+                    : "text-(--n-neutral-400)"
+                }`}
+              >
+                {isFavorite ? (
+                  <StarIcon size={14} />
+                ) : (
+                  <StarOutlineIcon size={14} />
+                )}
+                {isFavorite ? "Dans vos favoris" : "Ajouter"}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
 /**
  * Crypto search field with a results list; each result toggles the coin in
  * the favourites (watchlist).
@@ -134,65 +220,14 @@ const CoinSearch = forwardRef<HTMLInputElement, CoinSearchProps>(
             id={listId}
             className="n-menu left-0 right-0 top-[calc(100%+6px)] max-h-80 overflow-y-auto"
           >
-            {loading ? (
-              <p className="m-0 flex items-center gap-2 px-2.5 py-3 text-sm text-(--n-neutral-400)">
-                <span className="h-4 w-4 animate-spin rounded-full border border-current border-t-transparent" />
-                Recherche en cours…
-              </p>
-            ) : error ? (
-              <p className="m-0 px-2.5 py-3 text-sm text-(--n-down)">{error}</p>
-            ) : results.length === 0 ? (
-              <p className="m-0 px-2.5 py-3 text-sm text-(--n-neutral-400)">
-                Aucune crypto trouvée pour « {trimmed} ».
-              </p>
-            ) : (
-              <ul className="m-0 p-0 list-none">
-                {results.map((coin) => {
-                  const isFavorite = watchlistIds.includes(coin.id);
-                  return (
-                    <li key={coin.id}>
-                      <button
-                        type="button"
-                        className="n-menu-item"
-                        onClick={() => handleToggle(coin)}
-                        aria-label={`${
-                          isFavorite ? "Retirer" : "Ajouter"
-                        } ${coin.name} ${isFavorite ? "des" : "aux"} favoris`}
-                      >
-                        <CoinAvatar
-                          image={coin.image}
-                          name={coin.name}
-                          symbol={coin.symbol}
-                          size={24}
-                        />
-                        <span className="flex flex-col min-w-0 leading-tight">
-                          <span className="truncate font-medium">
-                            {coin.name}
-                          </span>
-                          <span className="text-xs text-(--n-neutral-500)">
-                            {coin.symbol.toUpperCase()}
-                          </span>
-                        </span>
-                        <span
-                          className={`ml-auto flex items-center gap-1.5 text-xs ${
-                            isFavorite
-                              ? "text-(--n-accent)"
-                              : "text-(--n-neutral-400)"
-                          }`}
-                        >
-                          {isFavorite ? (
-                            <StarIcon size={14} />
-                          ) : (
-                            <StarOutlineIcon size={14} />
-                          )}
-                          {isFavorite ? "Dans vos favoris" : "Ajouter"}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <SearchResults
+              loading={loading}
+              error={error}
+              query={trimmed}
+              results={results}
+              favoriteIds={watchlistIds}
+              onToggle={handleToggle}
+            />
           </div>
         )}
       </div>

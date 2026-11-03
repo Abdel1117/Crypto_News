@@ -127,7 +127,7 @@ class TestGetTopWinnersLosersRoute:
     async def test_top_coins_defaults_to_300_when_omitted(self, client, mock_market_service):
         response = await client.get("/markets/get_top_winners_losers")
         assert response.status_code == 200
-        assert mock_market_service.get_top_gainers_losers.call_args[0][3] == 300
+        assert mock_market_service.get_top_gainers_losers.call_args[0][2] == 300
 
     async def test_returns_200(self, client):
         response = await client.get(self.BASE_URL)
@@ -139,12 +139,14 @@ class TestGetTopWinnersLosersRoute:
         assert "top_losers" in body
 
     async def test_passes_params_to_service(self, client, mock_market_service):
-        await client.get(
+        # "duration" is no longer used but old clients may still send it.
+        response = await client.get(
             "/markets/get_top_winners_losers?currency=usd&duration=7d&top_coins=100"
         )
+        assert response.status_code == 200
         call_args = mock_market_service.get_top_gainers_losers.call_args
         assert call_args[0][0] == "usd"
-        assert call_args[0][3] == 100
+        assert call_args[0][2] == 100
 
 
 class TestGetExchangeRateRoute:

@@ -1,6 +1,8 @@
 // Static, deterministic data for the dashboard preview on the landing page.
 // Seeded so the server render is stable (no hydration mismatch).
 
+import { signPrefix } from "@/app/utils/Format/FrFormat/FrFormat";
+
 export type PreviewCoin = {
   name: string;
   sym: string;
@@ -82,7 +84,7 @@ function price(v: number) {
 }
 
 function pct(v: number) {
-  return (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v), 2, 2) + " %";
+  return signPrefix(v) + nf(Math.abs(v), 2, 2) + " %";
 }
 
 const FAVORITES = [

@@ -11,7 +11,7 @@ interface TaxPanelProps {
 }
 
 /** Estimated tax per year with the rules of the user's country. */
-export default function TaxPanel({ portfolio, rule }: TaxPanelProps) {
+export default function TaxPanel({ portfolio, rule }: Readonly<TaxPanelProps>) {
   const { tax, currency } = portfolio;
   const money = (v: number) => formatFiatPrice(v, currency);
 

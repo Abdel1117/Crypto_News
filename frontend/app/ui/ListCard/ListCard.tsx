@@ -6,10 +6,10 @@ import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 export function ListCard({
   article,
   index,
-}: {
+}: Readonly<{
   article: Article;
   index: number;
-}) {
+}>) {
   return (
     <Link
       href={`/blog/${article.id}`}

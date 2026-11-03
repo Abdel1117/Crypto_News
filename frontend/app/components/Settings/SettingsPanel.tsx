@@ -20,16 +20,15 @@ function Segmented<T extends string>({
   options,
   value,
   onChange,
-}: {
+}: Readonly<{
   label: string;
   options: { value: T; label: React.ReactNode }[];
   value: T | null;
   onChange: (value: T) => void;
-}) {
+}>) {
   return (
-    <div
-      className="n-seg flex! lg:inline-flex! self-start max-lg:w-full"
-      role="group"
+    <fieldset
+      className="n-seg flex! lg:inline-flex! self-start max-lg:w-full min-w-0"
       aria-label={label}
     >
       {options.map((o) => (
@@ -43,7 +42,7 @@ function Segmented<T extends string>({
           {o.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 }
 

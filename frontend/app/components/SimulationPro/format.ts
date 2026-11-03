@@ -48,8 +48,17 @@ export function formatLongDate(iso: string): string {
  */
 export function parseDecimalInput(raw: string): number {
   const cleaned = raw.replace(/\s/g, "").replace(",", ".");
-  if (!/^\d*\.?\d*$/.test(cleaned) || cleaned === "" || cleaned === ".") return Number.NaN;
+  // Digits, optionally followed by a dot and more digits.
+  if (!/^\d*(?:\.\d*)?$/.test(cleaned) || cleaned === "" || cleaned === ".") return Number.NaN;
   return Number(cleaned);
+}
+
+/** "12.3400" → "12.34", "5.000" → "5" (the dot goes when no digit follows it). */
+function trimTrailingZeros(fixed: string): string {
+  let end = fixed.length;
+  while (end > 0 && fixed[end - 1] === "0") end--;
+  if (end < fixed.length && fixed[end - 1] === ".") end--;
+  return fixed.slice(0, end);
 }
 
 /**
@@ -59,5 +68,5 @@ export function parseDecimalInput(raw: string): number {
 export function toApiDecimal(value: number, decimals: number): string {
   const factor = 10 ** decimals;
   const floored = Math.floor(value * factor + 1e-9) / factor;
-  return floored.toFixed(decimals).replace(/\.?0+$/, "") || "0";
+  return trimTrailingZeros(floored.toFixed(decimals)) || "0";
 }

@@ -45,11 +45,11 @@ export default function ConsentPreferencesPanel() {
         className="absolute inset-0 bg-black/55"
         onClick={closePreferencesPanel}
       />
-      <div
-        role="dialog"
+      <dialog
+        open
         aria-modal="true"
         aria-labelledby="cookie-preferences-title"
-        className="relative flex flex-col gap-4 w-full max-w-[480px] max-h-[90vh] overflow-y-auto p-5 rounded-[14px] bg-(--n-surface)"
+        className="relative flex flex-col gap-4 w-full max-w-[480px] max-h-[90vh] overflow-y-auto p-5 rounded-[14px] bg-(--n-surface) text-inherit"
         style={{ boxShadow: "var(--n-shadow-md)" }}
       >
         <div className="flex items-start gap-3">
@@ -120,7 +120,7 @@ export default function ConsentPreferencesPanel() {
             Tout accepter
           </button>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 }

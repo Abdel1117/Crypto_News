@@ -23,7 +23,7 @@ import { pageConfig } from "./appNav";
  * a top bar configured per page (title, search, currency, page actions), and
  * a bottom tab bar on mobile.
  */
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const page = pageConfig(pathname, { isAuthenticated });

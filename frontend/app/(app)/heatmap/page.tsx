@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/app/lib/hooks";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
@@ -26,11 +26,11 @@ function StablecoinToggle({
   checked,
   onChange,
   className = "",
-}: {
+}: Readonly<{
   checked: boolean;
   onChange: (value: boolean) => void;
   className?: string;
-}) {
+}>) {
   return (
     <label
       className={`relative flex items-center gap-2 px-3 rounded-lg cursor-pointer text-(--n-neutral-300) bg-[color-mix(in_srgb,var(--n-text)_5%,transparent)] hover:bg-[color-mix(in_srgb,var(--n-text)_8%,transparent)] has-focus-visible:outline-2 has-focus-visible:outline-(--n-accent) ${className}`}
@@ -51,9 +51,56 @@ function StablecoinToggle({
       >
         {checked && <CheckIcon size={12} strokeWidth={28} />}
       </span>
-      Masquer les stablecoins
+      <span>Masquer les stablecoins</span>
     </label>
   );
+}
+
+type TreemapProps = ComponentProps<typeof MarketTreemap>;
+
+/** The treemap, or what stands in for it while loading, on error or when empty. */
+function HeatmapBody({
+  error,
+  loading,
+  coins,
+  currency,
+  onRetry,
+  onSelect,
+}: Readonly<{
+  error: string | null;
+  loading: boolean;
+  coins: TreemapProps["coins"];
+  currency: TreemapProps["currency"];
+  onRetry: () => void;
+  onSelect: (id: string) => void;
+}>) {
+  if (error) {
+    return (
+      <div className="n-panel h-[560px] lg:h-[600px] flex flex-col items-center justify-center gap-3 text-sm text-(--n-neutral-400)">
+        <p className="m-0">{error}</p>
+        <button type="button" className="n-btn n-btn-secondary" onClick={onRetry}>
+          Réessayer
+        </button>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div
+        className="n-skeleton h-[560px] lg:h-[600px]"
+        aria-busy="true"
+        aria-label="Chargement de la heatmap"
+      />
+    );
+  }
+  if (coins.length === 0) {
+    return (
+      <div className="n-panel h-[560px] lg:h-[600px] grid place-items-center text-sm text-(--n-neutral-400)">
+        Aucune donnée de marché disponible.
+      </div>
+    );
+  }
+  return <MarketTreemap coins={coins} currency={currency} onSelect={onSelect} />;
 }
 
 const fmtTime = (ms: number) =>
@@ -126,34 +173,14 @@ export default function HeatmapPage() {
           className="lg:hidden min-h-11 text-sm"
         />
 
-        {error ? (
-          <div className="n-panel h-[560px] lg:h-[600px] flex flex-col items-center justify-center gap-3 text-sm text-(--n-neutral-400)">
-            <p className="m-0">{error}</p>
-            <button
-              type="button"
-              className="n-btn n-btn-secondary"
-              onClick={refresh}
-            >
-              Réessayer
-            </button>
-          </div>
-        ) : loading ? (
-          <div
-            className="n-skeleton h-[560px] lg:h-[600px]"
-            aria-busy="true"
-            aria-label="Chargement de la heatmap"
-          />
-        ) : coins.length === 0 ? (
-          <div className="n-panel h-[560px] lg:h-[600px] grid place-items-center text-sm text-(--n-neutral-400)">
-            Aucune donnée de marché disponible.
-          </div>
-        ) : (
-          <MarketTreemap
-            coins={coins}
-            currency={currency}
-            onSelect={openChart}
-          />
-        )}
+        <HeatmapBody
+          error={error}
+          loading={loading}
+          coins={coins}
+          currency={currency}
+          onRetry={refresh}
+          onSelect={openChart}
+        />
 
         <div className="flex items-center gap-2.5 lg:gap-3 text-xs text-(--n-neutral-400) n-tnum">
           <span className="hidden lg:inline">Variation 24 h</span>

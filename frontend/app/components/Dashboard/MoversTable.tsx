@@ -7,6 +7,7 @@ import { getTopGainersLosers } from "@/app/lib/features/topGainersLosers/topGain
 import { getTrending } from "@/app/lib/features/trending/trendingThunks";
 import { toggleWatchlist } from "@/app/lib/features/watchlist/watchlistSlice";
 import CoinAvatar from "@/app/ui/CoinAvatar/CoinAvatar";
+import { trendColor as trend } from "@/app/components/Simulation/usePortfolio";
 import { isStablecoin } from "@/app/utils/constants/stablecoins";
 import {
   StarIcon,
@@ -45,14 +46,8 @@ function toNumber(v: unknown): number | undefined {
   return typeof n === "number" && Number.isFinite(n) ? n : undefined;
 }
 
-const trend = (v?: number) =>
-  typeof v !== "number" || v === 0
-    ? "var(--n-neutral-400)"
-    : v > 0
-      ? "var(--n-up)"
-      : "var(--n-down)";
 
-function Sparkline({ data }: { data?: number[] }) {
+function Sparkline({ data }: Readonly<{ data?: number[] }>) {
   if (!data || data.length < 2) {
     return <span className="text-(--n-neutral-500)">—</span>;
   }
@@ -69,7 +64,7 @@ function Sparkline({ data }: { data?: number[] }) {
         (2 + 28 * (1 - (v - lo) / rg)).toFixed(1),
     )
     .join(" ");
-  const color = s[s.length - 1] >= s[0] ? "var(--n-up)" : "var(--n-down)";
+  const color = (s.at(-1) ?? 0) >= s[0] ? "var(--n-up)" : "var(--n-down)";
   return (
     <svg
       width="96"
@@ -99,7 +94,7 @@ interface MoversTableProps {
   onSelect: (id: string) => void;
 }
 
-export default function MoversTable({ onSelect }: MoversTableProps) {
+export default function MoversTable({ onSelect }: Readonly<MoversTableProps>) {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
   const watchlistIds = useAppSelector((state) => state.watchlist.ids);
@@ -155,9 +150,8 @@ export default function MoversTable({ onSelect }: MoversTableProps) {
     typeof v === "number" ? formatSignedPercent(v) : "—";
 
   const segment = (
-    <div
-      className="n-seg flex! lg:inline-flex! lg:ml-auto"
-      role="group"
+    <fieldset
+      className="n-seg flex! lg:inline-flex! lg:ml-auto min-w-0"
       aria-label="Classement"
     >
       {TABS.map((t) => (
@@ -171,7 +165,7 @@ export default function MoversTable({ onSelect }: MoversTableProps) {
           {t.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 
   let body: React.ReactNode;
@@ -236,7 +230,6 @@ export default function MoversTable({ onSelect }: MoversTableProps) {
                 key={r.id}
                 role="row"
                 className={`n-row-btn relative grid ${DESKTOP_COLS} items-center min-h-[46px] text-sm`}
-                onClick={() => onSelect(r.id)}
               >
                 <span role="cell" className="pl-2 text-(--n-neutral-500)">
                   {i + 1}
@@ -248,13 +241,12 @@ export default function MoversTable({ onSelect }: MoversTableProps) {
                     symbol={r.symbol}
                     size={24}
                   />
+                  {/* The button's ::after covers the whole row, so a click anywhere
+                      selects it; the favourite button sits above it. */}
                   <button
                     type="button"
-                    className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent)"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelect(r.id);
-                    }}
+                    className="min-w-0 truncate p-0 border-0 bg-transparent font-[inherit] font-medium text-(--n-text) cursor-pointer text-left hover:text-(--n-accent) after:absolute after:inset-0"
+                    onClick={() => onSelect(r.id)}
                   >
                     {r.name}
                   </button>
@@ -288,13 +280,10 @@ export default function MoversTable({ onSelect }: MoversTableProps) {
                 <span role="cell" className="flex justify-end">
                   <button
                     type="button"
-                    className={`n-btn n-btn-icon w-8! h-8! ${fav ? "text-(--n-accent)!" : "text-(--n-neutral-500)! hover:text-(--n-accent)!"}`}
+                    className={`n-btn n-btn-icon relative w-8! h-8! ${fav ? "text-(--n-accent)!" : "text-(--n-neutral-500)! hover:text-(--n-accent)!"}`}
                     aria-label={`${fav ? "Retirer" : "Ajouter"} ${r.name} ${fav ? "des" : "aux"} favoris`}
                     aria-pressed={fav}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      dispatch(toggleWatchlist(r.id));
-                    }}
+                    onClick={() => dispatch(toggleWatchlist(r.id))}
                   >
                     {fav ? <StarIcon /> : <StarOutlineIcon />}
                   </button>

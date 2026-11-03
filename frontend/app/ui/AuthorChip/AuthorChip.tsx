@@ -4,13 +4,12 @@ export function AuthorChip({
   name,
   readTime,
   onCover = false,
-}: {
+}: Readonly<{
   initial: string;
   name: string;
-  date?: string;
   readTime: string;
   onCover?: boolean;
-}) {
+}>) {
   return (
     <div
       className={`flex flex-wrap items-center gap-2 text-xs ${

@@ -60,13 +60,13 @@ function PasswordInput({
   onChange,
   invalid,
   autoComplete,
-}: {
+}: Readonly<{
   id: string;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   invalid: boolean;
   autoComplete: string;
-}) {
+}>) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -98,13 +98,18 @@ function PasswordInput({
   );
 }
 
-function FieldError({ id, message }: { id: string; message?: string }) {
+function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
   if (!message) return null;
   return (
     <p id={`${id}-error`} className={`n-field-error ${FADE_IN}`}>
       {message}
     </p>
   );
+}
+
+function submitText(loading: boolean, isLogin: boolean): string {
+  if (loading) return "Patientez…";
+  return isLogin ? "Se connecter" : "S’inscrire";
 }
 
 export default function Login() {
@@ -278,6 +283,7 @@ export default function Login() {
             role="group"
             aria-label="Mode d’accès"
           >
+          <fieldset className="n-seg flex! min-w-0" aria-label="Mode d’accès">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -289,15 +295,16 @@ export default function Login() {
                 {tab}
               </button>
             ))}
-          </div>
+          </fieldset>
 
           {notice && (
             <p
               role="status"
               className={`m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)] ${FADE_IN}`}
             >
+            <output className="block m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]">
               {notice}
-            </p>
+            </output>
           )}
 
           <div
@@ -326,7 +333,7 @@ export default function Login() {
             aria-hidden="true"
           >
             <span className="flex-1 h-px bg-[linear-gradient(to_right,transparent,var(--n-divider))]" />
-            ou
+            <span>ou</span>
             <span className="flex-1 h-px bg-[linear-gradient(to_left,transparent,var(--n-divider))]" />
           </div>
 
@@ -430,6 +437,13 @@ export default function Login() {
                     : "S’inscrire"}
               </button>
             </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="n-btn n-btn-primary w-full min-h-12 lg:min-h-[42px] text-[15px]! mt-1"
+            >
+              {submitText(loading, isLogin)}
+            </button>
           </form>
         </div>
 

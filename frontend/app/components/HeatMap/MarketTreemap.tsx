@@ -41,7 +41,7 @@ export default function MarketTreemap({
   coins,
   currency,
   onSelect,
-}: MarketTreemapProps) {
+}: Readonly<MarketTreemapProps>) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   const [hovered, setHovered] = useState<Rect | null>(null);
