@@ -1,15 +1,23 @@
+"use client";
+
 import {
   LightningIcon,
   ShieldCheckIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
 import { previewFavorites } from "./previewData";
+import { useLandingMotion } from "./motion/useLandingMotion";
+import { loginShowcaseIntro } from "./motion/landingMotion";
 
 const trend = (up: boolean) => (up ? "var(--n-up)" : "var(--n-down)");
 
 // Right-hand panel of the login page: shows what you get once signed in.
 export default function LoginShowcase() {
+  const ref = useLandingMotion<HTMLElement>(loginShowcaseIntro);
+
   return (
     <aside
+      ref={ref}
+      data-motion-root=""
       className="relative hidden lg:flex flex-col justify-center gap-10 px-24 py-[72px]"
       style={{
         background:
@@ -23,11 +31,17 @@ export default function LoginShowcase() {
             "linear-gradient(to bottom, transparent, var(--n-divider) 48px, var(--n-divider) calc(100% - 48px), transparent)",
         }}
       />
-      <h2 className="m-0 max-w-[14ch] text-[44px] leading-[1.1]">
+      <h2
+        data-anim="headline"
+        data-motion-hide=""
+        className="m-0 max-w-[14ch] text-[44px] leading-[1.1]"
+      >
         Connectez-vous ou créez votre compte
       </h2>
 
       <div
+        data-anim="card"
+        data-motion-hide=""
         className="w-[460px] max-w-full py-1.5 rounded-[14px] bg-(--n-surface)"
         style={{ boxShadow: "var(--n-shadow-md)" }}
         role="img"
@@ -35,12 +49,17 @@ export default function LoginShowcase() {
       >
         <div className="flex items-center gap-2 px-[18px] pt-3 pb-2">
           <span className="mr-auto text-sm font-medium">Mes favoris</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-(--n-up)" />
+          {/* "Live" marker; the ping stops under reduced motion. */}
+          <span className="relative w-1.5 h-1.5">
+            <span className="absolute inset-0 rounded-full bg-(--n-up) motion-safe:animate-ping [animation-duration:2s]" />
+            <span className="relative block size-full rounded-full bg-(--n-up)" />
+          </span>
           <span className="text-xs text-(--n-neutral-400)">En direct</span>
         </div>
         {previewFavorites.map((c) => (
           <div
             key={c.sym}
+            data-anim="row"
             className="relative grid grid-cols-[30px_minmax(0,1fr)_64px_112px] items-center gap-3 min-h-14 px-[18px]"
           >
             <div className="n-rule" />
@@ -59,6 +78,7 @@ export default function LoginShowcase() {
               aria-hidden="true"
             >
               <polyline
+                data-anim="spark"
                 points={c.spark}
                 vectorEffect="non-scaling-stroke"
                 style={{ fill: "none", stroke: trend(c.up), strokeWidth: 1.5 }}
@@ -76,12 +96,15 @@ export default function LoginShowcase() {
         ))}
       </div>
 
-      <ul className="flex flex-col gap-3.5 m-0 p-0 list-none text-[15px] text-(--n-neutral-300)">
-        <li className="flex items-center gap-3">
+      <ul
+        data-motion-hide=""
+        className="flex flex-col gap-3.5 m-0 p-0 list-none text-[15px] text-(--n-neutral-300)"
+      >
+        <li data-anim="perk" className="flex items-center gap-3">
           <LightningIcon size={20} className="text-(--n-accent)" />
           Accès rapide à votre dashboard et à vos favoris.
         </li>
-        <li className="flex items-center gap-3">
+        <li data-anim="perk" className="flex items-center gap-3">
           <ShieldCheckIcon size={20} className="text-(--n-accent)" />
           Inscription sécurisée et fluide.
         </li>

@@ -6,8 +6,7 @@ import partner03 from "@/public/images/partners/03.png";
 import partner04 from "@/public/images/partners/04.png";
 import partner05 from "@/public/images/partners/05.png";
 import partner06 from "@/public/images/partners/06.png";
-import { getCurrentYear } from "@/app/utils/Date/DateFormater";
-import CookieSettingsLink from "./CookieSettingsLink";
+import Reveal from "./motion/Reveal";
 import {
   ArrowRightIcon,
   EnvelopeIcon,
@@ -31,7 +30,8 @@ const PARTNERS = [
 
 export function PartnersStrip() {
   return (
-    <section
+    <Reveal
+      preset="partners"
       aria-label="Partenaires"
       className="grid grid-cols-3 gap-x-4 gap-y-[22px] items-center justify-items-center px-5 pt-7 pb-11 lg:flex lg:justify-between lg:gap-8 lg:px-[120px] lg:pt-10 lg:pb-[72px]"
     >
@@ -43,7 +43,7 @@ export function PartnersStrip() {
           className="h-7 lg:h-10 w-auto opacity-55"
         />
       ))}
-    </section>
+    </Reveal>
   );
 }
 
@@ -80,16 +80,25 @@ const FEATURES: Feature[] = [
 
 export function Features() {
   return (
-    <section
+    <Reveal
+      preset="features"
       id="fonctionnalites"
       className="scroll-mt-4 px-5 pt-14 pb-2 lg:px-[120px] lg:pt-[104px] lg:pb-10"
     >
-      <span className="n-eyebrow">Fonctionnalités</span>
-      <h2 className="mt-3.5 mb-0 text-[28px] leading-[1.15] lg:mt-4 lg:max-w-[20ch] lg:text-[44px] lg:leading-[1.1]">
+      <span data-anim="intro" className="n-eyebrow">
+        Fonctionnalités
+      </span>
+      <h2
+        data-anim="intro"
+        className="mt-3.5 mb-0 text-[28px] leading-[1.15] lg:mt-4 lg:max-w-[20ch] lg:text-[44px] lg:leading-[1.1]"
+      >
         Ce que vous pouvez faire avec{" "}
         <span className="lg:whitespace-nowrap">Crypto-Explorer</span>
       </h2>
-      <p className="mt-3.5 mb-0 text-[15px] leading-6 text-(--n-neutral-300) lg:mt-5 lg:max-w-[62ch] lg:text-base lg:leading-7">
+      <p
+        data-anim="intro"
+        className="mt-3.5 mb-0 text-[15px] leading-6 text-(--n-neutral-300) lg:mt-5 lg:max-w-[62ch] lg:text-base lg:leading-7"
+      >
         Un outil pensé pour les investisseurs autonomes — du débutant qui veut
         comprendre le marché au trader qui cherche à affiner ses stratégies sans
         friction.
@@ -99,9 +108,13 @@ export function Features() {
         {FEATURES.map((f, i) => (
           <li
             key={f.title}
+            data-anim="feature"
             className="group relative flex flex-col gap-2.5 py-[26px] lg:grid lg:grid-cols-[160px_minmax(0,380px)_minmax(0,1fr)] lg:gap-x-[72px] lg:gap-y-7 lg:items-baseline lg:py-10"
           >
-            <div className="n-rule n-rule-strong lg:group-first:hidden" />
+            <div
+              data-anim="rule"
+              className="n-rule n-rule-strong origin-left lg:group-first:hidden"
+            />
             <span className="n-tnum text-sm lg:text-[15px] text-(--n-accent)">
               {String(i + 1).padStart(2, "0")}
             </span>
@@ -125,7 +138,7 @@ export function Features() {
           </li>
         ))}
       </ol>
-    </section>
+    </Reveal>
   );
 }
 
@@ -143,12 +156,13 @@ const STACK = [
 
 export function Contact() {
   return (
-    <section
+    <Reveal
+      preset="contact"
       id="contact"
       className="scroll-mt-4 relative mx-5 mt-4 pt-11 pb-12 flex flex-col gap-7 lg:mx-[120px] lg:mt-14 lg:pt-[72px] lg:pb-[88px] lg:grid lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-24 lg:items-start"
     >
-      <div className="n-rule" />
-      <div>
+      <div data-anim="rule" className="n-rule origin-left" />
+      <div data-anim="contact-intro">
         <span className="n-eyebrow">Me contacter</span>
         <h2 className="mt-3.5 mb-0 text-[28px] leading-[1.15] lg:mt-4 lg:max-w-[16ch] lg:text-[44px] lg:leading-[1.1]">
           Une question ou une collaboration ?
@@ -191,7 +205,7 @@ export function Contact() {
         </p>
       </div>
 
-      <div className="n-card gap-3.5 p-5 lg:gap-4 lg:p-6">
+      <div data-anim="contact-card" className="n-card gap-3.5 p-5 lg:gap-4 lg:p-6">
         <span className="n-kicker">Construit indépendamment</span>
         <div className="flex items-center gap-3 lg:gap-3.5">
           <span className="w-11 h-11 lg:w-12 lg:h-12 flex-none rounded-full grid place-items-center text-lg lg:text-xl font-medium bg-(--n-accent-800) text-(--n-accent-100)">
@@ -222,32 +236,6 @@ export function Contact() {
           Ouvert aux collaborations
         </span>
       </div>
-    </section>
-  );
-}
-
-export function LandingFooter() {
-  return (
-    <footer className="relative mx-5 pt-5 pb-7 flex flex-col-reverse gap-2.5 text-xs text-(--n-neutral-500) lg:mx-[120px] lg:pt-6 lg:pb-8 lg:flex-row lg:items-center lg:gap-6 lg:text-[13px]">
-      <div className="n-rule" />
-      <span className="lg:mr-auto">
-        © {getCurrentYear()} Crypto-Explorer · Développé par Adjali Abderahmane
-      </span>
-      <nav className="flex gap-[18px] lg:gap-6" aria-label="Liens légaux">
-        <Link
-          href="/mentions-legales"
-          className="inline-flex items-center min-h-11 lg:min-h-0 no-underline text-(--n-neutral-400)! hover:text-(--n-accent)!"
-        >
-          Mentions légales
-        </Link>
-        <Link
-          href="/politique-de-confidentialite"
-          className="inline-flex items-center min-h-11 lg:min-h-0 no-underline text-(--n-neutral-400)! hover:text-(--n-accent)!"
-        >
-          Politique de confidentialité
-        </Link>
-        <CookieSettingsLink className="inline-flex items-center min-h-11 lg:min-h-0 text-(--n-neutral-400) hover:text-(--n-accent)" />
-      </nav>
-    </footer>
+    </Reveal>
   );
 }

@@ -22,6 +22,8 @@ export type PreviewChart = {
   line: string;
   area: string;
   ticks: string[];
+  /** Vertical position of the last price, as a % of the chart height. */
+  endY: string;
 };
 
 function rng(seed: number) {
@@ -137,6 +139,8 @@ function buildChart(): PreviewChart {
     line,
     area: "0,300 " + line + " 1000,300",
     ticks,
+    // The series lands exactly on `close` (see `series`).
+    endY: (((hi - close) / (hi - lo)) * 100).toFixed(2) + "%",
   };
 }
 

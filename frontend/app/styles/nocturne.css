@@ -351,6 +351,10 @@ html .nocturne .n-force-dark {
   color: var(--n-text);
   background: transparent;
   border: 0;
+  transition:
+    color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 @media (min-width: 1024px) {
   .nocturne .n-seg-btn {

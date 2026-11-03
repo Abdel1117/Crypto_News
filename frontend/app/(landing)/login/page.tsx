@@ -14,6 +14,11 @@ import { useAppSelector } from "@/app/lib/hooks";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 import LoginShowcase from "@/app/components/Landing/LoginShowcase";
+import { useLandingMotion } from "@/app/components/Landing/motion/useLandingMotion";
+import {
+  loginFormIntro,
+  slideLoginForm,
+} from "@/app/components/Landing/motion/landingMotion";
 import {
   ArrowLeftIcon,
   BrandMark,
@@ -26,6 +31,9 @@ const tabs = ["Connexion", "Inscription"] as const;
 type Tab = (typeof tabs)[number];
 
 type FieldName = keyof RegistrationFieldErrors;
+
+// Messages that appear after the page has loaded.
+const FADE_IN = "motion-safe:animate-[page-fade-in_0.35s_ease-out]";
 
 // Google renders its button in an iframe with a fixed pixel width (max 400),
 // so we track the form's width and hand it over.
@@ -93,7 +101,7 @@ function PasswordInput({
 function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
   if (!message) return null;
   return (
-    <p id={`${id}-error`} className="n-field-error">
+    <p id={`${id}-error`} className={`n-field-error ${FADE_IN}`}>
       {message}
     </p>
   );
@@ -132,6 +140,7 @@ export default function Login() {
   const [notice, setNotice] = useState<string>("");
   const { ref: formRef, width: googleWidth } =
     useElementWidth<HTMLDivElement>(400);
+  const mainRef = useLandingMotion<HTMLElement>(loginFormIntro);
 
   const isLogin = activeTab === "Connexion";
   const loading = isLogin ? loginLoading || googleLoading : registerLoading;
@@ -141,9 +150,11 @@ export default function Login() {
       setFormData((prev) => ({ ...prev, [field]: event.target.value }));
     };
 
-  const switchTab = (tab: Tab) => {
-    setActiveTab(tab);
-    setNotice("");
+  const switchTab = (tab: Tab, message = "") => {
+    slideLoginForm(mainRef.current, () => {
+      setActiveTab(tab);
+      setNotice(message);
+    });
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -157,10 +168,12 @@ export default function Login() {
         confirmPassword: formData.confirmPassword,
       };
       const result = await register(data);
-      setNotice(result?.message ?? "");
+      const message = result?.message ?? "";
       if (result.success) {
-        setActiveTab("Connexion");
         setFormData((prev) => ({ ...prev, fullname: "", confirmPassword: "" }));
+        switchTab("Connexion", message);
+      } else {
+        setNotice(message);
       }
       return;
     }
@@ -209,8 +222,16 @@ export default function Login() {
 
   return (
     <div className="min-h-screen lg:h-screen lg:min-h-[640px] lg:grid lg:grid-cols-[600px_minmax(0,1fr)]">
-      <main className="flex flex-col min-h-screen lg:min-h-0 px-5 pt-2 pb-6 lg:px-[72px] lg:py-7 lg:overflow-y-auto">
-        <div className="flex items-center gap-2 h-[52px] lg:gap-2.5 lg:h-auto">
+      <main
+        ref={mainRef}
+        data-motion-root=""
+        data-motion-hide=""
+        className="flex flex-col min-h-screen lg:min-h-0 px-5 pt-2 pb-6 lg:px-[72px] lg:py-7 lg:overflow-y-auto"
+      >
+        <div
+          data-anim="login-item"
+          className="flex items-center gap-2 h-[52px] lg:gap-2.5 lg:h-auto"
+        >
           <Link
             href="/"
             className="n-btn n-btn-icon w-11! h-11! -ml-3 text-(--n-neutral-300)! lg:hidden!"
@@ -240,7 +261,12 @@ export default function Login() {
           ref={formRef}
           className="w-full max-w-[400px] mt-6 flex flex-col gap-3.5 lg:my-auto lg:gap-5"
         >
-          <div className={isLogin ? "mt-3 lg:mt-0" : undefined}>
+          {/* Keyed so the title fades in anew on each tab. */}
+          <div
+            key={activeTab}
+            data-anim="login-item"
+            className={isLogin ? "mt-3 lg:mt-0" : undefined}
+          >
             <h1 className="m-0 text-[30px] lg:text-[34px] leading-[1.12]">
               {isLogin ? "Bon retour" : "Créez votre compte"}
             </h1>
@@ -251,6 +277,12 @@ export default function Login() {
             </p>
           </div>
 
+          <div
+            data-anim="login-item"
+            className="n-seg flex!"
+            role="group"
+            aria-label="Mode d’accès"
+          >
           <fieldset className="n-seg flex! min-w-0" aria-label="Mode d’accès">
             {tabs.map((tab) => (
               <button
@@ -266,12 +298,19 @@ export default function Login() {
           </fieldset>
 
           {notice && (
+            <p
+              role="status"
+              className={`m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)] ${FADE_IN}`}
+            >
             <output className="block m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]">
               {notice}
             </output>
           )}
 
-          <div className="flex justify-center min-h-10 [color-scheme:normal]">
+          <div
+            data-anim="login-item"
+            className="flex justify-center min-h-10 [color-scheme:normal]"
+          >
             <GoogleLogin
               theme="filled_black"
               text="continue_with"
@@ -289,6 +328,7 @@ export default function Login() {
           </div>
 
           <div
+            data-anim="login-item"
             className="flex items-center gap-3 text-xs text-(--n-neutral-500)"
             aria-hidden="true"
           >
@@ -297,13 +337,15 @@ export default function Login() {
             <span className="flex-1 h-px bg-[linear-gradient(to_left,transparent,var(--n-divider))]" />
           </div>
 
+          {/* POST: a submit before React loads must not put the password in the URL. */}
           <form
+            method="post"
             onSubmit={handleSubmit}
             className="flex flex-col gap-3.5"
             noValidate
           >
             {!isLogin && (
-              <div className="n-field">
+              <div data-anim="login-item" className="n-field">
                 <label htmlFor="fullname">Nom complet</label>
                 <input
                   id="fullname"
@@ -323,7 +365,7 @@ export default function Login() {
               </div>
             )}
 
-            <div className="n-field">
+            <div data-anim="login-item" className="n-field">
               <label htmlFor="email">Adresse e-mail</label>
               <input
                 id="email"
@@ -340,7 +382,7 @@ export default function Login() {
               <FieldError id="email" message={fieldErrors?.email} />
             </div>
 
-            <div className="n-field">
+            <div data-anim="login-item" className="n-field">
               <label htmlFor="password">Mot de passe</label>
               <PasswordInput
                 id="password"
@@ -353,7 +395,7 @@ export default function Login() {
             </div>
 
             {!isLogin && (
-              <div className="n-field">
+              <div data-anim="login-item" className="n-field">
                 <label htmlFor="confirmPassword">
                   Confirmer le mot de passe
                 </label>
@@ -380,6 +422,21 @@ export default function Login() {
               </div>
             )}
 
+            {/* The wrapper animates: the opacity the animation leaves inline
+                on its target would override the button's dimmed :disabled look. */}
+            <div data-anim="login-item" className="flex mt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="n-btn n-btn-primary w-full min-h-12 lg:min-h-[42px] text-[15px]!"
+              >
+                {loading
+                  ? "Patientez…"
+                  : isLogin
+                    ? "Se connecter"
+                    : "S’inscrire"}
+              </button>
+            </div>
             <button
               type="submit"
               disabled={loading}
@@ -391,6 +448,7 @@ export default function Login() {
         </div>
 
         <nav
+          data-anim="login-item"
           className="mt-auto pt-8 lg:mt-0 lg:pt-0 flex justify-center lg:justify-start gap-[18px] text-xs"
           aria-label="Liens légaux"
         >
