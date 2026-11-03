@@ -11,6 +11,9 @@ export type MotionSetup = (root: HTMLElement) => void;
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 
+export const prefersReducedMotion = () =>
+  window.matchMedia?.(REDUCED_MOTION).matches ?? false;
+
 /**
  * Plays a landing section's intro with anime.js.
  *
@@ -34,10 +37,10 @@ export function useLandingMotion<T extends HTMLElement>(setup: MotionSetup) {
       ? root
       : root.querySelector("[data-motion-hide]");
     const waiting = !!probe && getComputedStyle(probe).opacity === "0";
-    const reduced = window.matchMedia?.(REDUCED_MOTION).matches ?? false;
 
     root.dataset.motionReady = "";
-    const scope = waiting && !reduced ? createScope({ root }) : null;
+    const scope =
+      waiting && !prefersReducedMotion() ? createScope({ root }) : null;
 
     if (scope) {
       try {

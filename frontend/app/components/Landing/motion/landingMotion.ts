@@ -10,14 +10,16 @@ import {
   type Target,
   type Timeline,
 } from "animejs";
-import type { MotionSetup } from "./useLandingMotion";
+import { flushSync } from "react-dom";
+import { prefersReducedMotion, type MotionSetup } from "./useLandingMotion";
 
-// Landing page motion: subtle, short distances, soft deceleration. Only
-// transform and opacity are animated, so nothing shifts the layout.
+// Landing and login page motion: subtle, short distances, soft deceleration.
+// Only transform and opacity are animated, so nothing shifts the layout.
 
 const EASE = "outQuart";
 // Scroll reveals start once the trigger's top reaches 85% of the viewport.
 const ENTER = "85% top";
+const LOGIN_ITEM = "[data-anim=login-item]";
 
 const frenchNumber = new Intl.NumberFormat("fr-FR");
 
@@ -234,3 +236,94 @@ export const contactReveal: MotionSetup = (root) => {
   addTo(tl, tags, { opacity: 1, scale: 1, duration: 500, delay: stagger(30) }, 650);
   playOnEnter(root, tl);
 };
+
+/** Login form: quick, so it never gets in the way of typing. */
+export const loginFormIntro: MotionSetup = (root) => {
+  const items = all(root, LOGIN_ITEM);
+  set(items, { opacity: 0, y: 12 });
+  animate(items, {
+    opacity: 1,
+    y: 0,
+    ease: EASE,
+    duration: 550,
+    delay: stagger(35),
+  });
+};
+
+/** Login showcase: title, favorites card and its rows, sparklines, then perks. */
+export const loginShowcaseIntro: MotionSetup = (root) => {
+  // The panel is hidden below lg: nothing to play, nothing to measure.
+  if (!root.getClientRects().length) return;
+
+  const words = all(root, "[data-anim=headline]").flatMap(
+    (line) => splitText(line, { words: true }).words as HTMLElement[],
+  );
+  const card = all(root, "[data-anim=card]");
+  const rows = all(root, "[data-anim=row]");
+  const sparks = drawable(all(root, "[data-anim=spark]"));
+  const perks = all(root, "[data-anim=perk]");
+
+  set(words, { opacity: 0, y: "0.35em" });
+  set(card, { opacity: 0, y: 24 });
+  set(rows, { opacity: 0, y: 10 });
+  set(sparks, { draw: "0 0" });
+  set(perks, { opacity: 0, y: 12 });
+
+  const tl = createTimeline({ defaults: { ease: EASE, duration: 800 } });
+  addTo(tl, words, { opacity: 1, y: 0, delay: stagger(45) }, 100);
+  addTo(tl, card, { opacity: 1, y: 0, duration: 900 }, 300);
+  addTo(tl, rows, { opacity: 1, y: 0, delay: stagger(70) }, 450);
+  addTo(
+    tl,
+    sparks,
+    { draw: "0 1", duration: 900, ease: "inOutSine", delay: stagger(70) },
+    550,
+  );
+  addTo(tl, perks, { opacity: 1, y: 0, delay: stagger(90) }, 800);
+};
+
+/**
+ * Applies a state change that rearranges the login form (switching tab) without
+ * the jump: what stays slides over from its old position, what's new fades in.
+ * `update` sets the React state; it's flushed here to measure the new layout.
+ */
+export function slideLoginForm(root: HTMLElement | null, update: () => void) {
+  if (!root || prefersReducedMotion()) {
+    update();
+    return;
+  }
+
+  const tops = new Map(
+    all(root, LOGIN_ITEM).map((el) => [el, el.getBoundingClientRect().top]),
+  );
+  flushSync(update);
+
+  const moved: HTMLElement[] = [];
+  const entering: HTMLElement[] = [];
+  for (const el of all(root, LOGIN_ITEM)) {
+    const top = tops.get(el);
+    if (top === undefined) {
+      entering.push(el);
+      continue;
+    }
+    // Clear any slide still running, to measure the real new position.
+    el.style.transform = "";
+    const offset = top - el.getBoundingClientRect().top;
+    if (Math.abs(offset) < 1) continue;
+    utils.set(el, { y: offset });
+    moved.push(el);
+  }
+
+  if (moved.length) animate(moved, { y: 0, ease: EASE, duration: 400 });
+  if (entering.length) {
+    // Starts a bit later, once its neighbours have moved out of the way.
+    utils.set(entering, { opacity: 0, y: 8 });
+    animate(entering, {
+      opacity: 1,
+      y: 0,
+      ease: EASE,
+      duration: 400,
+      delay: 100,
+    });
+  }
+}

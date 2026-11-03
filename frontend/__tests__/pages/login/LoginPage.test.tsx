@@ -6,8 +6,14 @@ vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
 }));
 
+const mockRegister = vi.hoisted(() => vi.fn());
+
 vi.mock("@/app/hooks/useRegistration", () => ({
-  useRegistration: () => ({ register: vi.fn(), loading: false, result: null }),
+  useRegistration: () => ({
+    register: mockRegister,
+    loading: false,
+    result: null,
+  }),
 }));
 
 vi.mock("@/app/hooks/useLogin", () => ({
@@ -117,6 +123,80 @@ describe("Login page", () => {
     expect(screen.getByLabelText(/nom complet/i)).toBeTruthy();
     expect(screen.getByLabelText(/confirmer le mot de passe/i)).toBeTruthy();
     expect(screen.getByRole("button", { name: /s’inscrire/i })).toBeTruthy();
+  });
+
+  it("clears the notice and updates the title when switching tab", () => {
+    renderLogin();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "MockGoogleLogin-Error" }),
+    );
+    expect(screen.getByRole("status")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Inscription$/ }));
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByText("Bon retour")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /^Connexion$/ }));
+    expect(screen.getByText("Bon retour")).toBeTruthy();
+    expect(screen.queryByText("Créez votre compte")).toBeNull();
+  });
+
+  describe("registration", () => {
+    const submitRegistration = () => {
+      fireEvent.click(screen.getByRole("button", { name: /^Inscription$/ }));
+      fireEvent.click(screen.getByRole("button", { name: /s’inscrire/i }));
+    };
+
+    it("goes back to the login tab with the success notice", async () => {
+      mockRegister.mockResolvedValue({
+        success: true,
+        message: "Compte créé.",
+      });
+      renderLogin();
+
+      submitRegistration();
+
+      await waitFor(() => expect(screen.getByText("Bon retour")).toBeTruthy());
+      expect(screen.getByRole("status").textContent).toBe("Compte créé.");
+      expect(screen.queryByLabelText(/nom complet/i)).toBeNull();
+    });
+
+    it("stays on the tab and shows the notice when it fails", async () => {
+      mockRegister.mockResolvedValue({
+        success: false,
+        message: "E-mail déjà utilisé.",
+      });
+      renderLogin();
+
+      submitRegistration();
+
+      await waitFor(() =>
+        expect(screen.getByRole("status").textContent).toBe(
+          "E-mail déjà utilisé.",
+        ),
+      );
+      expect(screen.getByText("Créez votre compte")).toBeTruthy();
+    });
+  });
+
+  describe("animation", () => {
+    it("marks the form as an animated section hidden before hydration", () => {
+      renderLogin();
+
+      const main = screen.getByRole("main");
+      expect(main.hasAttribute("data-motion-root")).toBe(true);
+      expect(main.hasAttribute("data-motion-hide")).toBe(true);
+      expect(main.querySelectorAll("[data-anim=login-item]").length).toBeGreaterThan(0);
+    });
+
+    it("animates a wrapper, not the submit button, to keep its disabled look", () => {
+      renderLogin();
+
+      const submit = screen.getByRole("button", { name: /^Se connecter$/i });
+      expect(submit.hasAttribute("data-anim")).toBe(false);
+      expect(submit.parentElement?.getAttribute("data-anim")).toBe("login-item");
+    });
   });
 
   it("toggles the password visibility", () => {
