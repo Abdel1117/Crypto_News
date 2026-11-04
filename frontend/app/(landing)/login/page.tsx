@@ -98,7 +98,10 @@ function PasswordInput({
   );
 }
 
-function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
+function FieldError({
+  id,
+  message,
+}: Readonly<{ id: string; message?: string }>) {
   if (!message) return null;
   return (
     <p id={`${id}-error`} className={`n-field-error ${FADE_IN}`}>
@@ -277,13 +280,11 @@ export default function Login() {
             </p>
           </div>
 
-          <div
+          <fieldset
             data-anim="login-item"
-            className="n-seg flex!"
-            role="group"
+            className="n-seg flex! min-w-0"
             aria-label="Mode d’accès"
           >
-          <fieldset className="n-seg flex! min-w-0" aria-label="Mode d’accès">
             {tabs.map((tab) => (
               <button
                 key={tab}
@@ -298,11 +299,9 @@ export default function Login() {
           </fieldset>
 
           {notice && (
-            <p
-              role="status"
-              className={`m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)] ${FADE_IN}`}
+            <output
+              className={`block m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)] ${FADE_IN}`}
             >
-            <output className="block m-0 px-3 py-2.5 rounded-lg text-sm border border-(--n-accent) bg-[color-mix(in_srgb,var(--n-accent)_10%,transparent)]">
               {notice}
             </output>
           )}
@@ -430,20 +429,9 @@ export default function Login() {
                 disabled={loading}
                 className="n-btn n-btn-primary w-full min-h-12 lg:min-h-[42px] text-[15px]!"
               >
-                {loading
-                  ? "Patientez…"
-                  : isLogin
-                    ? "Se connecter"
-                    : "S’inscrire"}
+                {submitText(loading, isLogin)}
               </button>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="n-btn n-btn-primary w-full min-h-12 lg:min-h-[42px] text-[15px]! mt-1"
-            >
-              {submitText(loading, isLogin)}
-            </button>
           </form>
         </div>
 
