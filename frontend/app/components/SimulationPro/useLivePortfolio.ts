@@ -97,14 +97,14 @@ export function useLivePortfolio(portfolio: ProPortfolio | null): LivePortfolio 
           if (cancelled) return;
           // Keep the last prices of this portfolio and say they're delayed.
           setQuote((prev) =>
-            prev && prev.base === base
+            prev?.base === base
               ? { ...prev, failed: true }
               : { base, prices: {}, stale: [], at: null, failed: true },
           );
         });
     };
     const start = () => {
-      if (timer === undefined) timer = window.setInterval(load, LIVE_REFRESH_MS);
+      timer ??= window.setInterval(load, LIVE_REFRESH_MS);
     };
     const stop = () => {
       window.clearInterval(timer);
@@ -130,7 +130,7 @@ export function useLivePortfolio(portfolio: ProPortfolio | null): LivePortfolio 
   }, [dispatch, portfolio, holdsCoins]);
 
   if (!portfolio) return { portfolio: null, updatedAt: null, delayed: false };
-  const current = quote && quote.base === portfolio ? quote : null;
+  const current = quote?.base === portfolio ? quote : null;
   return {
     portfolio: current ? applyLivePrices(portfolio, current.prices) : portfolio,
     updatedAt: current?.at ?? null,

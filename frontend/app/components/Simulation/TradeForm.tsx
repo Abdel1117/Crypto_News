@@ -2,12 +2,12 @@
 
 import React, { useId, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/lib/hooks";
-import { executeTrade } from "@/app/lib/features/simulation/simulationSlice";
-import { useCurrency } from "@/app/context/Curency/CurrencyContext";
+import { executeTrade, type Holding } from "@/app/lib/features/simulation/simulationSlice";
+import { useCurrency, type Currency } from "@/app/context/Curency/CurrencyContext";
 import { CryptoMarketData } from "@/app/types/Crypto/Crypto";
-import { InfoIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
 import { formatFiatPrice } from "@/app/utils/Format/FrFormat/FrFormat";
 import CoinPicker from "./CoinPicker";
+import { OrderReason, OrderSummary, SideToggle, type OrderSide, type SummaryRow } from "./OrderParts";
 import { formatQuantity, signedFiat, trendColor } from "./usePortfolio";
 
 interface TradeFormProps {
@@ -20,7 +20,177 @@ interface TradeFormProps {
   onTraded?: () => void;
 }
 
-type TradeType = "buy" | "sell";
+type TradeType = OrderSide;
+
+interface TradeInput {
+  coins: CryptoMarketData[];
+  holdings: Holding[];
+  selectedId: string | null | number;
+  amountText: string;
+  tradeType: TradeType;
+  /** Cash, in the display currency. */
+  balance: number;
+  /** EUR → display currency (average prices are stored in EUR). */
+  multiplier: number;
+  rateUnavailable: boolean;
+}
+
+interface TradeView {
+  availableCoins: CryptoMarketData[];
+  sellableCount: number;
+  selectedCoin: CryptoMarketData | undefined;
+  holding: Holding | undefined;
+  numAmount: number;
+  total: number;
+  estimatedPnl: number;
+  invalid: boolean;
+  canTrade: boolean;
+  reason: string | null;
+}
+
+interface BlockerInput {
+  tradeType: TradeType;
+  rateUnavailable: boolean;
+  balance: number;
+  sellableCount: number;
+  overBalance: boolean;
+  overHolding: boolean;
+  numAmount: number;
+  holding: Holding | undefined;
+}
+
+/** Why the button is disabled, written out rather than just greyed out. */
+function tradeBlocker(b: BlockerInput): string | null {
+  if (b.rateUnavailable) return "Taux de change USD indisponible, réessayez plus tard.";
+  if (b.tradeType === "buy" && b.balance < 0.01) {
+    return "Solde insuffisant. Vendez une position ou réinitialisez le portefeuille.";
+  }
+  if (b.tradeType === "sell" && b.sellableCount === 0) return "Aucune position à vendre pour le moment.";
+  if (b.overBalance) return "Montant supérieur au solde disponible.";
+  if (b.numAmount > 0 && b.overHolding && b.holding) return "Quantité supérieure à votre position.";
+  return null;
+}
+
+function estimatePnl(
+  tradeType: TradeType,
+  coin: CryptoMarketData | undefined,
+  holding: Holding | undefined,
+  multiplier: number,
+  numAmount: number,
+): number {
+  if (tradeType !== "sell" || !coin || !holding) return 0;
+  return (coin.price - holding.avgBuyPrice * multiplier) * numAmount;
+}
+
+/** Everything the form shows, derived from the inputs. */
+function deriveTrade(t: TradeInput): TradeView {
+  const sellableCoins = t.coins.filter((c) => t.holdings.some((h) => h.coinId === c.id));
+  const selectedCoin = t.coins.find((c) => c.id === t.selectedId);
+  const holding = t.holdings.find((h) => h.coinId === t.selectedId);
+  // Accept both "0,5" and "0.5".
+  const numAmount = Number.parseFloat(t.amountText.replace(",", ".")) || 0;
+  const total = selectedCoin ? numAmount * selectedCoin.price : 0;
+
+  const isSell = t.tradeType === "sell";
+  const overBalance = !isSell && total > t.balance;
+  const overHolding = isSell && (!holding || numAmount > holding.amount);
+
+  return {
+    availableCoins: isSell ? sellableCoins : t.coins,
+    sellableCount: sellableCoins.length,
+    selectedCoin,
+    holding,
+    numAmount,
+    total,
+    estimatedPnl: estimatePnl(t.tradeType, selectedCoin, holding, t.multiplier, numAmount),
+    invalid: numAmount > 0 && (overBalance || overHolding),
+    canTrade: Boolean(selectedCoin) && numAmount > 0 && !t.rateUnavailable && !overBalance && !overHolding,
+    reason: tradeBlocker({
+      tradeType: t.tradeType,
+      rateUnavailable: t.rateUnavailable,
+      balance: t.balance,
+      sellableCount: sellableCoins.length,
+      overBalance,
+      overHolding,
+      numAmount,
+      holding,
+    }),
+  };
+}
+
+function submitLabel(tradeType: TradeType, coin: CryptoMarketData | undefined, numAmount: number): string {
+  if (tradeType === "sell" && coin && numAmount > 0) {
+    return `Vendre ${formatQuantity(numAmount)} ${coin.symbol.toUpperCase()}`;
+  }
+  const verb = tradeType === "buy" ? "Acheter" : "Vendre";
+  return coin ? `${verb} du ${coin.name}` : verb;
+}
+
+function pickerHint(
+  tradeType: TradeType,
+  coin: CryptoMarketData | undefined,
+  holding: Holding | undefined,
+  currency: Currency,
+): string | null {
+  if (!coin) return null;
+  const price = `Prix actuel ${formatFiatPrice(coin.price, currency)}`;
+  if (tradeType === "sell" && holding) {
+    return `Détenu ${formatQuantity(holding.amount)} ${coin.symbol.toUpperCase()} · ${price}`;
+  }
+  return price;
+}
+
+function summaryRows(tradeType: TradeType, view: TradeView, balance: number, currency: Currency): SummaryRow[] {
+  const money = (v: number) => formatFiatPrice(v, currency);
+  if (tradeType === "buy") {
+    return [
+      { label: "Solde disponible", value: money(balance) },
+      { label: "Total estimé", value: money(view.total), strong: true },
+    ];
+  }
+  return [
+    { label: "Total estimé", value: money(view.total), strong: true },
+    {
+      label: "PnL réalisé",
+      value: signedFiat(view.estimatedPnl, currency),
+      color: trendColor(view.estimatedPnl),
+    },
+  ];
+}
+
+function maxAmount(
+  tradeType: TradeType,
+  coin: CryptoMarketData | undefined,
+  holding: Holding | undefined,
+  balance: number,
+): string | null {
+  if (!coin) return null;
+  if (tradeType === "buy") return String(balance / coin.price);
+  return holding ? String(holding.amount) : null;
+}
+
+/** Switching to "sell" drops a selected coin that isn't held. */
+const dropsSelection = (next: TradeType, holdings: Holding[], selectedId: TradeFormProps["selectedId"]) =>
+  next === "sell" && !holdings.some((h) => h.coinId === selectedId);
+
+const emptyLabel = (tradeType: TradeType, sellableCount: number) =>
+  tradeType === "sell" && sellableCount === 0 ? "Aucune position à vendre" : "Sélectionner une crypto";
+
+const PANEL_FRAME = {
+  className:
+    "n-panel flex flex-col gap-4 p-[18px] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--n-accent)_30%,transparent)]",
+  "aria-labelledby": "trade-title",
+};
+const SHEET_FRAME = { className: "flex flex-col gap-4", "aria-label": "Passer un ordre" };
+
+function FormTitle({ hidden }: Readonly<{ hidden: boolean }>) {
+  if (hidden) return null;
+  return (
+    <h2 id="trade-title" className="m-0 text-base">
+      Passer un ordre
+    </h2>
+  );
+}
 
 export default function TradeForm({
   coins,
@@ -28,67 +198,39 @@ export default function TradeForm({
   handleSymbolChange,
   inSheet = false,
   onTraded,
-}: TradeFormProps) {
+}: Readonly<TradeFormProps>) {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
   const { balance: balanceEur, holdings } = useAppSelector(
     (state) => state.simulation,
   );
   const usdPerEur = useAppSelector((state) => state.exchangeRate.usdPerEur);
-  const rateUnavailable = currency === "usd" && !usdPerEur;
+  const isUsd = currency === "usd";
+  const rateUnavailable = isUsd && !usdPerEur;
   // Balance and average prices are stored in EUR; prices arrive in the
   // display currency.
-  const multiplier = currency === "usd" ? (usdPerEur ?? 1) : 1;
+  const multiplier = isUsd ? (usdPerEur ?? 1) : 1;
   const balance = balanceEur * multiplier;
 
   const [tradeType, setTradeType] = useState<TradeType>("buy");
   const [amount, setAmount] = useState("");
   const reasonId = useId();
 
-  const sellableCoins = coins.filter((c) =>
-    holdings.some((h) => h.coinId === c.id),
-  );
-  const availableCoins = tradeType === "sell" ? sellableCoins : coins;
-
-  const selectedCoin = coins.find((c) => c.id === selectedId);
-  const holding = holdings.find((h) => h.coinId === selectedId);
-  // Accept both "0,5" and "0.5".
-  const numAmount = Number.parseFloat(amount.replace(",", ".")) || 0;
-  const total = selectedCoin ? numAmount * selectedCoin.price : 0;
-  const estimatedPnl =
-    tradeType === "sell" && selectedCoin && holding
-      ? (selectedCoin.price - holding.avgBuyPrice * multiplier) * numAmount
-      : 0;
-
-  const overBalance = tradeType === "buy" && total > balance;
-  const overHolding =
-    tradeType === "sell" && (!holding || numAmount > holding.amount);
-
-  const canTrade =
-    Boolean(selectedCoin) &&
-    numAmount > 0 &&
-    !rateUnavailable &&
-    !overBalance &&
-    !overHolding;
-
-  // Why the button is disabled, written out rather than just greyed out.
-  let reason: string | null = null;
-  if (rateUnavailable) {
-    reason = "Taux de change USD indisponible, réessayez plus tard.";
-  } else if (tradeType === "buy" && balance < 0.01) {
-    reason =
-      "Solde insuffisant. Vendez une position ou réinitialisez le portefeuille.";
-  } else if (tradeType === "sell" && sellableCoins.length === 0) {
-    reason = "Aucune position à vendre pour le moment.";
-  } else if (overBalance) {
-    reason = "Montant supérieur au solde disponible.";
-  } else if (numAmount > 0 && overHolding && holding) {
-    reason = "Quantité supérieure à votre position.";
-  }
+  const view = deriveTrade({
+    coins,
+    holdings,
+    selectedId,
+    amountText: amount,
+    tradeType,
+    balance,
+    multiplier,
+    rateUnavailable,
+  });
+  const { selectedCoin, holding, numAmount, reason } = view;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCoin || !canTrade) return;
+    if (!selectedCoin || !view.canTrade) return;
     dispatch(
       executeTrade({
         coinId: selectedCoin.id,
@@ -109,110 +251,28 @@ export default function TradeForm({
   const handleTradeTypeChange = (nextType: TradeType) => {
     setTradeType(nextType);
     setAmount("");
-    if (nextType === "sell" && !holdings.some((h) => h.coinId === selectedId)) {
-      handleSymbolChange("");
-    }
+    if (dropsSelection(nextType, holdings, selectedId)) handleSymbolChange("");
   };
 
   const fillMax = () => {
-    if (!selectedCoin) return;
-    if (tradeType === "buy") {
-      setAmount(String(balance / selectedCoin.price));
-    } else if (holding) {
-      setAmount(String(holding.amount));
-    }
+    const max = maxAmount(tradeType, selectedCoin, holding, balance);
+    if (max !== null) setAmount(max);
   };
-
-  const money = (v: number) => formatFiatPrice(v, currency);
-  const symbol = selectedCoin?.symbol.toUpperCase() ?? "";
-
-  let submitLabel: string;
-  if (tradeType === "buy") {
-    submitLabel = selectedCoin ? `Acheter du ${selectedCoin.name}` : "Acheter";
-  } else if (selectedCoin && numAmount > 0) {
-    submitLabel = `Vendre ${formatQuantity(numAmount)} ${symbol}`;
-  } else {
-    submitLabel = selectedCoin ? `Vendre du ${selectedCoin.name}` : "Vendre";
-  }
-
-  let pickerHint: React.ReactNode = null;
-  if (selectedCoin) {
-    const price = `Prix actuel ${money(selectedCoin.price)}`;
-    pickerHint =
-      tradeType === "sell" && holding
-        ? `Détenu ${formatQuantity(holding.amount)} ${symbol} · ${price}`
-        : price;
-  }
-
-  type SummaryRow = {
-    label: string;
-    value: string;
-    strong?: boolean;
-    color?: string;
-  };
-  const rows: SummaryRow[] =
-    tradeType === "buy"
-      ? [
-          { label: "Solde disponible", value: money(balance) },
-          { label: "Total estimé", value: money(total), strong: true },
-        ]
-      : [
-          { label: "Total estimé", value: money(total), strong: true },
-          {
-            label: "PnL réalisé",
-            value: signedFiat(estimatedPnl, currency),
-            color: trendColor(estimatedPnl),
-          },
-        ];
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={
-        inSheet
-          ? "flex flex-col gap-4"
-          : "n-panel flex flex-col gap-4 p-[18px] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--n-accent)_30%,transparent)]"
-      }
-      aria-labelledby={inSheet ? undefined : "trade-title"}
-      aria-label={inSheet ? "Passer un ordre" : undefined}
-    >
-      {!inSheet && (
-        <h2 id="trade-title" className="m-0 text-base">
-          Passer un ordre
-        </h2>
-      )}
+    <form onSubmit={handleSubmit} {...(inSheet ? SHEET_FRAME : PANEL_FRAME)}>
+      <FormTitle hidden={inSheet} />
 
-      <div className="n-seg flex!" role="group" aria-label="Sens de l’ordre">
-        {(
-          [
-            ["buy", "Acheter"],
-            ["sell", "Vendre"],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            type="button"
-            className="n-seg-btn"
-            aria-pressed={tradeType === value}
-            onClick={() => handleTradeTypeChange(value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <SideToggle side={tradeType} onChange={handleTradeTypeChange} />
 
       <CoinPicker
         label="Crypto"
-        coins={availableCoins}
-        value={(selectedId as string) || null}
+        coins={view.availableCoins}
+        value={selectedId ? String(selectedId) : null}
         onChange={handleSymbolChange}
         currency={currency}
-        emptyLabel={
-          tradeType === "sell" && sellableCoins.length === 0
-            ? "Aucune position à vendre"
-            : "Sélectionner une crypto"
-        }
-        hint={pickerHint}
+        emptyLabel={emptyLabel(tradeType, view.sellableCount)}
+        hint={pickerHint(tradeType, selectedCoin, holding, currency)}
       />
 
       <div className="n-field">
@@ -227,7 +287,7 @@ export default function TradeForm({
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0,00"
             className="n-text-input n-tnum pr-16!"
-            aria-invalid={numAmount > 0 && (overBalance || overHolding)}
+            aria-invalid={view.invalid}
             aria-describedby={reason ? reasonId : undefined}
           />
           <button
@@ -241,38 +301,17 @@ export default function TradeForm({
         </div>
       </div>
 
-      <dl className="m-0 flex flex-col gap-2 text-sm lg:text-[13px] n-tnum">
-        {rows.map((r) => (
-          <div key={r.label} className="flex justify-between gap-3">
-            <dt className="text-(--n-neutral-400)">{r.label}</dt>
-            <dd
-              className={`m-0 ${r.strong ? "font-medium" : ""}`}
-              style={r.color ? { color: r.color } : undefined}
-            >
-              {r.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <OrderSummary rows={summaryRows(tradeType, view, balance, currency)} />
 
       <button
         type="submit"
-        disabled={!canTrade}
+        disabled={!view.canTrade}
         className="n-btn n-btn-primary w-full min-h-12 lg:min-h-[42px] max-lg:text-[15px]!"
       >
-        {submitLabel}
+        {submitLabel(tradeType, selectedCoin, numAmount)}
       </button>
 
-      {reason && (
-        <p
-          id={reasonId}
-          className="-mt-1 mb-0 flex gap-2 text-xs leading-normal text-(--n-neutral-400)"
-          role="status"
-        >
-          <InfoIcon size={14} className="flex-none mt-0.5" />
-          {reason}
-        </p>
-      )}
+      <OrderReason id={reasonId} reason={reason} />
     </form>
   );
 }

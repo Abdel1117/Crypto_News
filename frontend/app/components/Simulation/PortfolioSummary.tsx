@@ -25,7 +25,7 @@ const ROW_RULE =
 export default function PortfolioSummary({
   coins,
   chart,
-}: PortfolioSummaryProps) {
+}: Readonly<PortfolioSummaryProps>) {
   const loading = useAppSelector((state) => state.prices.loading);
   const p = usePortfolio(coins);
   const money = (v: number) => formatFiatPrice(v, p.currency);

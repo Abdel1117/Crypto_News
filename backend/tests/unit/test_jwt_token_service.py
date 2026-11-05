@@ -21,7 +21,8 @@ def service() -> JWTTokenService:
 class TestCreateAccessToken:
     def test_returns_non_empty_string(self, service):
         token = service.create_access_token(USER_ID, EMAIL)
-        assert isinstance(token, str) and len(token) > 0
+        assert isinstance(token, str)
+        assert len(token) > 0
 
     def test_payload_token_type_is_access(self, service):
         token = service.create_access_token(USER_ID, EMAIL)
@@ -52,7 +53,8 @@ class TestCreateAccessToken:
 class TestCreateRefreshToken:
     def test_returns_non_empty_string(self, service):
         token = service.create_refresh_token(USER_ID, EMAIL)
-        assert isinstance(token, str) and len(token) > 0
+        assert isinstance(token, str)
+        assert len(token) > 0
 
     def test_payload_token_type_is_refresh(self, service):
         token = service.create_refresh_token(USER_ID, EMAIL)

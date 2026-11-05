@@ -12,4 +12,11 @@ describe("ThemeScript", () => {
     expect(script?.innerHTML).toContain("localStorage.getItem('theme')");
     expect(script?.innerHTML).toContain("prefers-color-scheme: dark");
   });
+
+  it("flags the page as JS-enabled for the landing animations", () => {
+    const { container } = render(<ThemeScript />);
+    const script = container.querySelector("script");
+
+    expect(script?.innerHTML).toContain("root.setAttribute('data-motion', '')");
+  });
 });

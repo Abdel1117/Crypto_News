@@ -10,6 +10,5 @@ class GoogleUserInfo:
 
 class GoogleAuthProviderProtocol(Protocol):
     
-    def verify_credentials(self, credentials: str) -> GoogleUserInfo :
-        pass 
+    def verify_credentials(self, credentials: str) -> GoogleUserInfo : ...
     

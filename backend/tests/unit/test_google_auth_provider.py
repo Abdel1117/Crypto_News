@@ -24,9 +24,10 @@ class TestVerifyCredentials:
     def test_raises_value_error_when_client_id_not_configured(self, monkeypatch):
         monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
         provider = GoogleAuthProvider(client_id=None)
+        credentials = make_credentials()
 
         with pytest.raises(ValueError):
-            provider.verify_credentials(make_credentials())
+            provider.verify_credentials(credentials)
 
     def test_returns_user_info_on_valid_token(self, provider, monkeypatch):
         payload = {"email": "user@example.com", "name": "Test User", "sub": "google-sub-123", "email_verified": True}
@@ -60,9 +61,10 @@ class TestVerifyCredentials:
             "app.clients.google_auth_provider.id_token.verify_oauth2_token",
             _raise,
         )
+        credentials = make_credentials()
 
         with pytest.raises(ValueError):
-            provider.verify_credentials(make_credentials())
+            provider.verify_credentials(credentials)
 
     def test_passes_configured_client_id_to_verifier(self, provider, monkeypatch):
         captured = {}
@@ -101,9 +103,10 @@ class TestEmailVerification:
         if verified is not None:
             payload["email_verified"] = verified
         stub_payload(monkeypatch, payload)
+        credentials = make_credentials()
 
         with pytest.raises(InvalidGoogleCredentials):
-            provider.verify_credentials(make_credentials())
+            provider.verify_credentials(credentials)
 
     def test_accepts_string_true(self, provider, monkeypatch):
         stub_payload(monkeypatch, {"email": "u@example.com", "sub": "s", "email_verified": "true"})
@@ -111,8 +114,9 @@ class TestEmailVerification:
 
     def test_rejects_missing_email(self, provider, monkeypatch):
         stub_payload(monkeypatch, {"sub": "s", "email_verified": True})
+        credentials = make_credentials()
         with pytest.raises(InvalidGoogleCredentials):
-            provider.verify_credentials(make_credentials())
+            provider.verify_credentials(credentials)
 
     def test_lowercases_email(self, provider, monkeypatch):
         stub_payload(monkeypatch, {"email": "User@Example.COM", "sub": "s", "email_verified": True})
@@ -120,5 +124,7 @@ class TestEmailVerification:
 
     def test_missing_client_id_has_its_own_error(self, monkeypatch):
         monkeypatch.delenv("GOOGLE_CLIENT_ID", raising=False)
+        provider = GoogleAuthProvider(client_id=None)
+        credentials = make_credentials()
         with pytest.raises(GoogleAuthNotConfigured):
-            GoogleAuthProvider(client_id=None).verify_credentials(make_credentials())
+            provider.verify_credentials(credentials)

@@ -28,6 +28,8 @@ import {
   formatSignedPercent,
 } from "@/app/utils/Format/FrFormat/FrFormat";
 import { QUOTE_CURRENCY_SYMBOLS } from "@/app/utils/constants/currency";
+import { hexToRgba } from "@/app/utils/Chart/hexToRgba";
+import { trendColor } from "@/app/components/Simulation/usePortfolio";
 
 type TimeFrame = MarketViewState["selectedTimeFrame"];
 type ChartType = "line" | "candles";
@@ -54,18 +56,17 @@ function readTokens(el: HTMLElement) {
   };
 }
 
-function hexToRgba(hex: string, alpha: number) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+/** Small prices keep more decimals on the axis. */
+function priceDigits(p: number): number {
+  if (p < 1) return 6;
+  return p < 100 ? 2 : 0;
 }
 
 interface PriceChartProps {
   coin?: CoinSummary;
 }
 
-export default function PriceChart({ coin }: PriceChartProps) {
+export default function PriceChart({ coin }: Readonly<PriceChartProps>) {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
   const { theme } = useTheme();
@@ -113,7 +114,7 @@ export default function PriceChart({ coin }: PriceChartProps) {
         locale: "fr-FR",
         priceFormatter: (p: number) =>
           p.toLocaleString("fr-FR", {
-            maximumFractionDigits: p < 1 ? 6 : p < 100 ? 2 : 0,
+            maximumFractionDigits: priceDigits(p),
           }),
       },
     });
@@ -170,17 +171,11 @@ export default function PriceChart({ coin }: PriceChartProps) {
 
   const quote = QUOTE_CURRENCY_SYMBOLS[currency];
   const change = coin?.change_24h;
-  const changeColor =
-    typeof change !== "number" || change === 0
-      ? "var(--n-neutral-400)"
-      : change > 0
-        ? "var(--n-up)"
-        : "var(--n-down)";
+  const changeColor = trendColor(change);
 
   const timeframeSeg = (mobile: boolean) => (
-    <div
-      className={`n-seg ${mobile ? "flex! lg:hidden!" : "hidden! lg:inline-flex!"}`}
-      role="group"
+    <fieldset
+      className={`n-seg min-w-0 ${mobile ? "flex! lg:hidden!" : "hidden! lg:inline-flex!"}`}
       aria-label="Période"
     >
       {TIMEFRAMES.map((tf) => (
@@ -195,7 +190,7 @@ export default function PriceChart({ coin }: PriceChartProps) {
           {tf.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   );
 
   return (
@@ -241,7 +236,7 @@ export default function PriceChart({ coin }: PriceChartProps) {
           </div>
         </div>
         {timeframeSeg(false)}
-        <div className="n-seg" role="group" aria-label="Type de graphique">
+        <fieldset className="n-seg min-w-0" aria-label="Type de graphique">
           <button
             type="button"
             className="n-seg-btn gap-1.5"
@@ -260,7 +255,7 @@ export default function PriceChart({ coin }: PriceChartProps) {
             <ChartBarIcon size={14} />
             Bougies
           </button>
-        </div>
+        </fieldset>
       </div>
 
       <div className="relative h-[220px] lg:h-auto lg:flex-1 lg:min-h-[300px]">

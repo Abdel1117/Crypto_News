@@ -4,7 +4,7 @@ import { useAppSelector } from "@/app/lib/hooks";
 import { useCurrency } from "@/app/context/Curency/CurrencyContext";
 import type { CryptoMarketData } from "@/app/types/Crypto/Crypto";
 import type { Currency } from "@/app/context/Curency/CurrencyContext";
-import { formatFiatPrice } from "@/app/utils/Format/FrFormat/FrFormat";
+import { formatFiatPrice, signPrefix } from "@/app/utils/Format/FrFormat/FrFormat";
 
 export interface PositionView {
   coinId: string;
@@ -77,13 +77,16 @@ export function usePortfolio(coins: CryptoMarketData[]) {
   };
 }
 
-export const trendColor = (v: number) =>
-  v > 0 ? "var(--n-up)" : v < 0 ? "var(--n-down)" : "var(--n-neutral-400)";
+/** Green when up, red when down, grey when flat or unknown. */
+export function trendColor(v?: number): string {
+  if (typeof v !== "number") return "var(--n-neutral-400)";
+  if (v > 0) return "var(--n-up)";
+  return v < 0 ? "var(--n-down)" : "var(--n-neutral-400)";
+}
 
 /** Signed fiat amount with a true minus, e.g. "+50,00 €" / "−12,30 €". */
 export function signedFiat(value: number, currency: Currency) {
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return sign + formatFiatPrice(Math.abs(value), currency);
+  return signPrefix(value) + formatFiatPrice(Math.abs(value), currency);
 }
 
 /** Crypto quantity: 6 decimals, French separators ("0,186000"). */

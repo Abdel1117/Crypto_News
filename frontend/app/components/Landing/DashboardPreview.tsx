@@ -4,6 +4,7 @@ import {
   StarIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
 import { previewChart, previewFavorites } from "./previewData";
+import Reveal from "./motion/Reveal";
 
 const trend = (up: boolean) => (up ? "var(--n-up)" : "var(--n-down)");
 
@@ -16,6 +17,7 @@ function DesktopPreview() {
   const chart = previewChart;
   return (
     <div
+      data-anim="preview-desktop"
       className="hidden lg:block mx-[120px] mt-[72px] h-[540px] overflow-hidden border border-b-0 border-(--n-neutral-800) rounded-t-[14px]"
       style={{
         background:
@@ -41,6 +43,7 @@ function DesktopPreview() {
           {previewFavorites.map((c, i) => (
             <div
               key={c.sym}
+              data-anim="card"
               className="flex flex-col gap-3 px-4 py-3.5 rounded-lg bg-(--n-surface)"
               style={{
                 boxShadow:
@@ -79,10 +82,12 @@ function DesktopPreview() {
                   className="flex-none"
                 >
                   <polygon
+                    data-anim="spark-area"
                     points={c.sparkArea}
                     style={{ fill: trend(c.up), fillOpacity: 0.12 }}
                   />
                   <polyline
+                    data-anim="spark"
                     points={c.spark}
                     vectorEffect="non-scaling-stroke"
                     style={{
@@ -158,7 +163,11 @@ function DesktopPreview() {
                   />
                 </linearGradient>
               </defs>
-              <polygon points={chart.area} fill="url(#landingChartFade)" />
+              <polygon
+                data-anim="chart-area"
+                points={chart.area}
+                fill="url(#landingChartFade)"
+              />
             </svg>
             <svg
               viewBox="0 0 1000 300"
@@ -171,6 +180,7 @@ function DesktopPreview() {
               }}
             >
               <polyline
+                data-anim="chart-line"
                 points={chart.line}
                 vectorEffect="non-scaling-stroke"
                 style={{
@@ -181,6 +191,16 @@ function DesktopPreview() {
                 }}
               />
             </svg>
+            {/* "Live" marker on the last price; the ping stops under reduced motion. */}
+            <span
+              data-anim="live-dot"
+              aria-hidden="true"
+              className="absolute right-0 size-2.5 translate-x-1/2 -translate-y-1/2"
+              style={{ top: chart.endY }}
+            >
+              <span className="absolute inset-0 rounded-full bg-(--n-accent) motion-safe:animate-ping [animation-duration:2s]" />
+              <span className="relative block size-full rounded-full bg-(--n-accent) shadow-[0_0_10px_var(--n-accent)]" />
+            </span>
           </div>
         </div>
       </div>
@@ -191,6 +211,7 @@ function DesktopPreview() {
 function MobilePreview() {
   return (
     <div
+      data-anim="preview-mobile"
       className="lg:hidden mx-5 mt-10 h-80 overflow-hidden border border-b-0 border-(--n-neutral-800) rounded-t-[14px] bg-(--n-bg)"
       style={FADE_MASK("55%")}
     >
@@ -206,6 +227,7 @@ function MobilePreview() {
         {previewFavorites.map((c, i) => (
           <div
             key={c.sym}
+            data-anim="row"
             className="grid grid-cols-[28px_minmax(0,1fr)_44px_auto] items-center gap-2.5 min-h-14 px-3"
             style={{
               background:
@@ -232,6 +254,7 @@ function MobilePreview() {
               aria-hidden="true"
             >
               <polyline
+                data-anim="spark"
                 points={c.spark}
                 vectorEffect="non-scaling-stroke"
                 style={{ fill: "none", stroke: trend(c.up), strokeWidth: 1.5 }}
@@ -254,12 +277,14 @@ function MobilePreview() {
 
 export default function DashboardPreview() {
   return (
-    <div
+    <Reveal
+      as="div"
+      preset="preview"
       role="img"
       aria-label="Aperçu du dashboard Crypto-Explorer : favoris et graphique Bitcoin"
     >
       <DesktopPreview />
       <MobilePreview />
-    </div>
+    </Reveal>
   );
 }

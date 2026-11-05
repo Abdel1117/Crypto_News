@@ -48,9 +48,16 @@ type OhlcRow = [number, number, number, number, number];
 
 /** Keeps the points inside the period, relative to the latest one. */
 function clip(points: Point[], period: Period): Point[] {
-  if (period === "all" || points.length === 0) return points;
-  const from = points[points.length - 1].time - PERIOD_SECONDS[period];
+  const last = points.at(-1);
+  if (period === "all" || !last) return points;
+  const from = last.time - PERIOD_SECONDS[period];
   return points.filter((p) => p.time >= from);
+}
+
+/** Fewer decimals as the price grows. */
+function priceDigits(p: number): number {
+  if (p < 1) return 4;
+  return p < 100 ? 2 : 0;
 }
 
 interface PerformanceChartProps {
@@ -66,7 +73,7 @@ interface PerformanceChartProps {
 export default function PerformanceChart({
   coins,
   variant = "card",
-}: PerformanceChartProps) {
+}: Readonly<PerformanceChartProps>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
@@ -160,7 +167,7 @@ export default function PerformanceChart({
         locale: "fr-FR",
         priceFormatter: (p: number) =>
           p.toLocaleString("fr-FR", {
-            maximumFractionDigits: p < 1 ? 4 : p < 100 ? 2 : 0,
+            maximumFractionDigits: priceDigits(p),
           }),
       },
     });
@@ -193,7 +200,7 @@ export default function PerformanceChart({
     let points: Point[];
     if (activeSubject === "portfolio") {
       // Append the live value "now" (after the last snapshot).
-      const lastTime = history.length ? history[history.length - 1].time : 0;
+      const lastTime = history.at(-1)?.time ?? 0;
       const now = Math.max(Math.floor(Date.now() / 1000), lastTime + 1);
       points = [...history, { time: now as UTCTimestamp, value: totalValue }];
     } else {
@@ -203,30 +210,29 @@ export default function PerformanceChart({
     chartRef.current?.timeScale().fitContent();
   }, [activeSubject, history, totalValue, coinPoints, period, theme, variant]);
 
+  const chartLabel =
+    activeSubject === "portfolio"
+      ? "Évolution de la valeur du portefeuille"
+      : `Évolution du cours de ${
+          positions.find((p) => p.coinId === activeSubject)?.coinName ??
+          activeSubject
+        }`;
+
   const chartBox = (
-    <div className="relative">
+    <figure className="relative m-0">
+      {/* The canvas says nothing to a screen reader: the caption describes it. */}
       <div
         ref={containerRef}
         className={variant === "compact" ? "h-[150px]" : "h-[264px]"}
-        role="img"
-        aria-label={
-          activeSubject === "portfolio"
-            ? "Évolution de la valeur du portefeuille"
-            : `Évolution du cours de ${
-                positions.find((p) => p.coinId === activeSubject)?.coinName ??
-                activeSubject
-              }`
-        }
+        aria-hidden="true"
       />
+      <figcaption className="sr-only">{chartLabel}</figcaption>
       {activeSubject !== "portfolio" && coinError && (
-        <p
-          role="status"
-          className="absolute inset-0 m-0 grid place-items-center text-sm text-(--n-neutral-500)"
-        >
+        <output className="absolute inset-0 m-0 grid place-items-center text-sm text-(--n-neutral-500)">
           Historique indisponible pour cette crypto.
-        </p>
+        </output>
       )}
-    </div>
+    </figure>
   );
 
   if (variant === "compact") return chartBox;
@@ -240,7 +246,7 @@ export default function PerformanceChart({
         <h2 id="perf-title" className="m-0 mr-auto text-base">
           Performance
         </h2>
-        <div className="n-seg" role="group" aria-label="Courbe affichée">
+        <fieldset className="n-seg min-w-0" aria-label="Courbe affichée">
           {[
             { id: "portfolio", label: "Portefeuille" },
             ...positions.map((p) => ({ id: p.coinId, label: p.coinName })),
@@ -255,8 +261,8 @@ export default function PerformanceChart({
               {s.label}
             </button>
           ))}
-        </div>
-        <div className="n-seg" role="group" aria-label="Période">
+        </fieldset>
+        <fieldset className="n-seg min-w-0" aria-label="Période">
           {PERIODS.map((p) => (
             <button
               key={p.value}
@@ -269,7 +275,7 @@ export default function PerformanceChart({
               {p.label}
             </button>
           ))}
-        </div>
+        </fieldset>
       </div>
       {chartBox}
     </section>

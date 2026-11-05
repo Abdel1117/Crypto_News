@@ -16,7 +16,7 @@ export default function CoinAvatar({
   name,
   symbol,
   size = 28,
-}: CoinAvatarProps) {
+}: Readonly<CoinAvatarProps>) {
   if (image) {
     return (
       <Image

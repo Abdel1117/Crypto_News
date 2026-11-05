@@ -10,6 +10,7 @@ import {
   formatFiatPrice,
   formatSignedPercent,
 } from "@/app/utils/Format/FrFormat/FrFormat";
+import { trendColor as trend } from "@/app/components/Simulation/usePortfolio";
 import { useAppSearch } from "../AppShell/SearchContext";
 
 interface FavoritesProps {
@@ -17,13 +18,6 @@ interface FavoritesProps {
   selectedId: string;
   onSelect: (id: string) => void;
 }
-
-const trend = (v?: number) =>
-  typeof v !== "number" || v === 0
-    ? "var(--n-neutral-400)"
-    : v > 0
-      ? "var(--n-up)"
-      : "var(--n-down)";
 
 function Price({ coin }: { coin: CoinSummary }) {
   const { currency } = useCurrency();
@@ -42,7 +36,7 @@ export default function Favorites({
   coins,
   selectedId,
   onSelect,
-}: FavoritesProps) {
+}: Readonly<FavoritesProps>) {
   const dispatch = useAppDispatch();
   const { openSearch } = useAppSearch();
 

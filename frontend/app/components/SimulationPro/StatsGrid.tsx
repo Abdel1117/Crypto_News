@@ -12,8 +12,13 @@ interface Stat {
   color?: string;
 }
 
+function winRateHint(sells: number): string {
+  if (sells === 0) return "Aucune vente pour le moment.";
+  return `Ventes gagnantes sur ${sells} vente${sells > 1 ? "s" : ""}.`;
+}
+
 /** Risk and trading statistics. */
-export default function StatsGrid({ portfolio }: { portfolio: ProPortfolio }) {
+export default function StatsGrid({ portfolio }: Readonly<{ portfolio: ProPortfolio }>) {
   const { risk, stats, currency } = portfolio;
 
   const riskStats: Stat[] = [
@@ -40,10 +45,7 @@ export default function StatsGrid({ portfolio }: { portfolio: ProPortfolio }) {
     {
       label: "Taux de réussite",
       value: formatFraction(stats.win_rate, 0),
-      hint:
-        stats.sells_count === 0
-          ? "Aucune vente pour le moment."
-          : `Ventes gagnantes sur ${stats.sells_count} vente${stats.sells_count > 1 ? "s" : ""}.`,
+      hint: winRateHint(stats.sells_count),
     },
     {
       label: "Meilleure vente",

@@ -8,10 +8,10 @@ import { ArrowsClockwiseIcon } from "./ui/NocturneIcons/NocturneIcons";
 export default function Error({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   useEffect(() => {
     console.error(error);
   }, [error]);

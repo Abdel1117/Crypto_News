@@ -5,8 +5,8 @@ import { render, screen } from "@testing-library/react";
 vi.mock("../../app/components/Landing/LandingNav", () => ({
   default: () => <nav>Navigation</nav>,
 }));
-vi.mock("../../app/components/Landing/LandingSections", () => ({
-  LandingFooter: () => <footer>Pied de page</footer>,
+vi.mock("../../app/components/Landing/LandingFooter", () => ({
+  default: () => <footer>Pied de page</footer>,
 }));
 
 import PublicLayout from "../../app/(public)/layout";

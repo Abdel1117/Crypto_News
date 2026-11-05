@@ -15,7 +15,7 @@ import type { ProPortfolio } from "@/app/lib/api/simulationPro";
 import { hexToRgba } from "@/app/utils/Chart/hexToRgba";
 
 /** Portfolio value, one point per day since creation, against the starting capital. */
-export default function ValueChart({ portfolio }: { portfolio: ProPortfolio }) {
+export default function ValueChart({ portfolio }: Readonly<{ portfolio: ProPortfolio }>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
@@ -94,19 +94,16 @@ export default function ValueChart({ portfolio }: { portfolio: ProPortfolio }) {
       <h2 id="value-chart-title" className="m-0 text-base">
         Valeur dans le temps
       </h2>
-      <div className="relative">
-        <div
-          ref={containerRef}
-          className="h-60"
-          role="img"
-          aria-label="Évolution de la valeur du portefeuille, un point par jour"
-        />
+      <figure className="relative m-0">
+        {/* The canvas says nothing to a screen reader: the caption describes it. */}
+        <div ref={containerRef} className="h-60" aria-hidden="true" />
+        <figcaption className="sr-only">Évolution de la valeur du portefeuille, un point par jour</figcaption>
         {history.length < 2 && (
-          <p role="status" className="absolute inset-x-0 bottom-3 m-0 text-center text-sm text-(--n-neutral-500)">
+          <output className="block absolute inset-x-0 bottom-3 m-0 text-center text-sm text-(--n-neutral-500)">
             La courbe se construit jour après jour : reviens demain pour voir l&apos;évolution.
-          </p>
+          </output>
         )}
-      </div>
+      </figure>
     </section>
   );
 }

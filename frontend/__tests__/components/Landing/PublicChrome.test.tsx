@@ -18,7 +18,7 @@ vi.mock("@/app/context/Consent/ConsentContext", () => ({
 }));
 
 import LandingNav from "@/app/components/Landing/LandingNav";
-import { LandingFooter } from "@/app/components/Landing/LandingSections";
+import LandingFooter from "@/app/components/Landing/LandingFooter";
 
 describe("Public pages chrome", () => {
   beforeEach(() => vi.clearAllMocks());

@@ -14,12 +14,12 @@ function ReadOnlyInput({
   label,
   value,
   muted = false,
-}: {
+}: Readonly<{
   id: string;
   label: string;
   value: string;
   muted?: boolean;
-}) {
+}>) {
   return (
     <div className="n-field">
       <label htmlFor={id}>{label}</label>

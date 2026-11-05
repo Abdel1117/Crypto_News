@@ -7,7 +7,7 @@ import { useAppSelector } from "@/app/lib/hooks";
 // Gates pages that require an authenticated session (e.g. /profil, /settings).
 // Waits for AuthBootstrap's initial refreshSession() to resolve before deciding,
 // so a valid session restored from the httpOnly refresh cookie isn't bounced to /login.
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function AuthGuard({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
   const { isAuthenticated, initializing } = useAppSelector(
     (state) => state.auth,

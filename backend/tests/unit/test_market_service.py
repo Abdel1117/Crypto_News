@@ -176,7 +176,7 @@ class TestGetTopGainersLosers:
             make_coin(id="c", symbol="C", price_change_percentage_24h=3.0),
         ]
         mock_client.fetch_markets.return_value = coins
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         gainers = result["top_gainers"]
         assert gainers[0]["id"] == "b"
         assert gainers[1]["id"] == "c"
@@ -189,7 +189,7 @@ class TestGetTopGainersLosers:
             make_coin(id="c", symbol="C", price_change_percentage_24h=3.0),
         ]
         mock_client.fetch_markets.return_value = coins
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         losers = result["top_losers"]
         assert losers[0]["id"] == "a"
 
@@ -199,7 +199,7 @@ class TestGetTopGainersLosers:
             make_coin(id="b", symbol="B", price_change_percentage_24h=5.0),
         ]
         mock_client.fetch_markets.return_value = coins
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         ids_in_gainers = [c["id"] for c in result["top_gainers"]]
         assert "a" not in ids_in_gainers
 
@@ -209,7 +209,7 @@ class TestGetTopGainersLosers:
             for i in range(20)
         ]
         mock_client.fetch_markets.return_value = coins
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         assert len(result["top_gainers"]) == 10
         assert len(result["top_losers"]) == 10
 
@@ -223,7 +223,7 @@ class TestGetTopGainersLosers:
             price_change_percentage_24h=3.5,
         )
         mock_client.fetch_markets.return_value = [coin]
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         gainer = result["top_gainers"][0]
         assert gainer["symbol"] == "BTC"
         assert gainer["sparkline"] == [1.0, 2.0]
@@ -234,5 +234,5 @@ class TestGetTopGainersLosers:
         coin = make_coin(price_change_percentage_24h=1.0)
         coin.pop("sparkline_in_7d")
         mock_client.fetch_markets.return_value = [coin]
-        result = await service.get_top_gainers_losers("eur", "1d", "1d", "300")
+        result = await service.get_top_gainers_losers("eur", "1d", "300")
         assert result["top_gainers"][0]["sparkline"] == []

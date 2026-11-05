@@ -5,9 +5,9 @@ import { useConsent } from "@/app/context/Consent/ConsentContext";
 /** Footer entry that reopens the cookie preferences. */
 export default function CookieSettingsLink({
   className = "",
-}: {
+}: Readonly<{
   className?: string;
-}) {
+}>) {
   const { openPreferencesPanel } = useConsent();
   return (
     <button

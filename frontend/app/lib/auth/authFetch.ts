@@ -51,6 +51,39 @@ function readDetail(data: unknown, status: number): string {
   return `Erreur ${status}`;
 }
 
+/** The parsed body, or null when it is empty or isn't JSON. */
+function parseJsonBody(text: string): unknown {
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function withAccessToken(init: RequestInit, token: string): RequestInit {
+  return {
+    ...init,
+    headers: {
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  };
+}
+
+/** The JSON body of a successful response; an ApiError otherwise. */
+async function readJsonResponse<T>(res: Response): Promise<T> {
+  const data = parseJsonBody(await res.text());
+  if (!res.ok) {
+    throw new ApiError(
+      res.status,
+      res.status === 401 ? SESSION_EXPIRED : readDetail(data, res.status),
+    );
+  }
+  return data as T;
+}
+
 /**
  * JSON request with the user's access token. A rejected token (401) is
  * refreshed once and the request retried.
@@ -64,30 +97,9 @@ export async function authFetchJson<T>(
     const token = await getValidToken(tools, attempt > 0);
     if (!token) throw new ApiError(401, SESSION_EXPIRED);
 
-    const res = await fetch(url, {
-      ...init,
-      headers: {
-        ...(init.body ? { "Content-Type": "application/json" } : {}),
-        ...init.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(url, withAccessToken(init, token));
     if (res.status === 401 && attempt === 0) continue;
-
-    const text = await res.text();
-    let data: unknown = null;
-    try {
-      data = text ? JSON.parse(text) : null;
-    } catch {
-      data = null;
-    }
-    if (!res.ok) {
-      throw new ApiError(
-        res.status,
-        res.status === 401 ? SESSION_EXPIRED : readDetail(data, res.status),
-      );
-    }
-    return data as T;
+    return readJsonResponse<T>(res);
   }
   throw new ApiError(401, SESSION_EXPIRED);
 }
