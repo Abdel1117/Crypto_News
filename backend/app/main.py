@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 
 import httpx
@@ -10,10 +11,14 @@ from app.core.config import settings
 from app.core.jwt_config import JWT_SECRET_KEY, check_jwt_secret
 from app.clients.coingecko_client import CoinGeckoClient
 from app.db.session import async_session, init_db
+from app.services.alerts.price_alert_service import price_alert_loop
+from app.services.email.smtp_email_sender import build_email_sender
 from app.services.market_service import MarketService
 from app.services.simulation.simulation_service import snapshot_loop
 
 check_jwt_secret(os.getenv("ENV"), JWT_SECRET_KEY)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 _background_tasks: set[asyncio.Task] = set()
@@ -52,6 +57,20 @@ async def on_startup() -> None:
             )
         )
         _background_tasks.add(task)
+
+    if settings.PRICE_ALERT_INTERVAL > 0:
+        if settings.EMAIL_ENABLED:
+            task = asyncio.create_task(
+                price_alert_loop(
+                    async_session,
+                    lambda: MarketService(CoinGeckoClient()),
+                    build_email_sender,
+                    settings.PRICE_ALERT_INTERVAL,
+                )
+            )
+            _background_tasks.add(task)
+        else:
+            logger.warning("Price alerts are off: SMTP_HOST and SMTP_USER are not set")
 
 
 @app.on_event("shutdown")

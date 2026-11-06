@@ -1,5 +1,6 @@
 import type { ComponentType, SVGProps } from "react";
 import {
+  BellIcon,
   ChartLineUpIcon,
   GridFourIcon,
   HouseIcon,
@@ -16,6 +17,7 @@ export const APP_NAV: AppNavItem[] = [
   { label: "Dashboard", href: "/dashboard", Icon: SquaresFourIcon },
   { label: "Simulation", href: "/simulation", Icon: ChartLineUpIcon },
   { label: "Heatmap", href: "/heatmap", Icon: GridFourIcon },
+  { label: "Alertes", href: "/alertes", Icon: BellIcon },
 ];
 
 export interface PageConfig {
@@ -36,6 +38,8 @@ const PAGES: Record<string, PageConfig> = {
     currency: true,
   },
   "/heatmap": { title: "Heatmap du marché", currency: true },
+  // No currency switch: each alert has its own currency.
+  "/alertes": { title: "Alertes de prix" },
   "/profil": { title: "Profil" },
   "/settings": { title: "Paramètres", currency: true },
 };

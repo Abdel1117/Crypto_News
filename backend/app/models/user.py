@@ -19,6 +19,15 @@ class UserBase(SQLModel):
         default=0, nullable=False, sa_column_kwargs={"server_default": "0"}
     )
     provider: AuthProvider = Field(default=AuthProvider.local)
+    # Set once the address is proven: a confirmation link, or a Google sign-in.
+    # Emails other than the confirmation itself only go to confirmed addresses.
+    email_verified_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    # Last confirmation email, to limit how often one can be requested.
+    email_verification_sent_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=False), nullable=False),

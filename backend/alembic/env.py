@@ -13,6 +13,7 @@ from alembic import context
 from app.db.session import DATABASE_URL
 import app.models.user  # noqa: F401  (registers the tables on SQLModel.metadata)
 import app.models.simulation  # noqa: F401
+import app.models.price_alert  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

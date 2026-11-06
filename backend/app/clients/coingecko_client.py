@@ -209,3 +209,18 @@ class CoinGeckoClient:
 
         _cache_set(key, coins)
         return coins
+
+    async def fetch_simple_prices(self, ids: str, currencies: str) -> Dict[str, Dict]:
+        """Prices of several coins in several currencies, in a single call.
+
+        Never cached, and no stale fallback unlike the calls above: a price alert
+        must not fire on an old price. Errors are left to the caller.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/simple/price",
+                params={"ids": ids, "vs_currencies": currencies},
+                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+            )
+            response.raise_for_status()
+            return response.json()
