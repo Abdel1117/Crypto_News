@@ -6,6 +6,8 @@ from app.models.user import User
 
 
 class UserRepositoryProtocol(Protocol):
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        ...
     async def get_by_google_id(self, id: int ) -> Optional[User]:
         ...
     async def get_by_email(self, email: str) -> Optional[User]:

@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from app.clients.market_client import MarketClient
 
 
@@ -57,6 +59,21 @@ class MarketService:
             for coin in data:
                 if coin.get("current_price") is not None:
                     prices[coin["id"]] = coin["current_price"]
+        return prices
+
+    async def get_live_prices(
+        self, coin_ids: Iterable[str], currencies: Iterable[str]
+    ) -> dict[str, dict[str, float]]:
+        """coin id → currency → price, never cached; one CoinGecko call per 250 coins.
+
+        Coins CoinGecko doesn't know are left out.
+        """
+        ids = sorted(set(coin_ids))
+        vs_currencies = ",".join(sorted(set(currencies)))
+        prices: dict[str, dict[str, float]] = {}
+        for start in range(0, len(ids), 250):
+            chunk = ",".join(ids[start : start + 250])
+            prices.update(await self.client.fetch_simple_prices(chunk, vs_currencies))
         return prices
 
     async def get_market_view(self, currency: str):

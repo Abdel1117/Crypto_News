@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
@@ -283,11 +285,62 @@ class TestGoogleAuth:
         mock_repo.get_by_google_id.return_value = User(
             id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=GOOGLE_ID,
             provider=AuthProvider.google, is_active=True,
+            email_verified_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
 
         await service.google_auth(GOOGLE_CREDENTIALS)
 
         mock_repo.update.assert_not_called()
+
+    async def test_new_google_account_counts_as_confirmed(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        mock_repo.get_by_google_id.return_value = None
+        mock_repo.get_by_email.return_value = None
+        mock_repo.create.side_effect = lambda user: user
+
+        await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert mock_repo.create.call_args.args[0].email_verified_at is not None
+
+    async def test_linking_google_confirms_a_local_account(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        local_user = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=None,
+            hashed_password="hashed_password", provider=AuthProvider.local, is_active=True,
+        )
+        mock_repo.get_by_google_id.return_value = None
+        mock_repo.get_by_email.return_value = local_user
+        mock_repo.update.side_effect = lambda user: user
+
+        await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert local_user.email_verified_at is not None
+
+    async def test_a_disabled_account_isnt_touched(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        disabled = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=GOOGLE_ID,
+            provider=AuthProvider.google, is_active=False,
+        )
+        mock_repo.get_by_google_id.return_value = disabled
+
+        with pytest.raises(HTTPException):
+            await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert disabled.email_verified_at is None
+        mock_repo.update.assert_not_called()
+
+    async def test_password_registration_stays_unconfirmed(self, service, mock_repo):
+        mock_repo.get_by_email.return_value = None
+        mock_repo.create.side_effect = lambda user: user
+
+        user = await service.register_user(
+            AuthRegistrationRequest(
+                fullname=FULL_NAME, email=EMAIL, password="password123", provider=AuthProvider.local
+            )
+        )
+
+        assert user.email_verified_at is None
 
     async def test_raises_403_when_user_inactive(self, service, mock_repo, mock_google_provider):
         mock_google_provider.verify_credentials.return_value = self._google_user_info()

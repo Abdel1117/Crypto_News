@@ -206,7 +206,7 @@ function summaryRows(
  * answer, so loading and error states are derived instead of being set
  * inside effects.
  */
-function useCoinSearch(query: string, enabled: boolean): { results: CoinChoice[]; state: SearchState } {
+export function useCoinSearch(query: string, enabled: boolean): { results: CoinChoice[]; state: SearchState } {
   const trimmed = query.trim();
   const searchable = enabled && trimmed.length >= 2;
   const [answer, setAnswer] = useState<{ query: string; coins: CoinChoice[] | null }>({
@@ -242,7 +242,7 @@ function useCoinSearch(query: string, enabled: boolean): { results: CoinChoice[]
 }
 
 /** Live price of the selected coin (the server re-prices the order anyway). */
-function useQuote(currency: PortfolioCurrency, coin: CoinChoice | null): { price: number | null; failed: boolean } {
+export function useQuote(currency: PortfolioCurrency, coin: CoinChoice | null): { price: number | null; failed: boolean } {
   const [quote, setQuote] = useState<{ key: string; price: number | null } | null>(null);
   const key = coin ? `${currency}:${coin.id}` : null;
 
@@ -302,7 +302,7 @@ interface CoinSearchFieldProps {
   onChoose: (coin: CoinChoice | null) => void;
 }
 
-function CoinSearchField({
+export function CoinSearchField({
   inputId,
   reasonId,
   selected,

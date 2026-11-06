@@ -8,9 +8,11 @@ import { metadata as simulation } from "../../app/(app)/simulation/layout";
 import { metadata as heatmap } from "../../app/(app)/heatmap/layout";
 import { metadata as profil } from "../../app/(app)/profil/layout";
 import { metadata as settings } from "../../app/(app)/settings/page";
+import { metadata as alerts } from "../../app/(app)/alertes/page";
 
 describe("App route titles", () => {
   it("gives every app page its own tab title", () => {
+    expect(alerts.title).toBe("Alertes de prix");
     expect(dashboard.title).toBe("Dashboard");
     expect(simulation.title).toBe("Portefeuille virtuel");
     expect(heatmap.title).toBe("Heatmap du marché");
