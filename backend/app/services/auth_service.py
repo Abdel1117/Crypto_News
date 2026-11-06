@@ -13,6 +13,7 @@ from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoo
 from app.enums.auth_provider import  AuthProvider
 from app.schemas.token import TokenPair
 from app.auth.token_service import TokenServiceProtocol
+from app.utils.dates import utcnow
 from app.utils.security import PasswordHasher, dummy_password_hash
 
 
@@ -178,15 +179,21 @@ class AuthService:
                 hashed_password=None,
                 provider=AuthProvider.google,
                 is_active=True,
+                email_verified_at=utcnow(),
             )
-            user = await self.user_repository.create(user) 
-            
+            user = await self.user_repository.create(user)
+
         if user.google_id is None:
             user.google_id = user_info_from_google.google_id
             user.provider = AuthProvider.google
             user = await self.user_repository.update(user)
-            
-        if not user.is_active: 
+
+        if not user.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Votre compte est désactivé.")
-        
+
+        # Google only signs in verified addresses (see GoogleAuthProvider).
+        if user.email_verified_at is None:
+            user.email_verified_at = utcnow()
+            user = await self.user_repository.update(user)
+
         return  self.__create_session(user)

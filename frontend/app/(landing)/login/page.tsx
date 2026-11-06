@@ -316,7 +316,7 @@ export default function Login() {
               shape="rectangular"
               width={googleWidth}
               onSuccess={(credentialResponse: CredentialResponse) => {
-                handleSubmitWithGoogle(credentialResponse);
+                void handleSubmitWithGoogle(credentialResponse);
               }}
               onError={() => {
                 setNotice(

@@ -1,13 +1,7 @@
 import html
-import re
 
 from app.schemas.contact import ContactRequest
-from app.services.email.email_sender import EmailMessage, IEmailSender
-
-
-def _single_line(value: str) -> str:
-    """Line breaks in a header would let a sender add their own headers."""
-    return re.sub(r"[\r\n]+", " ", value).strip()
+from app.services.email.email_sender import EmailMessage, IEmailSender, single_line
 
 
 class ContactService:
@@ -57,7 +51,7 @@ class ContactService:
         await self._sender.send(
             EmailMessage(
                 to=self._recipient,
-                subject=f"[Contact] Message de {_single_line(data.name)}",
+                subject=f"[Contact] Message de {single_line(data.name)}",
                 html_body=body,
             )
         )
