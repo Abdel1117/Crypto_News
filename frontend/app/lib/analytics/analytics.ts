@@ -14,5 +14,10 @@ export function syncAnalyticsConsent(preferences: ConsentPreferences): void {
   if (!domain) return;
 
   plausibleLoaded = true;
-  import("@plausible-analytics/tracker").then(({ init }) => init({ domain }));
+  import("@plausible-analytics/tracker")
+    .then(({ init }) => init({ domain }))
+    .catch(() => {
+      // Analytics must never break the page: a later consent change can try again.
+      plausibleLoaded = false;
+    });
 }

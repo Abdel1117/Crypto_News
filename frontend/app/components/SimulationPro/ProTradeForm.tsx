@@ -133,6 +133,17 @@ function pickPrompt(side: Side, hasPositions: boolean): string {
   return hasPositions ? "Choisis une position à vendre." : "Aucune position à vendre pour le moment.";
 }
 
+/** Why a valid amount is still more, or less, than this order allows. */
+function amountLimitBlocker(o: BlockerInput): string | null {
+  if (o.side === "buy") {
+    if (o.amount > o.cash) return "Montant supérieur à tes liquidités.";
+    if (o.buyGross < MIN_ORDER) return `Montant trop petit : minimum ${formatFiatPrice(MIN_ORDER, o.currency)}.`;
+    return null;
+  }
+  if (o.heldQuantity !== undefined && o.amount > o.heldQuantity) return "Quantité supérieure à ta position.";
+  return null;
+}
+
 /** Why the order can't be sent yet, or null when nothing stands in the way. */
 function orderBlocker(o: BlockerInput): string | null {
   if (!o.hasSelection) return pickPrompt(o.side, o.hasPositions);
@@ -143,13 +154,7 @@ function orderBlocker(o: BlockerInput): string | null {
     if (!o.amountText) return null;
     return o.side === "buy" ? "Montant invalide." : "Quantité invalide.";
   }
-  if (o.side === "buy") {
-    if (o.amount > o.cash) return "Montant supérieur à tes liquidités.";
-    if (o.buyGross < MIN_ORDER) return `Montant trop petit : minimum ${formatFiatPrice(MIN_ORDER, o.currency)}.`;
-    return null;
-  }
-  if (o.heldQuantity !== undefined && o.amount > o.heldQuantity) return "Quantité supérieure à ta position.";
-  return null;
+  return amountLimitBlocker(o);
 }
 
 function maxAmountText(side: Side, cash: number, position: ProPosition | undefined): string | null {

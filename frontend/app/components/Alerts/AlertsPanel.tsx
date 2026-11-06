@@ -88,10 +88,10 @@ export default function AlertsPanel() {
       <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start">
         <div className="flex flex-col gap-3 min-w-0">
           {!alerts_available && (
-            <p role="status" className="n-panel m-0 p-4.5 text-sm leading-relaxed text-(--n-neutral-300)">
+            <output className="n-panel block m-0 p-4.5 text-sm leading-relaxed text-(--n-neutral-300)">
               Les alertes ne sont pas disponibles pour le moment. Tes alertes
               existantes sont conservées.
-            </p>
+            </output>
           )}
           {alerts_available && !email_verified && (
             <ConfirmEmailNotice email={email} onSend={sendConfirmation} />
