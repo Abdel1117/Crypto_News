@@ -439,3 +439,17 @@ class TestGoogleAuthErrors:
         with pytest.raises(HTTPException) as exc:
             await service.google_auth(GOOGLE_CREDENTIALS)
         assert exc.value.status_code == 503
+
+
+class TestRoleClaim:
+    @pytest.mark.parametrize("role,claim", [("editor", "editor"), (None, "user")])
+    async def test_tokens_carry_the_user_role(
+        self, service, mock_repo, mock_token_service, active_user, role, claim
+    ):
+        active_user.role = role
+        mock_repo.get_by_email.return_value = active_user
+
+        await service.login(EMAIL, PASSWORD)
+
+        assert mock_token_service.create_access_token.call_args.kwargs["role"] == claim
+        assert mock_token_service.create_refresh_token.call_args.kwargs["role"] == claim

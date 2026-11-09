@@ -12,25 +12,41 @@ vi.mock("next/link", () => ({
 
 import { vi } from "vitest";
 import { SmallCard } from "../../app/ui/SmallCard/SmallCard";
-import type { Article } from "../../app/(public)/blog/data";
+import type { ArticleSummary } from "../../app/lib/api/blog";
 
-const article: Article = {
+function makeArticle(overrides: Partial<ArticleSummary> = {}): ArticleSummary {
+  return {
+    id: 1,
+    slug: "un-article",
+    title: "Un article",
+    excerpt: "excerpt",
+    category: "Bitcoin",
+    status: "published",
+    author_name: "Alice Dupont",
+    read_minutes: 5,
+    published_at: "2025-06-12T10:00:00Z",
+    updated_at: "2025-06-12T10:00:00Z",
+    like_count: 0,
+    comment_count: 0,
+    ...overrides,
+  };
+}
+
+const article = makeArticle({
   id: 3,
+  slug: "defi-yields",
   title: "DeFi yields",
   category: "DeFi",
-  author: "Sophie Martin",
-  authorInitial: "S",
-  date: "9 juin 2025",
-  readTime: "6 min",
-  excerpt: "excerpt",
-};
+  author_name: "Sophie Martin",
+  read_minutes: 6,
+});
 
 describe("SmallCard", () => {
   it("links to the article page and shows its metadata", () => {
     render(<SmallCard article={article} />);
 
     const link = screen.getByRole("link");
-    expect(link.getAttribute("href")).toBe("/blog/3");
+    expect(link.getAttribute("href")).toBe("/blog/defi-yields");
     expect(screen.getByText("DeFi yields")).toBeTruthy();
     expect(screen.getByText("Sophie Martin")).toBeTruthy();
     expect(screen.getByText("6 min de lecture")).toBeTruthy();

@@ -3,12 +3,24 @@ import {
   ChartLineUpIcon,
   GridFourIcon,
   HouseIcon,
+  NewspaperIcon,
+  PencilIcon,
   SquaresFourIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
+import type { Role } from "@/app/lib/features/auth/authSlice";
+import { EDITORIAL_ROLES, hasRole } from "@/app/lib/auth/roles";
 
 type NavIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number }>;
 
-export type AppNavItem = { label: string; href: string; Icon: NavIcon };
+export type AppNavItem = {
+  label: string;
+  href: string;
+  Icon: NavIcon;
+  /** false: sidebar only (the mobile tab bar has room for five items). */
+  mobile?: false;
+  /** Only shown to these roles. */
+  roles?: readonly Role[];
+};
 
 // Only pages that exist: "Utilitaires" and "Pages spéciales" stay hidden until they do.
 export const APP_NAV: AppNavItem[] = [
@@ -16,7 +28,27 @@ export const APP_NAV: AppNavItem[] = [
   { label: "Dashboard", href: "/dashboard", Icon: SquaresFourIcon },
   { label: "Simulation", href: "/simulation", Icon: ChartLineUpIcon },
   { label: "Heatmap", href: "/heatmap", Icon: GridFourIcon },
+  { label: "Blog", href: "/blog", Icon: NewspaperIcon, mobile: false },
+  {
+    label: "Rédaction",
+    href: "/redaction",
+    Icon: PencilIcon,
+    mobile: false,
+    roles: EDITORIAL_ROLES,
+  },
 ];
+
+/** The nav items this user may see, on the sidebar or the mobile tab bar. */
+export function navItems(
+  role: Role | null | undefined,
+  { mobile = false }: { mobile?: boolean } = {},
+): AppNavItem[] {
+  return APP_NAV.filter(
+    (item) =>
+      (!mobile || item.mobile !== false) &&
+      (!item.roles || hasRole(role, item.roles)),
+  );
+}
 
 export interface PageConfig {
   title: string;
@@ -37,6 +69,10 @@ const PAGES: Record<string, PageConfig> = {
   },
   "/heatmap": { title: "Heatmap du marché", currency: true },
   "/profil": { title: "Profil" },
+  // Before "/redaction": the first matching prefix wins.
+  "/redaction/equipe": { title: "Équipe" },
+  "/redaction/nouveau": { title: "Nouvel article" },
+  "/redaction": { title: "Rédaction" },
   "/settings": { title: "Paramètres", currency: true },
 };
 

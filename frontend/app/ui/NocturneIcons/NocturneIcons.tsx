@@ -394,3 +394,77 @@ export function CookieIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function HeartIcon({
+  filled = false,
+  ...props
+}: IconProps & { filled?: boolean }) {
+  return (
+    <Icon {...props}>
+      <path
+        fill={filled ? "currentColor" : "none"}
+        d="M128,224S24,168,24,102A54,54,0,0,1,78,48c22.59,0,41.94,12.31,50,32,8.06-19.69,27.41-32,50-32a54,54,0,0,1,54,54C232,168,128,224,128,224Z"
+      />
+    </Icon>
+  );
+}
+
+export function LinkIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M122.34,71.6l20.3-20.3a44,44,0,0,1,62.23,62.22l-29.15,29.15a44,44,0,0,1-62.22,0" />
+      <path d="M133.66,184.4l-20.3,20.3a44,44,0,0,1-62.23-62.22l29.15-29.15a44,44,0,0,1,62.22,0" />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <line x1="216" y1="56" x2="40" y2="56" />
+      <line x1="104" y1="104" x2="104" y2="168" />
+      <line x1="152" y1="104" x2="152" y2="168" />
+      <path d="M200,56V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V56" />
+      <path d="M168,56V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V56" />
+    </Icon>
+  );
+}
+
+export function PencilIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z" />
+      <line x1="136" y1="64" x2="192" y2="120" />
+    </Icon>
+  );
+}
+
+export function ChatIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M79.93,211.11a96,96,0,1,0-35-35h0L32.42,213.46a8,8,0,0,0,10.12,10.12l37.39-12.47Z" />
+    </Icon>
+  );
+}
+
+export function NewspaperIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <line x1="96" y1="112" x2="176" y2="112" />
+      <line x1="96" y1="144" x2="176" y2="144" />
+      <path d="M32,200a16,16,0,0,0,16-16V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8V184a16,16,0,0,1-16,16Z" />
+      <path d="M32,200a16,16,0,0,1-16-16V88" />
+    </Icon>
+  );
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="84" cy="108" r="52" />
+      <path d="M10.23,200a88,88,0,0,1,147.54,0" />
+      <path d="M172,160a87.93,87.93,0,0,1,73.77,40" />
+      <path d="M152.69,59.7A52,52,0,1,1,172,160" />
+    </Icon>
+  );
+}

@@ -29,8 +29,20 @@ describe("authSlice", () => {
     expect(state.isAuthenticated).toBe(true);
     expect(state.initializing).toBe(false);
     expect(state.accessToken).toBe(token);
-    expect(state.user).toEqual({ id: "2", email: "c@d.com", fullName: null });
+    // No "role" claim (token issued before roles existed): plain user.
+    expect(state.user).toEqual({ id: "2", email: "c@d.com", fullName: null, role: "user" });
     expect(state.expiresAt).toBeGreaterThanOrEqual(before + 3600 * 1000);
+  });
+
+  it("reads the role claim, ignoring unknown values", () => {
+    const editor = makeToken({ sub: "4", email: "g@h.com", role: "editor" });
+    const forged = makeToken({ sub: "5", email: "i@j.com", role: "superuser" });
+
+    const asEditor = authReducer(undefined, loginSuccess({ accessToken: editor, expiresIn: 60 }));
+    const asForged = authReducer(undefined, loginSuccess({ accessToken: forged, expiresIn: 60 }));
+
+    expect(asEditor.user?.role).toBe("editor");
+    expect(asForged.user?.role).toBe("user");
   });
 
   it("falls back to no user when the access token cannot be decoded", () => {
@@ -62,7 +74,7 @@ describe("authSlice", () => {
 
     const state = authReducer(
       {
-        user: { id: "1", email: "a@b.com", fullName: null },
+        user: { id: "1", email: "a@b.com", fullName: null, role: "user" },
         accessToken: token,
         expiresAt: Date.now() + 1000,
         isAuthenticated: true,
@@ -83,7 +95,7 @@ describe("authSlice", () => {
   it("clears the session on logout", () => {
     const state = authReducer(
       {
-        user: { id: "1", email: "a@b.com", fullName: null },
+        user: { id: "1", email: "a@b.com", fullName: null, role: "user" },
         accessToken: "x",
         expiresAt: Date.now() + 1000,
         isAuthenticated: true,

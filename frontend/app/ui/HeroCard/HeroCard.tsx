@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
+import { initialOf, readTimeLabel } from "@/app/components/Blog/format";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
@@ -9,13 +10,13 @@ export function HeroCard({
   className = "",
   showExcerpt = false,
 }: Readonly<{
-  article: Article;
+  article: ArticleSummary;
   className?: string;
   showExcerpt?: boolean;
 }>) {
   return (
     <Link
-      href={`/blog/${article.id}`}
+      href={`/blog/${article.slug}`}
       className={`group relative overflow-hidden rounded-[14px] flex flex-col justify-end no-underline n-cover ${className}`}
       style={categoryStyle(article.category)}
     >
@@ -34,9 +35,9 @@ export function HeroCard({
           </p>
         )}
         <AuthorChip
-          initial={article.authorInitial}
-          name={article.author}
-          readTime={article.readTime}
+          initial={initialOf(article.author_name)}
+          name={article.author_name}
+          readTime={readTimeLabel(article.read_minutes)}
           onCover
         />
       </div>

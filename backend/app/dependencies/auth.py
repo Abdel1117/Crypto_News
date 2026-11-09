@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.jwt_config import TOKEN_TYPE_ACCESS
+from app.enums.user_role import EDITORIAL_ROLES, UserRole
 from app.db.session import get_session
 from app.models.user import User
 from app.repositories.users.user_sql_repo import SQLUserRepository
@@ -40,3 +41,22 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def has_role(user: User, *roles: UserRole) -> bool:
+    return user.role in roles
+
+
+def require_roles(*roles: UserRole, detail: str = "Accès réservé à l'équipe éditoriale."):
+    """Dependency: the logged-in user, if their role (read from the DB) is one of `roles`."""
+
+    async def dependency(user: User = Depends(get_current_user)) -> User:
+        if not has_role(user, *roles):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
+        return user
+
+    return dependency
+
+
+require_editor = require_roles(*EDITORIAL_ROLES)
+require_admin = require_roles(UserRole.admin, detail="Accès réservé aux administrateurs.")

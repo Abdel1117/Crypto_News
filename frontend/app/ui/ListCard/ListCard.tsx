@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
+import { formatArticleDate, readTimeLabel } from "@/app/components/Blog/format";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 
 /** Compact numbered row (side list next to the featured article). */
@@ -7,12 +8,12 @@ export function ListCard({
   article,
   index,
 }: Readonly<{
-  article: Article;
+  article: ArticleSummary;
   index: number;
 }>) {
   return (
     <Link
-      href={`/blog/${article.id}`}
+      href={`/blog/${article.slug}`}
       className="group flex gap-3.5 items-start py-3.5 no-underline text-(--n-text)!"
     >
       <span
@@ -28,7 +29,8 @@ export function ListCard({
           {article.title}
         </span>
         <span className="text-xs text-(--n-neutral-500)">
-          {article.readTime} · {article.date}
+          {readTimeLabel(article.read_minutes)} ·{" "}
+          {formatArticleDate(article.published_at)}
         </span>
       </span>
     </Link>

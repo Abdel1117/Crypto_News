@@ -1,13 +1,16 @@
 import Link from "next/link";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
+import { initialOf, readTimeLabel } from "@/app/components/Blog/format";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
 /** Article card for grids: cover, title, excerpt, author. */
-export function SmallCard({ article }: Readonly<{ article: Article }>) {
+export function SmallCard({
+  article,
+}: Readonly<{ article: ArticleSummary }>) {
   return (
     <Link
-      href={`/blog/${article.id}`}
+      href={`/blog/${article.slug}`}
       className="group flex flex-col overflow-hidden rounded-lg bg-(--n-surface) no-underline text-(--n-text)! transition-shadow hover:shadow-[inset_0_0_0_1px_var(--n-accent)]"
     >
       <span
@@ -25,9 +28,9 @@ export function SmallCard({ article }: Readonly<{ article: Article }>) {
         </span>
         <span className="mt-auto pt-2">
           <AuthorChip
-            initial={article.authorInitial}
-            name={article.author}
-            readTime={article.readTime}
+            initial={initialOf(article.author_name)}
+            name={article.author_name}
+            readTime={readTimeLabel(article.read_minutes)}
           />
         </span>
       </span>

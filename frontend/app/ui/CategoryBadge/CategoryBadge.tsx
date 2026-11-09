@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { categoryHue } from "@/app/(public)/blog/data";
+import { categoryHue } from "@/app/components/Blog/categories";
 
 /** Style that tints an element (cover, label) with a category's hue. */
 export const categoryStyle = (category: string) =>

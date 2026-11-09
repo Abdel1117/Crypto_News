@@ -7,6 +7,9 @@ services:
         - ENV=${ENV}
     expose:
       - "${PORT_FRONT}"
+    # Pages rendered by Next (blog) call the API inside the compose network.
+    environment:
+      - API_INTERNAL_URL=http://backend:${PORT_BACK}
     restart: unless-stopped
     depends_on:
       - backend

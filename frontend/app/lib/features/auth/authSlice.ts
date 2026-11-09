@@ -1,10 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { refreshSession } from "./authThunks";
 
+/** What the account may do beyond reading (the API checks it again). */
+export type Role = "user" | "editor" | "admin";
+
+const ROLES: readonly Role[] = ["user", "editor", "admin"];
+
 type AuthUser = {
   id: string;
   email: string;
   fullName: string | null;
+  role: Role;
 };
 
 type AuthState = {
@@ -23,13 +29,20 @@ const initialState: AuthState = {
   initializing: true,
 };
 
-function decodeJwtPayload(token: string): { sub: string; email: string; full_name?: string | null } | null {
+function decodeJwtPayload(
+  token: string,
+): { sub: string; email: string; full_name?: string | null; role?: string } | null {
   try {
     const base64 = token.split(".")[1].replaceAll(/-/g, "+").replaceAll(/_/g, "/");
     return JSON.parse(atob(base64));
   } catch {
     return null;
   }
+}
+
+/** Tokens issued before roles existed carry none: plain user. */
+function toRole(value: unknown): Role {
+  return ROLES.includes(value as Role) ? (value as Role) : "user";
 }
 
 // Access token lives only in memory (Redux state) — never persisted, so it
@@ -40,7 +53,14 @@ function applyTokens(state: AuthState, accessToken: string, expiresIn: number) {
   state.accessToken = accessToken;
   state.expiresAt = Date.now() + expiresIn * 1000;
   state.isAuthenticated = true;
-  state.user = decoded ? { id: decoded.sub, email: decoded.email, fullName: decoded.full_name ?? null } : null;
+  state.user = decoded
+    ? {
+        id: decoded.sub,
+        email: decoded.email,
+        fullName: decoded.full_name ?? null,
+        role: toRole(decoded.role),
+      }
+    : null;
 }
 
 function clearSession(state: AuthState) {

@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAppSelector } from "@/app/lib/hooks";
 import { UserIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
-import { APP_NAV, isCurrent } from "./appNav";
+import { isCurrent, navItems } from "./appNav";
 
 /** Bottom tab bar replacing the sidebar below lg. */
 export default function MobileTabBar() {
   const pathname = usePathname();
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const profileHref = isAuthenticated ? "/profil" : "/login";
   const items = [
-    ...APP_NAV,
+    ...navItems(user?.role, { mobile: true }),
     { label: "Profil", href: profileHref, Icon: UserIcon },
   ];
 

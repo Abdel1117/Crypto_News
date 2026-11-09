@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BrandMark, GearIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
-import { APP_NAV, isCurrent } from "./appNav";
+import { useAppSelector } from "@/app/lib/hooks";
+import { isCurrent, navItems } from "./appNav";
 import UserMenu from "./UserMenu";
 
 /** Desktop sidebar (≥ lg). On mobile, MobileTabBar takes over. */
 export default function AppSidebar() {
   const pathname = usePathname();
+  const role = useAppSelector((state) => state.auth.user?.role);
 
   return (
     <aside className="hidden lg:flex sticky top-0 h-screen w-60 flex-none flex-col gap-6 px-3.5 py-[18px]">
@@ -36,7 +38,7 @@ export default function AppSidebar() {
         className="flex flex-col gap-0.5"
         aria-label="Navigation de l’application"
       >
-        {APP_NAV.map(({ label, href, Icon }) => (
+        {navItems(role).map(({ label, href, Icon }) => (
           <Link
             key={href}
             href={href}

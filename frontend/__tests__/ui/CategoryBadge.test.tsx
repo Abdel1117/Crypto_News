@@ -5,7 +5,10 @@ import {
   CategoryBadge,
   categoryStyle,
 } from "../../app/ui/CategoryBadge/CategoryBadge";
-import { CATEGORY_META, DEFAULT_HUE } from "../../app/(public)/blog/data";
+import {
+  CATEGORY_META,
+  DEFAULT_HUE,
+} from "../../app/components/Blog/categories";
 
 describe("CategoryBadge", () => {
   it("tints a known category with its own hue", () => {
