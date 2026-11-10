@@ -6,10 +6,13 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.repositories.users.user_sql_repo import SQLUserRepository
+from app.schemas.alerts import EmailTokenIn, EmailVerificationOut
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, LoginRequest, AuthRegistrationRequestGoogle
 from app.clients.google_auth_provider import  GoogleAuthProvider
 from app.schemas.token import AccessTokenResponse
 from app.services.auth_service import AuthService
+from app.services.email.smtp_email_sender import build_email_sender
+from app.services.email.verification_service import EmailVerificationService
 from app.auth.jwt_token_service import JWTTokenService
 import os 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -25,6 +28,10 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
         token_service=JWTTokenService(),
         google_auth_provider=GoogleAuthProvider()
     )
+
+
+def get_verification_service(session: AsyncSession = Depends(get_session)) -> EmailVerificationService:
+    return EmailVerificationService(SQLUserRepository(session), build_email_sender())
 
 
 def _cookie_path(request: Request) -> str:
@@ -134,3 +141,22 @@ async def logout(
 @router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)) -> AuthRegistrationResponse:
     return current_user
+
+
+@router.post("/email-verification", status_code=status.HTTP_202_ACCEPTED)
+async def send_email_verification(
+    current_user: User = Depends(get_current_user),
+    service: EmailVerificationService = Depends(get_verification_service),
+) -> EmailVerificationOut:
+    sent = await service.send_link(current_user)
+    return EmailVerificationOut(email_verified=not sent)
+
+
+# Public: the link can be opened on a device where the user isn't logged in.
+@router.post("/email-verification/confirm")
+async def confirm_email_verification(
+    data: EmailTokenIn,
+    service: EmailVerificationService = Depends(get_verification_service),
+) -> EmailVerificationOut:
+    await service.confirm(data.token)
+    return EmailVerificationOut(email_verified=True)

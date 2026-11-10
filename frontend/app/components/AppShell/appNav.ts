@@ -1,5 +1,6 @@
 import type { ComponentType, SVGProps } from "react";
 import {
+  BellIcon,
   ChartLineUpIcon,
   GridFourIcon,
   HouseIcon,
@@ -36,6 +37,7 @@ export const APP_NAV: AppNavItem[] = [
     mobile: false,
     roles: EDITORIAL_ROLES,
   },
+  { label: "Alertes", href: "/alertes", Icon: BellIcon },
 ];
 
 /** The nav items this user may see, on the sidebar or the mobile tab bar. */
@@ -68,6 +70,8 @@ const PAGES: Record<string, PageConfig> = {
     currency: true,
   },
   "/heatmap": { title: "Heatmap du marché", currency: true },
+  // No currency switch: each alert has its own currency.
+  "/alertes": { title: "Alertes de prix" },
   "/profil": { title: "Profil" },
   // Before "/redaction": the first matching prefix wins.
   "/redaction/equipe": { title: "Équipe" },

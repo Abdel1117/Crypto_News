@@ -421,6 +421,13 @@ html .nocturne .n-force-dark {
 .nocturne .n-tab-link[aria-current="page"] {
   color: var(--n-accent-300);
 }
+/* Six tabs: on the narrowest phones, "Dashboard" and "Simulation" would touch. */
+@media (max-width: 359px) {
+  .nocturne .n-tab-link {
+    font-size: 10px;
+    letter-spacing: -0.02em;
+  }
+}
 
 .n-menu {
   position: absolute;

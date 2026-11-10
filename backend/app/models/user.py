@@ -23,6 +23,14 @@ class UserBase(SQLModel):
     role: UserRole = Field(
         default=UserRole.user,
         sa_column=Column(String(10), nullable=False, server_default=UserRole.user.value),
+    # Set once the address is proven: a confirmation link, or a Google sign-in.
+    # Emails other than the confirmation itself only go to confirmed addresses.
+    email_verified_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
+    )
+    # Last confirmation email, to limit how often one can be requested.
+    email_verification_sent_at: Optional[datetime] = Field(
+        default=None, sa_column=Column(DateTime(timezone=True), nullable=True)
     )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,

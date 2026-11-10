@@ -16,6 +16,7 @@ describe("appNav", () => {
       "/heatmap",
       "/blog",
       "/redaction",
+      "/alertes",
     ]);
   });
 
@@ -46,6 +47,7 @@ describe("appNav", () => {
   });
 
   it("derives the top bar title from the path", () => {
+    expect(pageTitle("/alertes")).toBe("Alertes de prix");
     expect(pageTitle("/dashboard")).toBe("Dashboard");
     expect(pageTitle("/settings")).toBe("Paramètres");
     expect(pageTitle("/simulation/abc")).toBe("Portefeuille virtuel");
@@ -58,6 +60,7 @@ describe("appNav", () => {
     expect(pageConfig("/simulation").search).toBeFalsy();
     expect(pageConfig("/simulation").tag?.desktop).toBe("Argent fictif");
     expect(pageConfig("/profil").currency).toBeFalsy();
+    expect(pageConfig("/alertes").currency).toBeFalsy();
   });
 
   it("adapts the simulation page to the login state", () => {

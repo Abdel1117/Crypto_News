@@ -41,6 +41,8 @@ Le projet se compose d'un frontend Next.js et d'une API FastAPI, qui communiquen
 | 💬 **Blog : lecteurs** | Commentaires, j'aime, favoris (`/blog/favoris`) et sélection « Pour vous » | Compte |
 | ✍️ **Rédaction** | Écrire, modifier, publier, dépublier et supprimer les articles, modérer les commentaires (`/redaction`) | Éditeur, Admin |
 | 👥 **Équipe** | Attribuer les rôles lecteur, éditeur ou admin (`/redaction/equipe`) | Admin |
+| 🔔 **Alertes de prix** | E-mail quand une crypto passe sous ou au-dessus d'un seuil, en euros ou en dollars (voir ci-dessous) | Compte |
+| 📰 **Blog** | Aperçus d'articles filtrables par catégorie, contenu statique dans `data.ts` | Public |
 | 🔐 **Authentification** | Inscription et connexion par e-mail ou avec Google | Public |
 | 👤 **Profil** | Consultation des informations du compte, déconnexion | Compte |
 | ⚙️ **Paramètres** | Thème clair ou sombre, devise EUR ou USD, préférences de cookies | Compte |
@@ -75,6 +77,15 @@ La page `/simulation` affiche la version bêta sans connexion et la version comp
 - **Historique :** export CSV des ordres et réinitialisation du portefeuille.
 
 > L'impôt affiché est une estimation pour la simulation, pas un conseil fiscal. Les règles, leurs sources et leur date de vérification se trouvent dans [`tax_rules.py`](backend/app/services/simulation/tax_rules.py).
+
+### Alertes de prix
+
+La page `/alertes` permet de créer jusqu'à 20 alertes par compte, sur n'importe quelle crypto trouvée par la recherche, par exemple « BTC passe sous 50 000 € » ou « BTC passe au-dessus de 85 000 $ ».
+
+- **Adresse confirmée :** les alertes partent seulement vers une adresse confirmée par un lien reçu par e-mail. Les comptes Google sont confirmés d'office.
+- **Déclenchement unique :** une alerte se déclenche une fois, puis reste désactivée jusqu'à ce que l'utilisateur la réactive. Un seuil déjà atteint est refusé à la création et à la réactivation.
+- **Fréquence :** les prix sont vérifiés toutes les 10 minutes par défaut (`PRICE_ALERT_INTERVAL`). Un mouvement qui commence et finit entre deux vérifications passe inaperçu.
+- **Désinscription :** chaque e-mail contient un lien qui désactive toutes les alertes du compte, sans connexion.
 
 ---
 
@@ -116,6 +127,7 @@ En local, le navigateur appelle directement l'API sur le port 4000.
 - **Couches :** les `controllers` exposent les routes, les `services` portent la logique métier, les `repositories` accèdent à la base et les `clients` aux services externes.
 - **Marché :** les réponses de CoinGecko sont gardées 30 s en mémoire. Tant qu'un client est connecté au WebSocket, l'API diffuse le top 20 toutes les 30 s.
 - **Simulation :** seuls les ordres sont stockés. Les liquidités, les positions et les impôts sont recalculés à partir d'eux, avec des montants décimaux exacts. Une tâche de fond enregistre chaque heure la valeur du jour de chaque portefeuille.
+- **Alertes :** une tâche de fond interroge CoinGecko sans cache, en un seul appel pour toutes les alertes actives, et aucun appel s'il n'y en a pas. Si CoinGecko est indisponible, la vérification est reportée : aucune alerte ne se déclenche sur un ancien prix. Si l'envoi d'un e-mail échoue, l'alerte est réessayée à la vérification suivante.
 
 ---
 
@@ -146,7 +158,7 @@ En local, le navigateur appelle directement l'API sur le port 4000.
 | **python-jose** + **bcrypt** | Tokens JWT et hachage des mots de passe |
 | **google-auth** | Vérification des connexions Google |
 | **httpx** | Appels à CoinGecko |
-| **aiosmtplib** | Envoi des e-mails de la route de contact |
+| **aiosmtplib** | Envoi des e-mails (alertes de prix, confirmation d'adresse, route de contact) |
 | **pytest** + pytest-asyncio | Tests unitaires et d'intégration |
 
 ### Infrastructure
@@ -169,8 +181,8 @@ Crypto_News/
 ├── frontend/                    # Application Next.js
 │   ├── app/
 │   │   ├── (landing)/           # Accueil et connexion
-│   │   ├── (public)/            # Blog et pages légales
-│   │   ├── (app)/               # Dashboard, heatmap, simulation, profil, paramètres
+│   │   ├── (public)/            # Blog, pages légales, liens reçus par e-mail
+│   │   ├── (app)/               # Dashboard, heatmap, simulation, alertes, profil, paramètres
 │   │   ├── components/          # Composants métier
 │   │   ├── ui/                  # Composants d'interface réutilisables
 │   │   ├── context/             # Thème, devise, consentement
@@ -185,8 +197,8 @@ Crypto_News/
 │
 ├── backend/                     # API FastAPI
 │   ├── app/
-│   │   ├── controllers/         # Routes (auth, markets, simulation, symbols…)
-│   │   ├── services/            # Logique métier, dont simulation/ et email/
+│   │   ├── controllers/         # Routes (auth, markets, simulation, alerts, symbols…)
+│   │   ├── services/            # Logique métier, dont simulation/, alerts/ et email/
 │   │   ├── repositories/        # Accès à la base de données
 │   │   ├── clients/             # CoinGecko, Google
 │   │   ├── models/              # Tables SQLModel
@@ -252,6 +264,13 @@ CORS_ORIGINS=http://localhost:3000,http://localhost
 # Facultatifs
 API_KEY_COINGECKO=
 GOOGLE_CLIENT_ID=
+
+# Facultatifs : sans SMTP_HOST ni SMTP_USER, les alertes de prix sont indisponibles.
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
 ```
 
 `frontend/.env`, pour le frontend :
@@ -293,7 +312,11 @@ Au démarrage, le backend applique les migrations puis crée les tables manquant
 | `API_KEY_COINGECKO` | `.env` | Facultative. Clé CoinGecko du plan Demo. Sans clé, l'API utilise le quota public, plus bas. |
 | `GOOGLE_CLIENT_ID` | `.env` | Facultative. Identifiant OAuth Google. Sans lui, la connexion Google est indisponible. |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | `frontend/.env` | Facultative. Même valeur que `GOOGLE_CLIENT_ID`. |
-| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_RECIPIENT` | `.env` | Facultatives. Serveur d'envoi et destinataire de `POST /contact/send`, une route que l'interface n'appelle pas pour l'instant. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` | `.env` | Facultatives. Serveur d'envoi des e-mails, connexion en STARTTLS. Sans `SMTP_HOST` ni `SMTP_USER`, les alertes de prix sont indisponibles. |
+| `SMTP_FROM` | `.env` | Facultative. Expéditeur affiché, par exemple `Crypto-Explorer <alertes@crypto-explorer.fr>` : `SMTP_USER` par défaut. |
+| `SMTP_RECIPIENT` | `.env` | Facultative. Destinataire de `POST /contact/send`, une route que l'interface n'appelle pas pour l'instant. |
+| `APP_PUBLIC_URL` | `.env` | Facultative. URL du site dans les liens des e-mails : la première valeur de `CORS_ORIGINS` par défaut. |
+| `PRICE_ALERT_INTERVAL` | `.env` | Facultative. Secondes entre deux vérifications des alertes : 600 par défaut, 0 pour désactiver. Chaque vérification coûte un appel CoinGecko par tranche de 250 cryptos suivies, soit environ 4 300 appels par mois à 600 s, sur les 10 000 du plan Demo. |
 | `SIM_SNAPSHOT_INTERVAL` | `.env` | Facultative. Secondes entre deux enregistrements de la valeur des portefeuilles : 3600 par défaut, 0 pour désactiver. |
 | `NEXT_PUBLIC_API_BACK_END` | `frontend/.env` | URL de l'API vue par le navigateur. |
 | `API_INTERNAL_URL` | `docker-compose-*.yml` | URL de l'API vue par le serveur Next (pages du blog), déjà réglée sur `http://backend:${PORT_BACK}`. Sans Docker, `NEXT_PUBLIC_API_BACK_END` sert de valeur par défaut. |
@@ -332,8 +355,10 @@ La documentation complète est générée par Swagger sur http://localhost:4000/
 
 | Préfixe | Routes | Accès |
 |---|---|---|
-| `/auth` | `POST /register`, `/login`, `/google`, `/refresh`, `/logout` | Public |
-| `/auth` | `GET /me` | Connecté |
+| `/auth` | `POST /register`, `/login`, `/google`, `/refresh`, `/logout`, `/email-verification/confirm` | Public |
+| `/auth` | `GET /me`, `POST /email-verification` | Connecté |
+| `/alerts` | `GET` et `POST` sur le préfixe, `PATCH/DELETE /{id}` | Connecté |
+| `/alerts` | `POST /unsubscribe` (avec le jeton du lien reçu par e-mail) | Public |
 | `/markets` | `GET` sur le préfixe, `GET /markets_view`, `/get_ohlc`, `/get_top_winners_losers`, `/coin`, `/exchange-rate` | Public |
 | `/markets` | WebSocket `/ws` | Public |
 | `/symbols` | `GET` sur le préfixe, `GET /search` | Public |
@@ -402,6 +427,7 @@ Le fichier [`.circleci/config.yml`](.circleci/config.yml) assemble le pipeline �
 
 - **Mots de passe :** hachés avec bcrypt, de 8 caractères minimum et 72 octets maximum.
 - **Connexion :** même message d'erreur et hachage systématique, pour ne pas révéler les e-mails inscrits.
+- **Liens reçus par e-mail :** signés, limités à une seule action et incapables d'ouvrir une session. L'action se fait au clic sur la page, pas à son ouverture, car des antivirus de messagerie ouvrent les liens d'eux-mêmes.
 - **Clé de signature :** en production, l'API refuse de démarrer si `JWT_SECRET_KEY` est la valeur par défaut ou fait moins de 32 caractères.
 
 **API et réseau**

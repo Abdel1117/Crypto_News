@@ -25,7 +25,7 @@ export default function PolitiqueConfidentialitePage() {
           eyebrow="Vie privée & RGPD"
           title="Politique de"
           highlight="confidentialité"
-          updatedAt="29 août 2026"
+          updatedAt="6 novembre 2026"
         />
 
         <LegalSection title="Responsable du traitement">
@@ -65,6 +65,12 @@ export default function PolitiqueConfidentialitePage() {
               permettre de les retrouver ;
             </li>
             <li>
+              <strong>Alertes de prix</strong> : les alertes que vous créez
+              (crypto, seuil, devise) et la date de confirmation de votre adresse
+              e-mail, pour vous prévenir par e-mail lorsqu&apos;un seuil est
+              atteint ;
+            </li>
+            <li>
               <strong>Formulaire de contact</strong> : nom, e-mail et message,
               transmis par e-mail à l&apos;éditeur pour traiter votre demande ;
             </li>
@@ -82,7 +88,7 @@ export default function PolitiqueConfidentialitePage() {
             <li>
               L&apos;exécution du contrat, pour la création de compte,
               l&apos;authentification et la fourniture des fonctionnalités du
-              site (watchlist, simulation de portefeuille) ;
+              site (watchlist, simulation de portefeuille, alertes de prix) ;
             </li>
             <li>
               Le consentement, pour les cookies de mesure d&apos;audience et
@@ -130,7 +136,8 @@ export default function PolitiqueConfidentialitePage() {
             techniques strictement nécessaires au fonctionnement du site :
             hébergeur (Hostinger), service d&apos;authentification Google (si
             vous choisissez de vous connecter via Google) et service
-            d&apos;envoi d&apos;e-mails pour le formulaire de contact.
+            d&apos;envoi d&apos;e-mails pour le formulaire de contact et les
+            alertes de prix.
           </p>
         </LegalSection>
 
@@ -139,6 +146,11 @@ export default function PolitiqueConfidentialitePage() {
             <li>
               Données de compte : conservées tant que votre compte est actif,
               puis supprimées sur simple demande ;
+            </li>
+            <li>
+              Alertes de prix : conservées jusqu&apos;à ce que vous les
+              supprimiez ou que votre compte soit supprimé. Chaque e-mail
+              d&apos;alerte contient un lien pour désactiver toutes vos alertes ;
             </li>
             <li>
               Cookies d&apos;authentification : durée de la session, selon la

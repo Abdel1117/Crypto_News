@@ -11,6 +11,9 @@ class SQLUserRepository(UserRepositoryProtocol):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
+    async def get_by_id(self, user_id: int) -> Optional[User]:
+        return await self.session.get(User, user_id)
+
     async def get_by_google_id(self, id):
         statement = select(User).where(User.google_id == id)
         result = await self.session.execute(statement)

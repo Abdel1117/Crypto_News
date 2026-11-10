@@ -30,6 +30,40 @@ def service(mock_client):
     return MarketService(mock_client)
 
 
+class TestGetLivePrices:
+    async def test_asks_for_every_coin_and_currency_in_one_call(self, service, mock_client):
+        mock_client.fetch_simple_prices.return_value = {"bitcoin": {"eur": 1.0, "usd": 2.0}}
+
+        prices = await service.get_live_prices(
+            ["bitcoin", "ethereum", "bitcoin"], ["usd", "eur", "usd"]
+        )
+
+        mock_client.fetch_simple_prices.assert_awaited_once_with("bitcoin,ethereum", "eur,usd")
+        assert prices == {"bitcoin": {"eur": 1.0, "usd": 2.0}}
+
+    async def test_accepts_generators(self, service, mock_client):
+        mock_client.fetch_simple_prices.return_value = {}
+        await service.get_live_prices((c for c in ["bitcoin"]), (c for c in ["eur"]))
+        mock_client.fetch_simple_prices.assert_awaited_once_with("bitcoin", "eur")
+
+    async def test_splits_long_lists_and_merges_the_answers(self, service, mock_client):
+        coins = [f"coin-{i:03}" for i in range(251)]
+        mock_client.fetch_simple_prices.side_effect = [
+            {"coin-000": {"eur": 1.0}},
+            {"coin-250": {"eur": 2.0}},
+        ]
+
+        prices = await service.get_live_prices(coins, ["eur"])
+
+        assert mock_client.fetch_simple_prices.await_count == 2
+        assert mock_client.fetch_simple_prices.await_args_list[1].args[0] == "coin-250"
+        assert prices == {"coin-000": {"eur": 1.0}, "coin-250": {"eur": 2.0}}
+
+    async def test_makes_no_call_without_coins(self, service, mock_client):
+        assert await service.get_live_prices([], ["eur"]) == {}
+        mock_client.fetch_simple_prices.assert_not_awaited()
+
+
 class TestGetTopMarkets:
     async def test_formats_coins_correctly(self, service, mock_client):
         mock_client.fetch_markets.return_value = [make_coin()]
