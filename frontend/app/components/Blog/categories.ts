@@ -6,6 +6,7 @@
  * Nocturne's lightness/chroma, so categories differ without shouting.
  */
 export const CATEGORY_META: Record<string, { hue: number }> = {
+  Sécurité : {hue : 50},
   Bitcoin: { hue: 70 },
   Ethereum: { hue: 265 },
   DeFi: { hue: 300 },
