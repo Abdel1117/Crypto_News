@@ -17,7 +17,7 @@ export type AppNavItem = {
   label: string;
   href: string;
   Icon: NavIcon;
-  /** false: sidebar only (the mobile tab bar has room for five items). */
+  /** false: sidebar only (the mobile tab bar has six slots: five pages and Profil). */
   mobile?: false;
   /** Only shown to these roles. */
   roles?: readonly Role[];

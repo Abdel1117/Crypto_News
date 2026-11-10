@@ -30,12 +30,13 @@ describe("appNav", () => {
     expect(hrefs("user")).toContain("/blog");
   });
 
-  it("keeps the mobile tab bar to four pages (plus Profil)", () => {
+  it("keeps the mobile tab bar to five pages (plus Profil)", () => {
     expect(navItems("admin", { mobile: true }).map((i) => i.href)).toEqual([
       "/",
       "/dashboard",
       "/simulation",
       "/heatmap",
+      "/alertes",
     ]);
   });
 
