@@ -111,4 +111,24 @@ describe("ProfileDropdown", () => {
     render(<ProfileDropdown />);
     expect(screen.getByText("B")).toBeTruthy();
   });
+
+  it("links to the saved articles", () => {
+    render(<ProfileDropdown />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(
+      screen.getByRole("menuitem", { name: "Mes favoris" }).getAttribute("href"),
+    ).toBe("/blog/favoris");
+    expect(screen.queryByRole("menuitem", { name: "Rédaction" })).toBeNull();
+  });
+
+  it("adds the editors' desk for editors", () => {
+    vi.mocked(useAppSelector).mockImplementation((selector: any) =>
+      selector({ auth: { user: { email: "ed@example.com", role: "editor" } } }),
+    );
+    render(<ProfileDropdown />);
+    fireEvent.click(screen.getByRole("button"));
+    expect(
+      screen.getByRole("menuitem", { name: "Rédaction" }).getAttribute("href"),
+    ).toBe("/redaction");
+  });
 });

@@ -13,6 +13,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - WATCHPACK_POLLING_INTERVAL=500
+      # Pages rendered by Next (blog) call the API inside the compose network.
+      - API_INTERNAL_URL=http://backend:${PORT_BACK}
     volumes:
       - ./frontend:/app
       - frontend_node_modules:/app/node_modules

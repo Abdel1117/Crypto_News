@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from app.enums.auth_provider import AuthProvider
+from app.enums.user_role import UserRole
 from sqlmodel import Column, DateTime, Field, SQLModel, String
 
 
@@ -19,6 +20,9 @@ class UserBase(SQLModel):
         default=0, nullable=False, sa_column_kwargs={"server_default": "0"}
     )
     provider: AuthProvider = Field(default=AuthProvider.local)
+    role: UserRole = Field(
+        default=UserRole.user,
+        sa_column=Column(String(10), nullable=False, server_default=UserRole.user.value),
     # Set once the address is proven: a confirmation link, or a Google sign-in.
     # Emails other than the confirmation itself only go to confirmed addresses.
     email_verified_at: Optional[datetime] = Field(

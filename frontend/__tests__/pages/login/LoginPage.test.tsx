@@ -336,5 +336,40 @@ describe("Login page", () => {
       await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
       expect(mockReplace).not.toHaveBeenCalledWith("/profil");
     });
+
+    describe("coming from a page that needs an account (?next=)", () => {
+      afterEach(() => {
+        globalThis.history.replaceState(null, "", "/");
+      });
+
+      it("goes back to that page after login", async () => {
+        globalThis.history.replaceState(null, "", "/login?next=%2Fblog%2Fun-article");
+        setAuth({ isAuthenticated: false, initializing: false });
+        mockLoginGoogle.mockResolvedValue({ success: true, message: "ok" });
+        renderLogin();
+
+        fireEvent.click(screen.getByRole("button", { name: "MockGoogleLogin-Success" }));
+
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/blog/un-article"));
+      });
+
+      it("ignores a link to another site", async () => {
+        globalThis.history.replaceState(null, "", "/login?next=https://evil.example");
+        setAuth({ isAuthenticated: false, initializing: false });
+        mockLoginGoogle.mockResolvedValue({ success: true, message: "ok" });
+        renderLogin();
+
+        fireEvent.click(screen.getByRole("button", { name: "MockGoogleLogin-Success" }));
+
+        await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      });
+
+      it("sends an already signed-in reader straight back", () => {
+        globalThis.history.replaceState(null, "", "/login?next=%2Fblog%2Fun-article");
+        setAuth({ isAuthenticated: true, initializing: false });
+        renderLogin();
+        expect(mockReplace).toHaveBeenCalledWith("/blog/un-article");
+      });
+    });
   });
 });

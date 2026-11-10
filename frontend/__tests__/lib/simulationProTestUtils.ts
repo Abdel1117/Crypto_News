@@ -107,7 +107,9 @@ export function makeProStore(sim: Partial<SimulationProState> = {}, loggedIn = t
     reducer: { auth: authReducer, simulationPro: simulationProReducer },
     preloadedState: {
       auth: {
-        user: loggedIn ? { id: "1", email: "t@example.com", fullName: "Test" } : null,
+        user: loggedIn
+          ? { id: "1", email: "t@example.com", fullName: "Test", role: "user" as const }
+          : null,
         accessToken: loggedIn ? "token-1" : null,
         expiresAt: loggedIn ? Date.now() + 3_600_000 : null,
         isAuthenticated: loggedIn,
