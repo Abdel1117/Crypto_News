@@ -145,6 +145,7 @@ class TestEditorial:
             ("post", "/blog/manage/articles", VALID),
             ("patch", "/blog/manage/articles/3", {"status": "draft"}),
             ("delete", "/blog/manage/articles/3", None),
+            ("post", "/blog/manage/images", None),
         ],
     )
     async def test_readers_are_refused(self, client, service, method, url, body):
@@ -175,6 +176,9 @@ class TestEditorial:
             {"excerpt": "court"},
             {"status": "archived"},
             {"body": "x" * 50_001},
+            {"cover_image": "../../etc/passwd", "cover_alt": "Une image"},
+            {"cover_image": "a" * 32, "cover_alt": "  "},
+            {"cover_image": "a" * 32, "cover_alt": "x" * 201},
         ],
     )
     async def test_invalid_articles_are_rejected(self, client, service, change):
@@ -201,3 +205,47 @@ class TestEditorial:
         response = await client.delete("/blog/manage/articles/3")
         assert response.status_code == 204
         service.delete.assert_awaited_once_with(3)
+
+
+class TestImageUpload:
+    async def test_editor_uploads_an_image(self, client, service):
+        log_in("editor")
+        service.upload_image.return_value = "a" * 32
+        response = await client.post(
+            "/blog/manage/images", files={"file": ("photo.png", b"PNG...", "image/png")}
+        )
+        assert response.status_code == 201
+        assert response.json() == {"key": "a" * 32}
+        service.upload_image.assert_awaited_once_with(b"PNG...", "image/png")
+
+    async def test_only_one_byte_over_the_limit_is_read(self, client, service):
+        log_in("editor")
+        service.upload_image.return_value = "a" * 32
+        heavy = b"x" * (5 * 1024 * 1024 + 100)
+        await client.post(
+            "/blog/manage/images", files={"file": ("big.jpg", heavy, "image/jpeg")}
+        )
+        data, _ = service.upload_image.await_args.args
+        assert len(data) == 5 * 1024 * 1024 + 1
+
+    async def test_refusal_message_is_passed_on(self, client, service):
+        log_in("admin")
+        service.upload_image.side_effect = BlogError(415, "Format non accepté.")
+        response = await client.post(
+            "/blog/manage/images", files={"file": ("anim.gif", b"GIF89a", "image/gif")}
+        )
+        assert response.status_code == 415
+        assert response.json()["detail"] == "Format non accepté."
+
+    async def test_a_file_is_required(self, client, service):
+        log_in("editor")
+        response = await client.post("/blog/manage/images")
+        assert response.status_code == 422
+        service.upload_image.assert_not_awaited()
+
+    async def test_cover_can_be_removed_with_null(self, client, service):
+        log_in("editor")
+        service.update.return_value = ARTICLE
+        await client.patch("/blog/manage/articles/3", json={"cover_image": None})
+        _, data = service.update.await_args.args
+        assert data.model_dump(exclude_unset=True) == {"cover_image": None}

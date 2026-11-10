@@ -39,6 +39,10 @@ class BlogArticle(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=_utcnow, sa_column=_timestamp())
     # Set the first time the article is published, kept if it is unpublished.
     published_at: Optional[datetime] = Field(default=None, sa_column=_timestamp(nullable=True))
+    # Cover image: key of the files kept by ImageStore, and its text alternative
+    # (both set, or both empty).
+    cover_image: Optional[str] = Field(default=None, max_length=32, nullable=True)
+    cover_alt: Optional[str] = Field(default=None, max_length=200, nullable=True)
 
 
 class BlogComment(SQLModel, table=True):

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ArticleSummary } from "@/app/lib/api/blog";
 import { initialOf, readTimeLabel } from "@/app/components/Blog/format";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
@@ -15,9 +16,16 @@ export function SmallCard({
     >
       <span
         aria-hidden="true"
-        className="n-cover h-28 flex-none"
+        className="n-cover relative h-28 flex-none overflow-hidden"
         style={categoryStyle(article.category)}
-      />
+      >
+        {article.cover_image && (
+          <CoverImage
+            image={article.cover_image}
+            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+          />
+        )}
+      </span>
       <span className="flex flex-col gap-2 flex-1 p-4">
         <CategoryBadge category={article.category} />
         <span className="text-[15px] font-medium leading-snug line-clamp-2 group-hover:text-(--n-accent)">

@@ -26,6 +26,8 @@ export function makeArticle(overrides: Partial<ArticleSummary> = {}): ArticleSum
     updated_at: "2026-11-01T10:00:00Z",
     like_count: 2,
     comment_count: 1,
+    cover_image: null,
+    cover_alt: null,
     ...overrides,
   };
 }

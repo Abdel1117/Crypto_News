@@ -40,6 +40,15 @@ describe("authFetchJson", () => {
     expect(fetchMock.mock.calls[0][1].headers["Content-Type"]).toBe("application/json");
   });
 
+  it("leaves a file upload's content type to the browser", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, {}));
+    vi.stubGlobal("fetch", fetchMock);
+    const store = makeProStore();
+
+    await authFetchJson("/api/x", { method: "POST", body: new FormData() }, tools(store));
+    expect(fetchMock.mock.calls[0][1].headers["Content-Type"]).toBeUndefined();
+  });
+
   it("refreshes a rejected token once and retries", async () => {
     let calls = 0;
     const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async (url) => {

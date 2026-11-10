@@ -5,28 +5,51 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthTools } from "@/app/hooks/useAuthTools";
 import {
+  ALT_MAX,
+  ALT_MIN,
   createArticle,
   EXCERPT_MAX,
+  imageFileProblem,
   TITLE_MAX,
   updateArticle,
+  uploadImage,
   type ArticleDetail,
   type ArticleInput,
   type ArticleStatus,
 } from "@/app/lib/api/blog";
 import ArticleBody from "@/app/components/Blog/ArticleBody";
 import { CATEGORIES } from "@/app/components/Blog/categories";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import { CategoryBadge } from "@/app/ui/CategoryBadge/CategoryBadge";
 import { EyeIcon } from "@/app/ui/NocturneIcons/NocturneIcons";
+import CoverField from "./CoverField";
+import { Counter, FieldError } from "./fields";
 
 export const BODY_MAX = 50_000;
 const TITLE_MIN = 5;
 const EXCERPT_MIN = 10;
 
-type Draft = Omit<ArticleInput, "status">;
+interface Draft {
+  title: string;
+  excerpt: string;
+  body: string;
+  category: string;
+  /** Key of the uploaded image (see uploadImage), null if none. */
+  cover_image: string | null;
+  cover_alt: string;
+}
 type Field = keyof Draft;
+type TextField = Exclude<Field, "cover_image">;
 type FieldErrors = Partial<Record<Field, string>>;
 
-const EMPTY: Draft = { title: "", excerpt: "", body: "", category: "" };
+const EMPTY: Draft = {
+  title: "",
+  excerpt: "",
+  body: "",
+  category: "",
+  cover_image: null,
+  cover_alt: "",
+};
 
 /** Same rules as the API, checked before sending. */
 export function validateArticle(draft: Draft): FieldErrors {
@@ -50,41 +73,32 @@ export function validateArticle(draft: Draft): FieldErrors {
   if (!CATEGORIES.includes(draft.category)) {
     errors.category = "Choisissez une catégorie.";
   }
+  if (draft.cover_image) {
+    const alt = draft.cover_alt.trim();
+    if (alt.length < ALT_MIN) {
+      errors.cover_alt = "Décrivez l’image en quelques mots.";
+    } else if (alt.length > ALT_MAX) {
+      errors.cover_alt = `${ALT_MAX} caractères au maximum.`;
+    }
+  }
   return errors;
 }
 
 function toDraft(article?: ArticleDetail): Draft {
   if (!article) return EMPTY;
   const { title, excerpt, body, category } = article;
-  return { title, excerpt, body, category };
+  return {
+    title,
+    excerpt,
+    body,
+    category,
+    cover_image: article.cover_image ?? null,
+    cover_alt: article.cover_alt ?? "",
+  };
 }
 
 function sameDraft(a: Draft, b: Draft) {
-  return (
-    a.title === b.title &&
-    a.excerpt === b.excerpt &&
-    a.body === b.body &&
-    a.category === b.category
-  );
-}
-
-function Counter({ value, max }: Readonly<{ value: string; max: number }>) {
-  return (
-    <span
-      className={`text-xs n-tnum ${value.length > max ? "text-(--n-down)" : "text-(--n-neutral-500)"}`}
-    >
-      {value.length} / {max}
-    </span>
-  );
-}
-
-function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
-  if (!message) return null;
-  return (
-    <p id={id} className="n-field-error">
-      {message}
-    </p>
-  );
+  return (Object.keys(a) as Field[]).every((field) => a[field] === b[field]);
 }
 
 /**
@@ -103,6 +117,8 @@ export default function ArticleEditor({
   const [serverError, setServerError] = useState("");
   const [notice, setNotice] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
 
   const dirty = !sameDraft(draft, toDraft(saved));
   const status: ArticleStatus = saved?.status ?? "draft";
@@ -117,9 +133,34 @@ export default function ArticleEditor({
     return () => globalThis.removeEventListener("beforeunload", warn);
   }, [dirty]);
 
-  const set = (field: Field) => (value: string) => {
+  const set = (field: TextField) => (value: string) => {
     setDraft((d) => ({ ...d, [field]: value }));
     setErrors((e) => ({ ...e, [field]: undefined }));
+    setNotice("");
+  };
+
+  // The image is sent as soon as it is chosen (the API checks and resizes
+  // it), then saved with the article like any other field.
+  const pickCover = async (file: File) => {
+    setNotice("");
+    const problem = imageFileProblem(file);
+    setUploadError(problem ?? "");
+    if (problem) return;
+    setUploading(true);
+    try {
+      const { key } = await uploadImage(file, tools);
+      setDraft((d) => ({ ...d, cover_image: key }));
+    } catch (e) {
+      setUploadError(e instanceof Error ? e.message : "Envoi de l’image impossible.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeCover = () => {
+    setDraft((d) => ({ ...d, cover_image: null, cover_alt: "" }));
+    setErrors((e) => ({ ...e, cover_alt: undefined }));
+    setUploadError("");
     setNotice("");
   };
 
@@ -136,6 +177,8 @@ export default function ArticleEditor({
       body: draft.body,
       category: draft.category,
       status: nextStatus,
+      cover_image: draft.cover_image,
+      cover_alt: draft.cover_image ? draft.cover_alt.trim() : null,
     };
     setSaving(true);
     setServerError("");
@@ -251,6 +294,19 @@ export default function ArticleEditor({
         </div>
       </div>
 
+      <CoverField
+        image={draft.cover_image}
+        alt={draft.cover_alt}
+        category={draft.category}
+        uploading={uploading}
+        disabled={saving}
+        uploadError={uploadError}
+        altError={errors.cover_alt}
+        onPick={pickCover}
+        onRemove={removeCover}
+        onAltChange={set("cover_alt")}
+      />
+
       <div className="n-field">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
           <span className="n-label mb-0!" id="article-body-label">
@@ -296,6 +352,15 @@ export default function ArticleEditor({
           </>
         ) : (
           <div className="n-card p-5 lg:p-8 min-h-[420px]" aria-label="Aperçu de l’article">
+            {draft.cover_image && (
+              <div className="relative mb-6 aspect-video overflow-hidden rounded-lg">
+                <CoverImage
+                  image={draft.cover_image}
+                  alt={draft.cover_alt}
+                  sizes="(min-width: 1024px) 880px, 100vw"
+                />
+              </div>
+            )}
             {draft.category && <CategoryBadge category={draft.category} />}
             <h2 className="mt-2 mb-6 text-[26px] leading-tight">
               {draft.title || "Sans titre"}
@@ -327,7 +392,7 @@ export default function ArticleEditor({
             <button
               type="button"
               className="n-btn n-btn-primary n-btn-lg"
-              disabled={saving}
+              disabled={saving || uploading}
               onClick={() => save("published")}
             >
               Publier
@@ -335,7 +400,7 @@ export default function ArticleEditor({
             <button
               type="submit"
               className="n-btn n-btn-secondary n-btn-lg"
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Enregistrer le brouillon
             </button>
@@ -345,14 +410,14 @@ export default function ArticleEditor({
             <button
               type="submit"
               className="n-btn n-btn-primary n-btn-lg"
-              disabled={saving}
+              disabled={saving || uploading}
             >
               Enregistrer
             </button>
             <button
               type="button"
               className="n-btn n-btn-secondary n-btn-lg"
-              disabled={saving}
+              disabled={saving || uploading}
               onClick={() => save("draft")}
             >
               Dépublier

@@ -5,17 +5,20 @@ import { cache } from "react";
 import ArticleActions from "@/app/components/Blog/ArticleActions";
 import ArticleBody from "@/app/components/Blog/ArticleBody";
 import Comments from "@/app/components/Blog/Comments";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import {
   formatArticleDate,
   initialOf,
   readTimeLabel,
 } from "@/app/components/Blog/format";
 import {
+  coverUrl,
   fetchArticle,
   fetchRelatedArticles,
   type ArticleDetail,
   type ArticleSummary,
 } from "@/app/lib/api/blog";
+import { DEFAULT_SHARE_IMAGE } from "@/app/lib/shareImage";
 import { AuthorChip } from "@/app/ui/AuthorChip/AuthorChip";
 import {
   CategoryBadge,
@@ -41,11 +44,18 @@ async function loadRelated(articleId: number): Promise<ArticleSummary[]> {
   }
 }
 
+/** The cover for link previews (social networks), else the site's image. */
+function shareImages(article: ArticleDetail) {
+  if (!article.cover_image) return [DEFAULT_SHARE_IMAGE];
+  return [{ url: coverUrl(article.cover_image), alt: article.cover_alt ?? "" }];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const article = await loadArticle((await params).slug);
   if (!article) return { title: "Article introuvable" };
 
   const url = `/blog/${article.slug}`;
+  const images = shareImages(article);
   return {
     title: article.title,
     description: article.excerpt,
@@ -60,8 +70,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       modifiedTime: article.updated_at,
       authors: [article.author_name],
       section: article.category,
+      images,
     },
-    twitter: { title: article.title, description: article.excerpt },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.excerpt,
+      images,
+    },
   };
 }
 
@@ -76,6 +92,7 @@ function jsonLd(article: ArticleDetail): string {
     dateModified: article.updated_at,
     author: { "@type": "Person", name: article.author_name },
     articleSection: article.category,
+    ...(article.cover_image && { image: coverUrl(article.cover_image) }),
   };
   // "<" escaped: the text can't close the <script> tag.
   return JSON.stringify(data).replaceAll("<", String.raw`<`);
@@ -106,6 +123,14 @@ export default async function ArticlePage({ params }: Props) {
           className="n-cover relative overflow-hidden rounded-[14px] flex flex-col justify-end min-h-[300px] lg:min-h-[400px]"
           style={categoryStyle(article.category)}
         >
+          {article.cover_image && (
+            <CoverImage
+              image={article.cover_image}
+              alt={article.cover_alt ?? ""}
+              sizes="(min-width: 1440px) 1200px, 100vw"
+              priority
+            />
+          )}
           <div
             aria-hidden="true"
             className="absolute inset-0 bg-linear-to-t from-black/75 via-black/25 to-transparent"

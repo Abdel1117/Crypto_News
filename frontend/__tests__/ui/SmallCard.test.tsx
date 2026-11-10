@@ -28,6 +28,8 @@ function makeArticle(overrides: Partial<ArticleSummary> = {}): ArticleSummary {
     updated_at: "2025-06-12T10:00:00Z",
     like_count: 0,
     comment_count: 0,
+    cover_image: null,
+    cover_alt: null,
     ...overrides,
   };
 }
@@ -52,5 +54,16 @@ describe("SmallCard", () => {
     expect(screen.getByText("6 min de lecture")).toBeTruthy();
     expect(screen.getByText("S")).toBeTruthy();
     expect(screen.getByText("DeFi")).toBeTruthy();
+    expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("shows the cover image, lazily", () => {
+    const { container } = render(
+      <SmallCard article={makeArticle({ cover_image: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", cover_alt: "Un graphique" })} />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("src")).toContain("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp");
+    expect(img.getAttribute("loading")).toBe("lazy");
+    expect(img.getAttribute("alt")).toBe("");
   });
 });
