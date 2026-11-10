@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
+import { formatArticleDate, readTimeLabel } from "@/app/components/Blog/format";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 
 /** Compact numbered row (side list next to the featured article). */
@@ -7,20 +9,27 @@ export function ListCard({
   article,
   index,
 }: Readonly<{
-  article: Article;
+  article: ArticleSummary;
   index: number;
 }>) {
   return (
     <Link
-      href={`/blog/${article.id}`}
+      href={`/blog/${article.slug}`}
       className="group flex gap-3.5 items-start py-3.5 no-underline text-(--n-text)!"
     >
       <span
         aria-hidden="true"
-        className="n-cover w-16 h-16 flex-none rounded-lg grid place-items-center text-lg font-medium text-white/80 n-tnum"
+        className="n-cover relative overflow-hidden w-16 h-16 flex-none rounded-lg grid place-items-center text-lg font-medium text-white/80 n-tnum"
         style={categoryStyle(article.category)}
       >
-        {String(index + 1).padStart(2, "0")}
+        {article.cover_image && (
+          <>
+            <CoverImage image={article.cover_image} sizes="64px" />
+            {/* Keeps the number readable over a bright image. */}
+            <span className="absolute inset-0 bg-black/45" />
+          </>
+        )}
+        <span className="relative">{String(index + 1).padStart(2, "0")}</span>
       </span>
       <span className="flex flex-col gap-1 min-w-0">
         <CategoryBadge category={article.category} />
@@ -28,7 +37,8 @@ export function ListCard({
           {article.title}
         </span>
         <span className="text-xs text-(--n-neutral-500)">
-          {article.readTime} · {article.date}
+          {readTimeLabel(article.read_minutes)} ·{" "}
+          {formatArticleDate(article.published_at)}
         </span>
       </span>
     </Link>

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   APP_NAV,
   isCurrent,
+  navItems,
   pageConfig,
   pageTitle,
 } from "@/app/components/AppShell/appNav";
@@ -13,8 +14,37 @@ describe("appNav", () => {
       "/dashboard",
       "/simulation",
       "/heatmap",
+      "/blog",
+      "/redaction",
       "/alertes",
     ]);
+  });
+
+  it("shows the editors' desk to editors and admins only", () => {
+    const hrefs = (role?: "user" | "editor" | "admin") =>
+      navItems(role).map((i) => i.href);
+    expect(hrefs()).not.toContain("/redaction");
+    expect(hrefs("user")).not.toContain("/redaction");
+    expect(hrefs("editor")).toContain("/redaction");
+    expect(hrefs("admin")).toContain("/redaction");
+    expect(hrefs("user")).toContain("/blog");
+  });
+
+  it("keeps the mobile tab bar to five pages (plus Profil)", () => {
+    expect(navItems("admin", { mobile: true }).map((i) => i.href)).toEqual([
+      "/",
+      "/dashboard",
+      "/simulation",
+      "/heatmap",
+      "/alertes",
+    ]);
+  });
+
+  it("titles the editorial pages", () => {
+    expect(pageTitle("/redaction")).toBe("Rédaction");
+    expect(pageTitle("/redaction/12")).toBe("Rédaction");
+    expect(pageTitle("/redaction/nouveau")).toBe("Nouvel article");
+    expect(pageTitle("/redaction/equipe")).toBe("Équipe");
   });
 
   it("derives the top bar title from the path", () => {

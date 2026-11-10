@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, EmailStr, Field, constr, field_validator
 from app.enums.auth_provider import AuthProvider
+from app.enums.user_role import UserRole
 
 # bcrypt only uses the first 72 bytes of a password.
 MAX_PASSWORD_BYTES = 72
@@ -30,6 +31,7 @@ class AuthRegistrationResponse(BaseModel):
     full_name: str
     email: EmailStr
     is_active: bool
+    role: UserRole = UserRole.user
     created_at: datetime
 
     model_config = {"from_attributes": True}

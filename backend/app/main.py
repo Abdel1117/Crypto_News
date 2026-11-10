@@ -1,11 +1,14 @@
 import asyncio
+import mimetypes
 import logging
 import os
+from pathlib import Path
 
 import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from app.controllers import api_router
 from app.core.config import settings
 from app.core.jwt_config import JWT_SECRET_KEY, check_jwt_secret
@@ -46,6 +49,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def on_startup() -> None:
     await init_db()
+    Path(settings.MEDIA_DIR).mkdir(parents=True, exist_ok=True)
     if settings.SIM_SNAPSHOT_INTERVAL > 0:
         # Records each simulated portfolio's daily value, for the chart and
         # the risk stats, even on days its owner doesn't visit.
@@ -80,3 +84,9 @@ async def on_shutdown() -> None:
 
 
 app.include_router(api_router)
+
+# Uploaded files (blog cover images). In production nginx serves this folder
+# itself, from the shared volume; this mount serves them in development.
+# Python < 3.13 doesn't know .webp: it would be sent as application/octet-stream.
+mimetypes.add_type("image/webp", ".webp")
+app.mount("/media", StaticFiles(directory=settings.MEDIA_DIR, check_dir=False), name="media")

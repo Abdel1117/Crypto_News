@@ -11,10 +11,18 @@ from app.clients.google_auth_provider import (
 )
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoogle
 from app.enums.auth_provider import  AuthProvider
+from app.enums.user_role import UserRole
 from app.schemas.token import TokenPair
 from app.auth.token_service import TokenServiceProtocol
 from app.utils.dates import utcnow
 from app.utils.security import PasswordHasher, dummy_password_hash
+
+
+def _role_value(role) -> str:
+    """The role as plain text ("user" for accounts created before roles)."""
+    if role is None:
+        return UserRole.user.value
+    return role.value if isinstance(role, UserRole) else str(role)
 
 
 class AuthService:
@@ -33,11 +41,12 @@ class AuthService:
     
     def __create_session(self, user : User) -> TokenPair :
         version = user.token_version or 0
+        role = _role_value(user.role)
         access_token = self.token_service.create_access_token(
-            str(user.id), user.email, user.full_name, version
+            str(user.id), user.email, user.full_name, version, role=role
         )
         refresh_token = self.token_service.create_refresh_token(
-            str(user.id), user.email, user.full_name, version
+            str(user.id), user.email, user.full_name, version, role=role
         )
         return TokenPair(
             access_token=access_token,

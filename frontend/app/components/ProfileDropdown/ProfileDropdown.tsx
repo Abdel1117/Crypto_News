@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useAppSelector } from "@/app/lib/hooks";
 import { useLogout } from "@/app/hooks/useLogout";
+import { isEditorial } from "@/app/lib/auth/roles";
 import {
+  PencilIcon,
   SignOutIcon,
   SquaresFourIcon,
+  StarIcon,
   UserIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
 
@@ -79,6 +82,26 @@ export default function ProfileDropdown() {
             <SquaresFourIcon size={16} />
             Dashboard
           </Link>
+          <Link
+            href="/blog/favoris"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="n-menu-item"
+          >
+            <StarIcon size={16} />
+            Mes favoris
+          </Link>
+          {isEditorial(user?.role) && (
+            <Link
+              href="/redaction"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="n-menu-item"
+            >
+              <PencilIcon size={16} />
+              Rédaction
+            </Link>
+          )}
           <button
             type="button"
             role="menuitem"

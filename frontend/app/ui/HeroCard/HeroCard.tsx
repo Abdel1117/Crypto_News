@@ -1,24 +1,35 @@
 import Link from "next/link";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
+import { initialOf, readTimeLabel } from "@/app/components/Blog/format";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 import { AuthorChip } from "../AuthorChip/AuthorChip";
 
-/** Large cover card for the featured article. */
+/** Large cover card for the featured article: its image, or the category's
+ * gradient when it has none. */
 export function HeroCard({
   article,
   className = "",
   showExcerpt = false,
 }: Readonly<{
-  article: Article;
+  article: ArticleSummary;
   className?: string;
   showExcerpt?: boolean;
 }>) {
   return (
     <Link
-      href={`/blog/${article.id}`}
+      href={`/blog/${article.slug}`}
       className={`group relative overflow-hidden rounded-[14px] flex flex-col justify-end no-underline n-cover ${className}`}
       style={categoryStyle(article.category)}
     >
+      {article.cover_image && (
+        <CoverImage
+          image={article.cover_image}
+          sizes="(min-width: 1024px) 60vw, 100vw"
+          priority
+          className="transition-transform duration-500 group-hover:scale-[1.02]"
+        />
+      )}
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-linear-to-t from-black/75 via-black/20 to-transparent"
@@ -34,9 +45,9 @@ export function HeroCard({
           </p>
         )}
         <AuthorChip
-          initial={article.authorInitial}
-          name={article.author}
-          readTime={article.readTime}
+          initial={initialOf(article.author_name)}
+          name={article.author_name}
+          readTime={readTimeLabel(article.read_minutes)}
           onCover
         />
       </div>

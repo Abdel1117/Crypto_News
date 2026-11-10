@@ -11,6 +11,7 @@ import {
 } from "../../lib/auth/registration";
 import { LoginData } from "../../lib/auth/login";
 import { useAppSelector } from "@/app/lib/hooks";
+import { nextPathFromLocation } from "@/app/lib/auth/redirect";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useGoogleLogin } from "@/app/hooks/useGoogleLogin";
 import LoginShowcase from "@/app/components/Landing/LoginShowcase";
@@ -189,7 +190,7 @@ export default function Login() {
     const result = await login(data);
     setNotice(result?.message ?? "");
     if (result.success) {
-      router.push("/dashboard");
+      router.push(nextPathFromLocation() ?? "/dashboard");
     } else {
       signingInHere.current = false;
     }
@@ -203,7 +204,7 @@ export default function Login() {
       const result = await loginGoogle(credentialResponse?.credential);
       setNotice(result.message);
       if (result.success) {
-        router.push("/dashboard");
+        router.push(nextPathFromLocation() ?? "/dashboard");
       } else {
         signingInHere.current = false;
       }
@@ -219,7 +220,7 @@ export default function Login() {
   // page once the session check is over, not just on mount.
   useEffect(() => {
     if (!initializing && isAuthenticated && !signingInHere.current) {
-      router.replace("/profil");
+      router.replace(nextPathFromLocation() ?? "/profil");
     }
   }, [initializing, isAuthenticated, router]);
 

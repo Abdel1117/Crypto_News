@@ -10,6 +10,7 @@ import {
   CaretUpDownIcon,
   MoonIcon,
   SignOutIcon,
+  StarIcon,
   SunIcon,
   UserIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
@@ -87,6 +88,17 @@ export default function UserMenu() {
             >
               <UserIcon size={16} />
               Mon profil
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link
+              href="/blog/favoris"
+              role="menuitem"
+              className="n-menu-item"
+              onClick={() => setOpen(false)}
+            >
+              <StarIcon size={16} />
+              Mes favoris
             </Link>
           )}
           <ThemeMenuItem />

@@ -6,6 +6,7 @@ import { useState, useSyncExternalStore } from "react";
 import { useAppSelector } from "@/app/lib/hooks";
 import { useTheme } from "@/app/context/Theme/ThemeContext";
 import ProfileDropdown from "../ProfileDropdown/ProfileDropdown";
+import { isCurrent } from "../AppShell/appNav";
 import {
   BrandMark,
   CloseIcon,
@@ -17,6 +18,7 @@ import {
 const NAV_LINKS = [
   { label: "Accueil", href: "/" },
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Blog", href: "/blog" },
   // The contact block lives on the landing page.
   { label: "Contact", href: "/#contact" },
 ];
@@ -86,7 +88,7 @@ export default function LandingNav() {
               key={l.href}
               href={l.href}
               className="n-nav-link"
-              aria-current={pathname === l.href ? "page" : undefined}
+              aria-current={isCurrent(pathname, l.href) ? "page" : undefined}
             >
               {l.label}
             </Link>
@@ -119,7 +121,7 @@ export default function LandingNav() {
               key={l.href}
               href={l.href}
               className="n-nav-link flex items-center min-h-11 px-2 text-[15px]!"
-              aria-current={pathname === l.href ? "page" : undefined}
+              aria-current={isCurrent(pathname, l.href) ? "page" : undefined}
               onClick={close}
             >
               {l.label}

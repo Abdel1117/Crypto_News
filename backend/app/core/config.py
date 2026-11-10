@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     # recorded; 0 turns the background task off.
     SIM_SNAPSHOT_INTERVAL: int = 3600
 
+    # Where uploaded files (blog cover images) are kept. In Docker it is a
+    # volume, shared with nginx in production.
+    MEDIA_DIR: str = "media"
     # How often (seconds) price alerts are checked; 0 turns the background task
     # off. Each check costs one CoinGecko call per 250 coins watched: at 600 s,
     # about 4,300 calls a month out of the Demo plan's 10,000.

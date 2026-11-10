@@ -37,12 +37,33 @@ Le projet se compose d'un frontend Next.js et d'une API FastAPI, qui communiquen
 | 🗺️ **Heatmap** | Carte du marché proportionnelle à la capitalisation, stablecoins masquables | Public |
 | 💼 **Simulation bêta** | 10 000 € fictifs, sans frais ni impôt, enregistrés dans le navigateur | Sans compte |
 | 📈 **Simulation complète** | Portefeuille enregistré en base, avec frais, impôts estimés et statistiques (voir ci-dessous) | Compte |
+| 📰 **Blog** | Articles en base filtrables par catégorie, page par article (Markdown), articles recommandés | Public |
+| 💬 **Blog : lecteurs** | Commentaires, j'aime, favoris (`/blog/favoris`) et sélection « Pour vous » | Compte |
+| ✍️ **Rédaction** | Écrire, modifier, publier, dépublier et supprimer les articles, modérer les commentaires (`/redaction`) | Éditeur, Admin |
+| 👥 **Équipe** | Attribuer les rôles lecteur, éditeur ou admin (`/redaction/equipe`) | Admin |
 | 🔔 **Alertes de prix** | E-mail quand une crypto passe sous ou au-dessus d'un seuil, en euros ou en dollars (voir ci-dessous) | Compte |
 | 📰 **Blog** | Aperçus d'articles filtrables par catégorie, contenu statique dans `data.ts` | Public |
 | 🔐 **Authentification** | Inscription et connexion par e-mail ou avec Google | Public |
 | 👤 **Profil** | Consultation des informations du compte, déconnexion | Compte |
 | ⚙️ **Paramètres** | Thème clair ou sombre, devise EUR ou USD, préférences de cookies | Compte |
 | ⚖️ **Pages légales** | Mentions légales, politique de confidentialité, bannière de consentement | Public |
+
+### Blog et rôles
+
+Chaque compte a un rôle : **lecteur** (par défaut), **éditeur** ou **admin**. Les éditeurs et les admins gèrent tous les articles et peuvent supprimer n'importe quel commentaire ; seuls les admins attribuent les rôles. L'API vérifie le rôle en base à chaque requête : le rôle contenu dans le token ne sert qu'à afficher les bons menus.
+
+- **Articles :** corps en Markdown (le HTML brut n'est jamais interprété), une catégorie parmi huit, brouillon ou publié. L'adresse `/blog/<slug>` est fixée à la création et ne change plus.
+- **Image de couverture :** facultative, en JPEG, PNG ou WebP de 5 Mo au maximum, avec un texte alternatif obligatoire. L'API la décode et la réenregistre en WebP en deux tailles (1600 px et 640 px), sans les métadonnées d'origine comme la position GPS. Les fichiers sont gardés dans le volume `blog_media`, servi directement par nginx en production. Une image remplacée, retirée ou jamais enregistrée avec un article est supprimée un jour plus tard ([`images.py`](backend/app/services/blog/images.py)).
+- **Pages publiques :** rendues par le serveur Next pour le référencement (métadonnées, données structurées `BlogPosting`), avec un cache d'une minute : un article publié apparaît sur le blog en moins de 60 s.
+- **Recommandations :** même catégorie, catégories aimées ou mises en favori par le lecteur, popularité et fraîcheur ([`recommend.py`](backend/app/services/blog/recommend.py)).
+
+Le premier admin se crée en ligne de commande, une fois son compte inscrit :
+
+```bash
+docker compose -f docker-compose-dev.yml exec backend python -m app.scripts.set_role vous@exemple.com admin
+```
+
+Il peut ensuite nommer les éditeurs depuis `/redaction/equipe`. Un changement de rôle s'applique tout de suite côté API ; les menus se mettent à jour au prochain chargement de page.
 
 ### Simulation complète
 
@@ -95,6 +116,7 @@ graph TB
 | Chemin public | Destination |
 |---|---|
 | `/` | Frontend Next.js |
+| `/api/media/*` | Images du blog, lues par nginx dans le volume `blog_media` |
 | `/api/*` | API FastAPI, préfixe `/api` retiré |
 | `/ws/*` | WebSocket FastAPI, préfixe `/ws` retiré |
 
@@ -297,6 +319,7 @@ Au démarrage, le backend applique les migrations puis crée les tables manquant
 | `PRICE_ALERT_INTERVAL` | `.env` | Facultative. Secondes entre deux vérifications des alertes : 600 par défaut, 0 pour désactiver. Chaque vérification coûte un appel CoinGecko par tranche de 250 cryptos suivies, soit environ 4 300 appels par mois à 600 s, sur les 10 000 du plan Demo. |
 | `SIM_SNAPSHOT_INTERVAL` | `.env` | Facultative. Secondes entre deux enregistrements de la valeur des portefeuilles : 3600 par défaut, 0 pour désactiver. |
 | `NEXT_PUBLIC_API_BACK_END` | `frontend/.env` | URL de l'API vue par le navigateur. |
+| `API_INTERNAL_URL` | `docker-compose-*.yml` | URL de l'API vue par le serveur Next (pages du blog), déjà réglée sur `http://backend:${PORT_BACK}`. Sans Docker, `NEXT_PUBLIC_API_BACK_END` sert de valeur par défaut. |
 | `NEXT_PUBLIC_WS_BACK_END` | `frontend/.env` | URL du WebSocket vue par le navigateur. |
 | `NEXT_PUBLIC_APP_URL` | `frontend/.env` | Facultative. URL publique du site pour les métadonnées : `http://localhost:3000` par défaut. |
 | `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` | `frontend/.env` | Facultative. Domaine Plausible. Sans lui, aucune mesure d'audience. |
@@ -340,6 +363,10 @@ La documentation complète est générée par Swagger sur http://localhost:4000/
 | `/markets` | WebSocket `/ws` | Public |
 | `/symbols` | `GET` sur le préfixe, `GET /search` | Public |
 | `/trending` | `GET` sur le préfixe | Public |
+| `/blog` | `GET /articles`, `/articles/{slug}`, `/articles/{id}/related`, `/articles/{id}/comments` | Public |
+| `/blog` | `GET /articles/{id}/me`, `PUT/DELETE /articles/{id}/like` et `/favorite`, `POST /articles/{id}/comments`, `DELETE /comments/{id}`, `GET /favorites`, `/recommendations` | Connecté |
+| `/blog` | `GET/POST /manage/articles`, `GET/PATCH/DELETE /manage/articles/{id}`, `POST /manage/images` | Éditeur, Admin |
+| `/admin` | `GET /users`, `PATCH /users/{id}/role` | Admin |
 | `/simulation` | `GET /countries` | Public |
 | `/simulation` | `GET/POST/PATCH /portfolio`, `POST /portfolio/reset`, `GET /quotes`, `GET/POST /trades` | Connecté |
 | `/contact` | `POST /send` | Public |
@@ -463,6 +490,12 @@ docker compose -f docker-compose-prod.yml up --build -d
 ```
 
 Les migrations s'appliquent au démarrage du backend. Une fusion dans `prod` déclenche ce déploiement automatiquement via CircleCI.
+
+Pour nommer le premier admin du blog :
+
+```bash
+docker compose -f docker-compose-prod.yml exec backend python -m app.scripts.set_role vous@exemple.com admin
+```
 
 ---
 

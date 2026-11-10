@@ -7,6 +7,7 @@ import { Providers } from "./providers/root-providers";
 import TopLoader from "./components/TopLoader/TopLoader";
 import { ConsentProvider } from "./context/Consent/ConsentContext";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
+import { DEFAULT_SHARE_IMAGE } from "./lib/shareImage";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -35,21 +36,14 @@ export const metadata: Metadata = {
     title: "Crypto-Explorer",
     description:
       "Suivez l'actualité crypto en temps réel : prix, analyses de marchés, tendances Bitcoin, Ethereum et bien plus.",
-    images: [
-      {
-        url: "/images/01.png",
-        width: 1200,
-        height: 630,
-        alt: "Crypto-Explorer – Actualité et marchés crypto",
-      },
-    ],
+    images: [DEFAULT_SHARE_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "Crypto-Explorer",
     description:
       "Suivez l'actualité crypto en temps réel : prix, analyses de marchés, tendances Bitcoin, Ethereum et bien plus.",
-    images: ["/images/01.png"],
+    images: [DEFAULT_SHARE_IMAGE.url],
   },
   robots: {
     index: true,

@@ -7,6 +7,9 @@ services:
         - ENV=${ENV}
     expose:
       - "${PORT_FRONT}"
+    # Pages rendered by Next (blog) call the API inside the compose network.
+    environment:
+      - API_INTERNAL_URL=http://backend:${PORT_BACK}
     restart: unless-stopped
     depends_on:
       - backend
@@ -27,6 +30,9 @@ services:
       --root-path /api --proxy-headers --forwarded-allow-ips='*'"
     expose:
       - "${PORT_BACK}"
+    # Uploaded blog images: kept across rebuilds, served by nginx.
+    volumes:
+      - blog_media:/app/media
     restart: unless-stopped
     depends_on:
       db:
@@ -56,6 +62,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
+      - blog_media:/srv/media:ro
     restart: unless-stopped
     depends_on:
       - frontend
@@ -63,3 +70,4 @@ services:
 
 volumes:
   postgres_data:
+  blog_media:
