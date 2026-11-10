@@ -70,6 +70,18 @@ describe("ArticlePage metadata", () => {
     });
   });
 
+  it("shares the cover image, or else the site's image", async () => {
+    api({ article: { ...ARTICLE, cover_image: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", cover_alt: "Un graphique" } });
+    const meta = await generateMetadata(params());
+    const shared = [{ url: expect.stringContaining("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp"), alt: "Un graphique" }];
+    expect(meta.openGraph?.images).toEqual(shared);
+    expect(meta.twitter).toMatchObject({ card: "summary_large_image", images: shared });
+
+    api();
+    const plain = await generateMetadata(params());
+    expect(plain.openGraph?.images).toEqual([expect.objectContaining({ url: "/images/01.png" })]);
+  });
+
   it("has a plain title for a missing article", async () => {
     api({ article: null });
     expect((await generateMetadata(params("nope"))).title).toBe("Article introuvable");
@@ -90,6 +102,21 @@ describe("ArticlePage", () => {
     expect(screen.getByText("2 novembre 2026")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Pourquoi" })).toBeTruthy();
     expect(screen.getByText("gras").tagName).toBe("STRONG");
+  });
+
+  it("shows the cover image with its text alternative", async () => {
+    api({ article: { ...ARTICLE, cover_image: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", cover_alt: "Un graphique" } });
+    const { container } = renderWithAuth(await ArticlePage(params()));
+    const img = screen.getByRole("img", { name: "Un graphique" });
+    expect(img.getAttribute("src")).toContain("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp");
+    expect(img.getAttribute("loading")).toBe("eager");
+    const ld = JSON.parse(container.querySelector('script[type="application/ld+json"]')!.innerHTML);
+    expect(ld.image).toContain("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp");
+  });
+
+  it("keeps the category gradient without an image", async () => {
+    renderWithAuth(await ArticlePage(params()));
+    expect(screen.queryByRole("img", { name: /./ })).toBeNull();
   });
 
   it("never renders raw HTML from the body", async () => {

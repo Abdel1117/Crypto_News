@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     # recorded; 0 turns the background task off.
     SIM_SNAPSHOT_INTERVAL: int = 3600
 
+    # Where uploaded files (blog cover images) are kept. In Docker it is a
+    # volume, shared with nginx in production.
+    MEDIA_DIR: str = "media"
+
     model_config = {"extra": "ignore"}
 
     @property

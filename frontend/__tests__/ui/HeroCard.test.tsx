@@ -27,6 +27,8 @@ function makeArticle(overrides: Partial<ArticleSummary> = {}): ArticleSummary {
     updated_at: "2025-06-12T10:00:00Z",
     like_count: 0,
     comment_count: 0,
+    cover_image: null,
+    cover_alt: null,
     ...overrides,
   };
 }
@@ -47,5 +49,18 @@ describe("HeroCard", () => {
     expect(screen.getByText("Bitcoin")).toBeTruthy();
     expect(screen.getByText("Alice Dupont")).toBeTruthy();
     expect(screen.getByText("5 min de lecture")).toBeTruthy();
+    expect(document.querySelector("img")).toBeNull();
+  });
+
+  it("shows the cover image, loaded first, with both sizes", () => {
+    const { container } = render(
+      <HeroCard article={makeArticle({ cover_image: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", cover_alt: "Un graphique" })} />,
+    );
+    const img = container.querySelector("img")!;
+    expect(img.getAttribute("src")).toContain("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.webp");
+    expect(img.getAttribute("srcset")).toContain("/media/blog/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-sm.webp 640w");
+    expect(img.getAttribute("loading")).toBe("eager");
+    // The link already says the title: the image is decorative here.
+    expect(img.getAttribute("alt")).toBe("");
   });
 });

@@ -27,6 +27,8 @@ function makeArticle(overrides: Partial<ArticleSummary> = {}): ArticleSummary {
     updated_at: "2025-06-12T10:00:00Z",
     like_count: 0,
     comment_count: 0,
+    cover_image: null,
+    cover_alt: null,
     ...overrides,
   };
 }
@@ -48,5 +50,13 @@ describe("ListCard", () => {
     expect(screen.getByText("03")).toBeTruthy();
     expect(screen.getByText("Solana vs Avalanche")).toBeTruthy();
     expect(screen.getByText(/8 min · 7 juin 2025/)).toBeTruthy();
+  });
+
+  it("keeps the rank over the cover image", () => {
+    const { container } = render(
+      <ListCard article={makeArticle({ cover_image: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", cover_alt: "Un graphique" })} index={0} />,
+    );
+    expect(container.querySelector("img")?.getAttribute("sizes")).toBe("64px");
+    expect(screen.getByText("01")).toBeTruthy();
   });
 });

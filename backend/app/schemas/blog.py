@@ -4,11 +4,13 @@ from typing import Annotated, Literal
 from pydantic import AfterValidator, BaseModel, StringConstraints
 
 from app.services.blog.categories import BlogCategory
+from app.services.blog.images import KEY_PATTERN
 
 ArticleStatus = Literal["draft", "published"]
 
 MAX_BODY_LENGTH = 50_000
 MAX_COMMENT_LENGTH = 2000
+MAX_ALT_LENGTH = 200
 
 
 def _as_utc(value: datetime | None) -> datetime | None:
@@ -25,6 +27,11 @@ Body = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max
 CommentBody = Annotated[
     str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_COMMENT_LENGTH)
 ]
+# The key returned by POST /blog/manage/images.
+CoverKey = Annotated[str, StringConstraints(pattern=KEY_PATTERN)]
+CoverAlt = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=3, max_length=MAX_ALT_LENGTH)
+]
 
 
 # ---------- requests ----------
@@ -35,16 +42,22 @@ class ArticleCreate(BaseModel):
     body: Body
     category: BlogCategory
     status: ArticleStatus = "draft"
+    # An image needs its text alternative (checked by the service).
+    cover_image: CoverKey | None = None
+    cover_alt: CoverAlt | None = None
 
 
 class ArticleUpdate(BaseModel):
-    """Only the fields sent are changed (e.g. just the status to unpublish)."""
+    """Only the fields sent are changed (e.g. just the status to unpublish).
+    `cover_image: null` removes the image."""
 
     title: Title | None = None
     excerpt: Excerpt | None = None
     body: Body | None = None
     category: BlogCategory | None = None
     status: ArticleStatus | None = None
+    cover_image: CoverKey | None = None
+    cover_alt: CoverAlt | None = None
 
 
 class CommentCreate(BaseModel):
@@ -66,10 +79,18 @@ class ArticleSummary(BaseModel):
     updated_at: UtcDatetime
     like_count: int
     comment_count: int
+    cover_image: str | None = None
+    cover_alt: str | None = None
 
 
 class ArticleDetail(ArticleSummary):
     body: str
+
+
+class ImageUploaded(BaseModel):
+    """An image ready to be set as an article's cover_image."""
+
+    key: str
 
 
 class ArticlesPage(BaseModel):

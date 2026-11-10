@@ -1,6 +1,9 @@
+import time
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 
 import pytest
+from PIL import Image
 from fastapi import HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -10,7 +13,8 @@ from app.models.blog import BlogComment, BlogFavorite, BlogLike
 from app.models.user import User
 from app.repositories.blog.blog_sql_repo import SQLBlogRepository
 from app.schemas.blog import ArticleCreate, ArticleUpdate, CommentCreate
-from app.services.blog.blog_service import BlogService
+from app.services.blog.blog_service import ALT_REQUIRED, IMAGE_MISSING, BlogService
+from app.services.blog.images import ORPHAN_AGE_SECONDS, ImageStore
 
 START = datetime(2026, 11, 1, tzinfo=timezone.utc)
 
@@ -49,9 +53,30 @@ async def people(session):
     return rows
 
 
+class FileClock:
+    """Real time, plus whatever the test has skipped ahead."""
+
+    def __init__(self):
+        self.skipped = 0.0
+
+    def __call__(self):
+        return time.time() + self.skipped
+
+
 @pytest.fixture
-def service(session):
-    return BlogService(SQLBlogRepository(session), now=Clock())
+def images(tmp_path):
+    return ImageStore(tmp_path, clock=FileClock())
+
+
+async def a_day_later(service, images):
+    """A day passes, then an editor uploads an image (which purges)."""
+    images.clock.skipped += ORPHAN_AGE_SECONDS + 60
+    return await service.upload_image(jpeg(), "image/jpeg")
+
+
+@pytest.fixture
+def service(session, images):
+    return BlogService(SQLBlogRepository(session), now=Clock(), images=images)
 
 
 def draft(title="Bitcoin et les ETF spot", category="Bitcoin", status="draft", body=None):
@@ -259,3 +284,130 @@ class TestComments:
         with pytest.raises(HTTPException) as exc:
             await service.delete_comment(people["admin"], 404)
         assert exc.value.status_code == 404
+
+
+def jpeg() -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", (1200, 630), "navy").save(buffer, "JPEG")
+    return buffer.getvalue()
+
+
+async def expect_error(call, status_code, detail=None):
+    with pytest.raises(HTTPException) as exc:
+        await call
+    assert exc.value.status_code == status_code
+    if detail:
+        assert exc.value.detail == detail
+
+
+class TestCoverImage:
+    async def test_upload_returns_a_key_for_the_article(self, service, images):
+        key = await service.upload_image(jpeg(), "image/jpeg")
+        assert images.exists(key)
+
+    async def test_refused_uploads(self, service, images):
+        await expect_error(service.upload_image(jpeg(), "image/gif"), 415)
+        await expect_error(service.upload_image(b"x" * (5 * 1024 * 1024 + 1), "image/png"), 413)
+        await expect_error(service.upload_image(b"pas une image", "image/png"), 422)
+        assert not images.dir.exists() or not any(images.dir.iterdir())
+
+    async def test_create_with_cover_and_alt(self, service, people):
+        key = await service.upload_image(jpeg(), "image/jpeg")
+        data = draft().model_copy(update={"cover_image": key, "cover_alt": "Un graphique"})
+        article = await service.create(people["editor"], data)
+        assert (article.cover_image, article.cover_alt) == (key, "Un graphique")
+        listed = (await service.manage_list(None, 50, 0)).items[0]
+        assert (listed.cover_image, listed.cover_alt) == (key, "Un graphique")
+
+    async def test_an_image_needs_its_alt(self, service, people):
+        key = await service.upload_image(jpeg(), "image/jpeg")
+        data = draft().model_copy(update={"cover_image": key})
+        await expect_error(service.create(people["editor"], data), 422, ALT_REQUIRED)
+
+    async def test_unknown_image_is_refused(self, service, people):
+        data = draft().model_copy(update={"cover_image": "0" * 32, "cover_alt": "Un graphique"})
+        await expect_error(service.create(people["editor"], data), 422, IMAGE_MISSING)
+
+    async def test_alt_without_image_is_dropped(self, service, people):
+        data = draft().model_copy(update={"cover_alt": "Rien à décrire"})
+        article = await service.create(people["editor"], data)
+        assert (article.cover_image, article.cover_alt) == (None, None)
+
+    async def _with_cover(self, service, people):
+        key = await service.upload_image(jpeg(), "image/jpeg")
+        data = draft().model_copy(update={"cover_image": key, "cover_alt": "Première image"})
+        return await service.create(people["editor"], data), key
+
+    async def test_other_updates_keep_the_cover(self, service, people):
+        article, key = await self._with_cover(service, people)
+        updated = await service.update(article.id, ArticleUpdate(title="Un autre titre"))
+        assert (updated.cover_image, updated.cover_alt) == (key, "Première image")
+
+    async def test_alt_alone_can_change(self, service, people, images):
+        article, key = await self._with_cover(service, people)
+        updated = await service.update(article.id, ArticleUpdate(cover_alt="Nouvelle description"))
+        assert (updated.cover_image, updated.cover_alt) == (key, "Nouvelle description")
+        assert images.exists(key)
+
+    async def test_alt_cannot_be_removed_while_there_is_an_image(self, service, people):
+        article, _ = await self._with_cover(service, people)
+        await expect_error(
+            service.update(article.id, ArticleUpdate(cover_alt=None)), 422, ALT_REQUIRED
+        )
+
+    async def test_replaced_image_is_deleted_a_day_later(self, service, people, images):
+        article, old = await self._with_cover(service, people)
+        new = await service.upload_image(jpeg(), "image/jpeg")
+        updated = await service.update(
+            article.id, ArticleUpdate(cover_image=new, cover_alt="Deuxième image")
+        )
+        assert (updated.cover_image, updated.cover_alt) == (new, "Deuxième image")
+        # Still there for the pages Next has cached with the old image.
+        assert images.exists(old)
+
+        await a_day_later(service, images)
+        assert not images.exists(old)
+        assert images.exists(new)
+
+    async def test_null_removes_the_cover(self, service, people, images):
+        article, key = await self._with_cover(service, people)
+        updated = await service.update(article.id, ArticleUpdate(cover_image=None))
+        assert (updated.cover_image, updated.cover_alt) == (None, None)
+        await a_day_later(service, images)
+        assert not images.exists(key)
+
+    async def test_images_never_saved_are_deleted_a_day_later(self, service, people, images):
+        article, used = await self._with_cover(service, people)
+        abandoned = await service.upload_image(jpeg(), "image/jpeg")
+        await a_day_later(service, images)
+        assert not images.exists(abandoned)
+        assert images.exists(used)
+
+    async def test_refused_update_changes_nothing(self, service, people, images):
+        article, key = await self._with_cover(service, people)
+        await expect_error(
+            service.update(
+                article.id,
+                ArticleUpdate(title="Titre jamais enregistré", cover_image="f" * 32),
+            ),
+            422,
+            IMAGE_MISSING,
+        )
+        current = await service.manage_get(article.id)
+        assert (current.title, current.cover_image) == (article.title, key)
+
+    async def test_deleting_the_article_deletes_its_cover(self, service, people, images):
+        article, key = await self._with_cover(service, people)
+        await service.delete(article.id)
+        await a_day_later(service, images)
+        assert not images.exists(key)
+
+    async def test_a_cover_shared_by_two_articles_is_kept(self, service, people, images):
+        article, key = await self._with_cover(service, people)
+        data = draft("Un second article").model_copy(
+            update={"cover_image": key, "cover_alt": "Même image"}
+        )
+        await service.create(people["editor"], data)
+        await service.delete(article.id)
+        await a_day_later(service, images)
+        assert images.exists(key)

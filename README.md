@@ -51,6 +51,7 @@ Le projet se compose d'un frontend Next.js et d'une API FastAPI, qui communiquen
 Chaque compte a un rôle : **lecteur** (par défaut), **éditeur** ou **admin**. Les éditeurs et les admins gèrent tous les articles et peuvent supprimer n'importe quel commentaire ; seuls les admins attribuent les rôles. L'API vérifie le rôle en base à chaque requête : le rôle contenu dans le token ne sert qu'à afficher les bons menus.
 
 - **Articles :** corps en Markdown (le HTML brut n'est jamais interprété), une catégorie parmi huit, brouillon ou publié. L'adresse `/blog/<slug>` est fixée à la création et ne change plus.
+- **Image de couverture :** facultative, en JPEG, PNG ou WebP de 5 Mo au maximum, avec un texte alternatif obligatoire. L'API la décode et la réenregistre en WebP en deux tailles (1600 px et 640 px), sans les métadonnées d'origine comme la position GPS. Les fichiers sont gardés dans le volume `blog_media`, servi directement par nginx en production. Une image remplacée, retirée ou jamais enregistrée avec un article est supprimée un jour plus tard ([`images.py`](backend/app/services/blog/images.py)).
 - **Pages publiques :** rendues par le serveur Next pour le référencement (métadonnées, données structurées `BlogPosting`), avec un cache d'une minute : un article publié apparaît sur le blog en moins de 60 s.
 - **Recommandations :** même catégorie, catégories aimées ou mises en favori par le lecteur, popularité et fraîcheur ([`recommend.py`](backend/app/services/blog/recommend.py)).
 
@@ -104,6 +105,7 @@ graph TB
 | Chemin public | Destination |
 |---|---|
 | `/` | Frontend Next.js |
+| `/api/media/*` | Images du blog, lues par nginx dans le volume `blog_media` |
 | `/api/*` | API FastAPI, préfixe `/api` retiré |
 | `/ws/*` | WebSocket FastAPI, préfixe `/ws` retiré |
 
@@ -338,7 +340,7 @@ La documentation complète est générée par Swagger sur http://localhost:4000/
 | `/trending` | `GET` sur le préfixe | Public |
 | `/blog` | `GET /articles`, `/articles/{slug}`, `/articles/{id}/related`, `/articles/{id}/comments` | Public |
 | `/blog` | `GET /articles/{id}/me`, `PUT/DELETE /articles/{id}/like` et `/favorite`, `POST /articles/{id}/comments`, `DELETE /comments/{id}`, `GET /favorites`, `/recommendations` | Connecté |
-| `/blog` | `GET/POST /manage/articles`, `GET/PATCH/DELETE /manage/articles/{id}` | Éditeur, Admin |
+| `/blog` | `GET/POST /manage/articles`, `GET/PATCH/DELETE /manage/articles/{id}`, `POST /manage/images` | Éditeur, Admin |
 | `/admin` | `GET /users`, `PATCH /users/{id}/role` | Admin |
 | `/simulation` | `GET /countries` | Public |
 | `/simulation` | `GET/POST/PATCH /portfolio`, `POST /portfolio/reset`, `GET /quotes`, `GET/POST /trades` | Connecté |

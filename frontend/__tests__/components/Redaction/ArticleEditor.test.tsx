@@ -30,10 +30,13 @@ function fill(fields: Partial<Record<"Titre" | "Résumé" | "Catégorie", string
 
 const VALID = { Titre: "Un titre valable", Résumé: "Un résumé assez long.", Catégorie: "DeFi" };
 
+const NO_COVER = { cover_image: null, cover_alt: "" };
+const KEY = "c".repeat(32);
+
 describe("validateArticle", () => {
   it("mirrors the API rules", () => {
     expect(
-      validateArticle({ title: "abc", excerpt: "court", body: "  ", category: "Poker" }),
+      validateArticle({ title: "abc", excerpt: "court", body: "  ", category: "Poker", ...NO_COVER }),
     ).toEqual({
       title: expect.stringMatching(/au moins 5/),
       excerpt: expect.stringMatching(/au moins 10/),
@@ -41,8 +44,25 @@ describe("validateArticle", () => {
       category: "Choisissez une catégorie.",
     });
     expect(
-      validateArticle({ title: "Titre ok", excerpt: "Résumé correct.", body: "x", category: "NFT" }),
+      validateArticle({
+        title: "Titre ok",
+        excerpt: "Résumé correct.",
+        body: "x",
+        category: "NFT",
+        ...NO_COVER,
+      }),
     ).toEqual({});
+  });
+
+  it("asks for the image's text alternative", () => {
+    const base = { title: "Titre ok", excerpt: "Résumé correct.", body: "x", category: "NFT" };
+    expect(validateArticle({ ...base, cover_image: KEY, cover_alt: "  " })).toEqual({
+      cover_alt: "Décrivez l’image en quelques mots.",
+    });
+    expect(validateArticle({ ...base, cover_image: KEY, cover_alt: "x".repeat(201) })).toEqual({
+      cover_alt: "200 caractères au maximum.",
+    });
+    expect(validateArticle({ ...base, cover_image: KEY, cover_alt: "Un graphique" })).toEqual({});
   });
 });
 
@@ -86,6 +106,8 @@ describe("ArticleEditor — new article", () => {
       body: "Le texte.",
       category: "DeFi",
       status: "draft",
+      cover_image: null,
+      cover_alt: null,
     });
   });
 
@@ -175,5 +197,119 @@ describe("ArticleEditor — existing article", () => {
     const event = new Event("beforeunload", { cancelable: true });
     globalThis.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
+  });
+});
+
+function imageFile(name = "photo.png", type = "image/png", size?: number) {
+  const file = new File([new Uint8Array(16)], name, { type });
+  if (size !== undefined) Object.defineProperty(file, "size", { value: size });
+  return file;
+}
+
+function pick(file: File) {
+  fireEvent.change(screen.getByLabelText("Fichier de l’image de couverture"), {
+    target: { files: [file] },
+  });
+}
+
+describe("ArticleEditor — cover image", () => {
+  it("sends the image, asks for its description, then saves both", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(201, { key: KEY }));
+    renderWithAuth(<ArticleEditor />, "editor");
+    fill(VALID, "Le texte.");
+    pick(imageFile());
+
+    const alt = await screen.findByLabelText("Texte alternatif");
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(String(url)).toContain("/blog/manage/images");
+    expect(init.method).toBe("POST");
+    expect((init.body as FormData).get("file")).toBeInstanceOf(File);
+    expect(init.headers["Content-Type"]).toBeUndefined();
+    expect(document.activeElement).toBe(alt);
+    expect(document.querySelector("img")?.getAttribute("src")).toContain(`/media/blog/${KEY}.webp`);
+
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    expect(screen.getByText("Décrivez l’image en quelques mots.")).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    fetchMock.mockResolvedValueOnce(jsonResponse(201, makeDetail({ id: 14 })));
+    fireEvent.change(alt, { target: { value: "  Un graphique en hausse " } });
+    fireEvent.click(screen.getByRole("button", { name: "Publier" }));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/redaction/14"));
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
+      cover_image: KEY,
+      cover_alt: "Un graphique en hausse",
+    });
+  });
+
+  it("checks the type and weight before sending anything", () => {
+    renderWithAuth(<ArticleEditor />, "editor");
+    pick(imageFile("anim.gif", "image/gif"));
+    expect(screen.getByRole("alert").textContent).toMatch(/JPEG, PNG ou WebP/);
+
+    pick(imageFile("photo.jpg", "image/jpeg", 5 * 1024 * 1024 + 1));
+    expect(screen.getByRole("alert").textContent).toBe("Image trop lourde : 5 Mo au maximum.");
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText("Texte alternatif")).toBeNull();
+  });
+
+  it("shows the API's refusal of an image", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(422, { detail: "Ce fichier n’est pas une image JPEG, PNG ou WebP valide." }),
+    );
+    renderWithAuth(<ArticleEditor />, "editor");
+    pick(imageFile());
+    expect((await screen.findByRole("alert")).textContent).toMatch(/pas une image/);
+    expect(screen.queryByLabelText("Texte alternatif")).toBeNull();
+  });
+
+  it("can't save while the image is being sent", () => {
+    fetchMock.mockReturnValueOnce(new Promise(() => {}));
+    renderWithAuth(<ArticleEditor />, "editor");
+    pick(imageFile());
+    expect(screen.getByText("Envoi de l’image…")).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Publier" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  const ILLUSTRATED = makeDetail({ id: 6, cover_image: KEY, cover_alt: "Un graphique" });
+
+  it("edits the text alternative of the current image", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ...ILLUSTRATED, cover_alt: "Autre texte" }));
+    renderWithAuth(<ArticleEditor article={ILLUSTRATED} />, "admin");
+    const alt = screen.getByLabelText("Texte alternatif") as HTMLInputElement;
+    expect(alt.value).toBe("Un graphique");
+
+    fireEvent.change(alt, { target: { value: "Autre texte" } });
+    expect(screen.getByText("Modifications non enregistrées")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await screen.findByRole("status");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      cover_image: KEY,
+      cover_alt: "Autre texte",
+    });
+  });
+
+  it("removes the image", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(200, { ...ILLUSTRATED, cover_image: null, cover_alt: null }),
+    );
+    renderWithAuth(<ArticleEditor article={ILLUSTRATED} />, "admin");
+    fireEvent.click(screen.getByRole("button", { name: "Retirer" }));
+    expect(screen.queryByLabelText("Texte alternatif")).toBeNull();
+    expect(screen.getByText("Aucune image")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
+    await screen.findByRole("status");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+      cover_image: null,
+      cover_alt: null,
+    });
+  });
+
+  it("shows the image in the preview", () => {
+    renderWithAuth(<ArticleEditor article={ILLUSTRATED} />, "admin");
+    fireEvent.click(screen.getByRole("button", { name: "Aperçu" }));
+    const preview = screen.getByLabelText("Aperçu de l’article");
+    expect(preview.querySelector("img")?.getAttribute("alt")).toBe("Un graphique");
   });
 });

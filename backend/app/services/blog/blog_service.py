@@ -4,13 +4,19 @@
 - Editors and admins write, edit and delete every article.
 - Logged-in readers like, save and comment published articles. A comment is
   deleted by its author, or by an editor or an admin.
+- A cover image is uploaded first (upload_image gives its key), then saved
+  with the article, always with a text alternative. Replaced or deleted
+  covers are removed from disk a day later (see images.py).
 """
 
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import HTTPException, status
 
+from app.core.config import settings
 from app.enums.user_role import EDITORIAL_ROLES
 from app.models.blog import (
     ARTICLE_PUBLISHED,
@@ -32,11 +38,16 @@ from app.schemas.blog import (
     CommentsPage,
     ReactionState,
 )
+from app.services.blog.images import ImageRejected, ImageStore, check_upload
 from app.services.blog.recommend import Candidate, rank
 from app.services.blog.slug import read_minutes, slugify, unique_slug
 
 ARTICLE_NOT_FOUND = "Article introuvable."
 COMMENT_NOT_FOUND = "Commentaire introuvable."
+IMAGE_MISSING = "Image introuvable : envoyez-la de nouveau."
+ALT_REQUIRED = "Ajoutez un texte alternatif qui décrit l’image."
+# Fields that `null` clears in an update; for the others, `null` means "unchanged".
+COVER_FIELDS = ("cover_image", "cover_alt")
 
 
 class BlogError(HTTPException):
@@ -62,6 +73,8 @@ def _summary(row: SummaryRow) -> ArticleSummary:
         updated_at=article.updated_at,
         like_count=likes,
         comment_count=comments,
+        cover_image=article.cover_image,
+        cover_alt=article.cover_alt,
     )
 
 
@@ -82,10 +95,14 @@ def _not_found(detail: str = ARTICLE_NOT_FOUND) -> BlogError:
 
 class BlogService:
     def __init__(
-        self, repo: SQLBlogRepository, now: Callable[[], datetime] = _utcnow
+        self,
+        repo: SQLBlogRepository,
+        now: Callable[[], datetime] = _utcnow,
+        images: ImageStore | None = None,
     ) -> None:
         self.repo = repo
         self.now = now
+        self.images = images or ImageStore(Path(settings.MEDIA_DIR))
 
     # ---------- lookups ----------
 
@@ -121,6 +138,8 @@ class BlogService:
             updated_at=article.updated_at,
             like_count=await self.repo.like_count(article.id),
             comment_count=await self.repo.count_comments(article.id),
+            cover_image=article.cover_image,
+            cover_alt=article.cover_alt,
             body=article.body,
         )
 
@@ -239,7 +258,48 @@ class BlogService:
     async def manage_get(self, article_id: int) -> ArticleDetail:
         return await self._detail(await self._any(article_id))
 
+    async def upload_image(self, data: bytes, content_type: str | None) -> str:
+        """Checks and stores an image; its key is then sent with the article."""
+        try:
+            check_upload(data, content_type)
+            # Decoding and resizing take CPU time: off the event loop.
+            key = await asyncio.to_thread(self.images.save, data)
+        except ImageRejected as exc:
+            raise BlogError(exc.status_code, str(exc)) from exc
+        await self._purge_unused_images(also_keep=key)
+        return key
+
+    async def _purge_unused_images(self, also_keep: str | None = None) -> None:
+        """Housekeeping, on each editorial change: deletes the images unused
+        for a day (replaced, removed, or uploaded and never saved)."""
+        keep = await self.repo.cover_keys()
+        if also_keep:
+            keep.add(also_keep)
+        await asyncio.to_thread(self.images.purge_orphans, keep)
+
+    def _checked_cover(
+        self, key: str | None, alt: str | None, is_new: bool
+    ) -> tuple[str | None, str | None]:
+        """The (image, alt) pair to save: both set, or both empty."""
+        if key is None:
+            return None, None
+        if is_new and not self.images.exists(key):
+            raise BlogError(status.HTTP_422_UNPROCESSABLE_CONTENT, IMAGE_MISSING)
+        if not alt:
+            raise BlogError(status.HTTP_422_UNPROCESSABLE_CONTENT, ALT_REQUIRED)
+        return key, alt
+
+    async def _release_cover(self, key: str | None) -> None:
+        """A cover no article uses anymore stays a day (pages cached by Next
+        still show it), then goes with the next purge."""
+        if key and not await self.repo.cover_in_use(key):
+            await asyncio.to_thread(self.images.retire, key)
+        await self._purge_unused_images()
+
     async def create(self, author: User, data: ArticleCreate) -> ArticleDetail:
+        cover_image, cover_alt = self._checked_cover(
+            data.cover_image, data.cover_alt, is_new=True
+        )
         now = self.now()
         taken = await self.repo.slugs_starting_with(slugify(data.title))
         article = BlogArticle(
@@ -254,6 +314,8 @@ class BlogService:
             created_at=now,
             updated_at=now,
             published_at=now if data.status == ARTICLE_PUBLISHED else None,
+            cover_image=cover_image,
+            cover_alt=cover_alt,
         )
         await self.repo.add(article)
         await self.repo.commit()
@@ -261,9 +323,19 @@ class BlogService:
 
     async def update(self, article_id: int, data: ArticleUpdate) -> ArticleDetail:
         article = await self._any(article_id)
-        changes = data.model_dump(exclude_unset=True, exclude_none=True)
+        changes = data.model_dump(exclude_unset=True)
+        old_cover = article.cover_image
+        cover_image = changes.get("cover_image", old_cover)
+        # Checked before anything changes: a refused update leaves the article as is.
+        cover_image, cover_alt = self._checked_cover(
+            cover_image,
+            changes.get("cover_alt", article.cover_alt),
+            is_new=cover_image != old_cover,
+        )
         for field, value in changes.items():
-            setattr(article, field, value)
+            if value is not None and field not in COVER_FIELDS:
+                setattr(article, field, value)
+        article.cover_image, article.cover_alt = cover_image, cover_alt
         if "body" in changes:
             article.read_minutes = read_minutes(article.body)
         now = self.now()
@@ -272,9 +344,13 @@ class BlogService:
         article.updated_at = now
         await self.repo.add(article)
         await self.repo.commit()
+        if old_cover != article.cover_image:
+            await self._release_cover(old_cover)
         return await self._detail(article)
 
     async def delete(self, article_id: int) -> None:
         article = await self._any(article_id)
+        cover = article.cover_image
         await self.repo.delete_article(article)
         await self.repo.commit()
+        await self._release_cover(cover)

@@ -1,8 +1,10 @@
+from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.db.session import get_session
 from app.dependencies.auth import get_current_user, require_editor
 from app.models.user import User
@@ -16,16 +18,25 @@ from app.schemas.blog import (
     CommentCreate,
     CommentOut,
     CommentsPage,
+    ImageUploaded,
     ReactionState,
 )
 from app.services.blog.blog_service import BlogService
 from app.services.blog.categories import BlogCategory
+from app.services.blog.images import MAX_BYTES, ImageStore
 
 router = APIRouter(prefix="/blog", tags=["blog"])
 
 
-def get_blog_service(session: AsyncSession = Depends(get_session)) -> BlogService:
-    return BlogService(SQLBlogRepository(session))
+def get_image_store() -> ImageStore:
+    return ImageStore(Path(settings.MEDIA_DIR))
+
+
+def get_blog_service(
+    session: AsyncSession = Depends(get_session),
+    images: ImageStore = Depends(get_image_store),
+) -> BlogService:
+    return BlogService(SQLBlogRepository(session), images=images)
 
 
 # ---------- public: published articles only, no token read ----------
@@ -183,6 +194,21 @@ async def create_article(
     service: BlogService = Depends(get_blog_service),
 ):
     return await service.create(user, data)
+
+
+@router.post(
+    "/manage/images", response_model=ImageUploaded, status_code=status.HTTP_201_CREATED
+)
+async def upload_image(
+    file: UploadFile = File(...),
+    _: User = Depends(require_editor),
+    service: BlogService = Depends(get_blog_service),
+):
+    """A cover image (JPEG, PNG or WebP, 5 MB at most). Its key is then sent
+    as `cover_image` when the article is created or updated."""
+    # One byte more than allowed is enough to know the file is too heavy.
+    data = await file.read(MAX_BYTES + 1)
+    return ImageUploaded(key=await service.upload_image(data, file.content_type))
 
 
 @router.patch("/manage/articles/{article_id}", response_model=ArticleDetail)

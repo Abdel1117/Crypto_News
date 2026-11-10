@@ -65,7 +65,9 @@ function withAccessToken(init: RequestInit, token: string): RequestInit {
   return {
     ...init,
     headers: {
-      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      // JSON bodies only: a FormData (file upload) gets its multipart type,
+      // with its boundary, from the browser.
+      ...(typeof init.body === "string" ? { "Content-Type": "application/json" } : {}),
       ...init.headers,
       Authorization: `Bearer ${token}`,
     },

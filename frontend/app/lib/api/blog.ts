@@ -19,6 +19,9 @@ export interface ArticleSummary {
   updated_at: string;
   like_count: number;
   comment_count: number;
+  /** Key of the cover image (see coverUrl), with its text alternative. */
+  cover_image: string | null;
+  cover_alt: string | null;
 }
 
 export interface ArticleDetail extends ArticleSummary {
@@ -56,12 +59,41 @@ export interface ArticleInput {
   body: string;
   category: string;
   status: ArticleStatus;
+  /** null: no image (removes the current one). */
+  cover_image: string | null;
+  cover_alt: string | null;
 }
 
 export const TITLE_MAX = 160;
 export const EXCERPT_MAX = 300;
 export const COMMENT_MAX = 2000;
 export const COMMENTS_PAGE = 20;
+
+// Same limits as the API (services/blog/images.py, schemas/blog.py).
+export const IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const ALT_MIN = 3;
+export const ALT_MAX = 200;
+
+/**
+ * URL of a cover image. The API stores two WebP files per image: "large"
+ * (1600 px at most, article page and social networks) and "small" (640 px,
+ * cards). Same public URL for the browser and the Next server.
+ */
+export function coverUrl(key: string, size: "large" | "small" = "large"): string {
+  return `${API}/media/blog/${key}${size === "small" ? "-sm" : ""}.webp`;
+}
+
+/** Why `file` can't be sent as a cover image, or null if it can. */
+export function imageFileProblem(file: File): string | null {
+  if (!IMAGE_TYPES.includes(file.type)) {
+    return "Format non accepté : choisissez une image JPEG, PNG ou WebP.";
+  }
+  if (file.size > IMAGE_MAX_BYTES) {
+    return "Image trop lourde : 5 Mo au maximum.";
+  }
+  return null;
+}
 
 // ---------- server side (pages rendered by Next) ----------
 
@@ -213,6 +245,17 @@ export function updateArticle(
   return authFetchJson<ArticleDetail>(
     `${API}/blog/manage/articles/${id}`,
     { method: "PATCH", body: JSON.stringify(changes) },
+    tools,
+  );
+}
+
+/** Sends an image; its key then goes in the article's cover_image. */
+export function uploadImage(file: File, tools: ThunkTools) {
+  const form = new FormData();
+  form.append("file", file);
+  return authFetchJson<{ key: string }>(
+    `${API}/blog/manage/images`,
+    { method: "POST", body: form },
     tools,
   );
 }

@@ -137,6 +137,19 @@ class SQLBlogRepository:
         )
         return [tuple(row) for row in result.all()]
 
+    async def cover_keys(self) -> set[str]:
+        """Keys of every image used as a cover, drafts included."""
+        result = await self.session.execute(
+            select(BlogArticle.cover_image).where(BlogArticle.cover_image.is_not(None))
+        )
+        return set(result.scalars().all())
+
+    async def cover_in_use(self, key: str) -> bool:
+        result = await self.session.execute(
+            select(BlogArticle.id).where(BlogArticle.cover_image == key).limit(1)
+        )
+        return result.first() is not None
+
     async def delete_article(self, article: BlogArticle) -> None:
         """The article and everything attached to it (SQLite doesn't cascade)."""
         for model in (BlogComment, BlogLike, BlogFavorite):

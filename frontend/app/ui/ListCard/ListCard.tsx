@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ArticleSummary } from "@/app/lib/api/blog";
 import { formatArticleDate, readTimeLabel } from "@/app/components/Blog/format";
+import { CoverImage } from "@/app/components/Blog/CoverImage";
 import { CategoryBadge, categoryStyle } from "../CategoryBadge/CategoryBadge";
 
 /** Compact numbered row (side list next to the featured article). */
@@ -18,10 +19,17 @@ export function ListCard({
     >
       <span
         aria-hidden="true"
-        className="n-cover w-16 h-16 flex-none rounded-lg grid place-items-center text-lg font-medium text-white/80 n-tnum"
+        className="n-cover relative overflow-hidden w-16 h-16 flex-none rounded-lg grid place-items-center text-lg font-medium text-white/80 n-tnum"
         style={categoryStyle(article.category)}
       >
-        {String(index + 1).padStart(2, "0")}
+        {article.cover_image && (
+          <>
+            <CoverImage image={article.cover_image} sizes="64px" />
+            {/* Keeps the number readable over a bright image. */}
+            <span className="absolute inset-0 bg-black/45" />
+          </>
+        )}
+        <span className="relative">{String(index + 1).padStart(2, "0")}</span>
       </span>
       <span className="flex flex-col gap-1 min-w-0">
         <CategoryBadge category={article.category} />
