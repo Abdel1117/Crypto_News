@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import BlogExplorer from "@/app/components/Blog/BlogExplorer";
 import BlogReaderLinks from "@/app/components/Blog/BlogReaderLinks";
 import { CATEGORIES } from "@/app/components/Blog/categories";
-import { fetchPublishedArticles, type ArticleSummary } from "@/app/lib/api/blog";
+import {
+  fetchPublishedArticles,
+  type ArticleSummary,
+} from "@/app/lib/api/blog";
 
 export const metadata: Metadata = {
   title: "Blog – Analyses et actualités crypto",
