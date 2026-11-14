@@ -1,10 +1,10 @@
 from collections.abc import Iterable
 
-from app.clients.market_client import MarketClient
+from app.interface.market_client import AbstractMarketClient
 
 
 class MarketService:
-    def __init__(self, client: MarketClient):
+    def __init__(self, client: AbstractMarketClient):
         self.client = client
 
     async def get_top_markets(

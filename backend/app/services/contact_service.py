@@ -1,11 +1,12 @@
 import html
 
 from app.schemas.contact import ContactRequest
-from app.services.email.email_sender import EmailMessage, IEmailSender, single_line
+from app.interface.email_sender import AbstractEmailSender
+from app.services.email.email_sender import EmailMessage, single_line
 
 
 class ContactService:
-    def __init__(self, email_sender: IEmailSender, recipient: str) -> None:
+    def __init__(self, email_sender: AbstractEmailSender, recipient: str) -> None:
         self._sender = email_sender
         self._recipient = recipient
 

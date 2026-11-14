@@ -1,4 +1,4 @@
-from app.clients.market_client import MarketClient
+from app.interface.market_client import AbstractMarketClient
 
 
 class TrendingService:

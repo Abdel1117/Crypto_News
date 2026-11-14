@@ -1,6 +1,7 @@
 import time
 import httpx
 from app.core.config import settings
+from app.interface.market_client import AbstractMarketClient
 from typing import Optional, List, Dict
 
 _CACHE_TTL = 30  # seconds — matches the markets WS poll interval
@@ -45,7 +46,7 @@ def clear_cache() -> None:
     _cache.clear()
 
 
-class CoinGeckoClient:
+class CoinGeckoClient(AbstractMarketClient):
 
     BASE_URL = "https://api.coingecko.com/api/v3"
 

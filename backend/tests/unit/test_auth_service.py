@@ -10,7 +10,7 @@ from app.schemas.token import TokenPayload
 from app.models.user import User
 from app.core.jwt_config import TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
 from app.enums.auth_provider import AuthProvider
-from app.interface.protocol.GoogleAuthProvider import GoogleUserInfo
+from app.interface.google_auth_provider import GoogleUserInfo
 from app.clients.google_auth_provider import GoogleAuthNotConfigured, InvalidGoogleCredentials
 from jose import JWTError
 from pydantic import ValidationError

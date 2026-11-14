@@ -4,10 +4,10 @@ from typing import Optional
 from sqlmodel import col, or_, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.repositories.users.user_repository import UserRepositoryProtocol
+from app.interface.user_repository import AbstractUserRepository
 from app.models.user import User
 
-class SQLUserRepository(UserRepositoryProtocol):
+class SQLUserRepository(AbstractUserRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
