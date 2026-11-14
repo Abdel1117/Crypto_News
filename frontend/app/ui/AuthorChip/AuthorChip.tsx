@@ -1,16 +1,20 @@
-/** Author initial, name and reading time. */
+/** Author initial, name, reading time and (optionally) the date. */
 export function AuthorChip({
   initial,
   name,
   readTime,
+  date,
+  dateTime,
   onCover = false,
-}: {
+}: Readonly<{
   initial: string;
   name: string;
-  date?: string;
   readTime: string;
+  date?: string;
+  /** Machine-readable date for the <time> element. */
+  dateTime?: string;
   onCover?: boolean;
-}) {
+}>) {
   return (
     <div
       className={`flex flex-wrap items-center gap-2 text-xs ${
@@ -26,6 +30,12 @@ export function AuthorChip({
       <span>{name}</span>
       <span aria-hidden="true">·</span>
       <span>{readTime} de lecture</span>
+      {date && (
+        <>
+          <span aria-hidden="true">·</span>
+          <time dateTime={dateTime}>{date}</time>
+        </>
+      )}
     </div>
   );
 }

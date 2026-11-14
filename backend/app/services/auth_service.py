@@ -3,22 +3,36 @@ from jose import JWTError
 
 from app.core.jwt_config import ACCESS_TOKEN_EXPIRE_DELTA, TOKEN_TYPE_REFRESH
 from app.models.user import User
-from app.repositories.users.user_repository import UserRepositoryProtocol
-from app.clients.google_auth_provider import GoogleAuthProvider
+from app.interface.user_repository import AbstractUserRepository
+from app.clients.google_auth_provider import (
+    GoogleAuthNotConfigured,
+    GoogleAuthProvider,
+    InvalidGoogleCredentials,
+)
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoogle
 from app.enums.auth_provider import  AuthProvider
+from app.enums.user_role import UserRole
 from app.schemas.token import TokenPair
-from app.auth.token_service import TokenServiceProtocol
-from app.utils.security import PasswordHasher
+from app.interface.token_service import AbstractTokenService
+from app.interface.password_hasher import AbstractPasswordHasher
+from app.utils.dates import utcnow
+from app.utils.security import PasswordHasher, dummy_password_hash
+
+
+def _role_value(role) -> str:
+    """The role as plain text ("user" for accounts created before roles)."""
+    if role is None:
+        return UserRole.user.value
+    return role.value if isinstance(role, UserRole) else str(role)
 
 
 class AuthService:
     def __init__(
         self,
         google_auth_provider : GoogleAuthProvider,
-        user_repository: UserRepositoryProtocol,
-        token_service: TokenServiceProtocol | None = None,
-        password_hasher: PasswordHasher | None = None,
+        user_repository: AbstractUserRepository,
+        token_service: AbstractTokenService | None = None,
+        password_hasher: AbstractPasswordHasher | None = None,
     ) -> None:
         self.google_auth_provider = google_auth_provider
         self.user_repository = user_repository
@@ -27,8 +41,14 @@ class AuthService:
 
     
     def __create_session(self, user : User) -> TokenPair :
-        access_token = self.token_service.create_access_token(str(user.id), user.email, user.full_name)
-        refresh_token = self.token_service.create_refresh_token(str(user.id), user.email, user.full_name)
+        version = user.token_version or 0
+        role = _role_value(user.role)
+        access_token = self.token_service.create_access_token(
+            str(user.id), user.email, user.full_name, version, role=role
+        )
+        refresh_token = self.token_service.create_refresh_token(
+            str(user.id), user.email, user.full_name, version, role=role
+        )
         return TokenPair(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -58,7 +78,9 @@ class AuthService:
     async def authenticate_user(self, email: str, password: str) -> User:
         normalized_email = email.lower()
         user = await self.user_repository.get_by_email(normalized_email)
-        if not user or not user.is_active:
+        if not user or not user.is_active or not user.hashed_password:
+            # Hash anyway so the response time doesn't reveal which emails exist.
+            self.password_hasher.verify(password, dummy_password_hash())
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Email ou mot de passe incorrect.",
@@ -110,13 +132,49 @@ class AuthService:
                 detail="Utilisateur introuvable ou inactif.",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        if payload.ver != (user.token_version or 0):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session expirée. Reconnecte-toi.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         return  self.__create_session(user)
+
+    async def logout(self, refresh_token: str | None) -> None:
+        """Ends every session of the token's owner by bumping their token version.
+
+        Invalid or already-revoked tokens are ignored: logout must always succeed.
+        """
+        if not refresh_token or self.token_service is None:
+            return
+        try:
+            payload = self.token_service.verify_token(refresh_token)
+        except JWTError:
+            return
+        if payload.token_type != TOKEN_TYPE_REFRESH:
+            return
+        user = await self.user_repository.get_by_email(payload.email)
+        if user is None or payload.ver != (user.token_version or 0):
+            return
+        user.token_version = (user.token_version or 0) + 1
+        await self.user_repository.update(user)
       
     async def google_auth(self, credentials : AuthRegistrationRequestGoogle) -> TokenPair: 
         if self.google_auth_provider is None : 
             raise RuntimeError("Google Auth Client requis pour la connexion.")
         
-        user_info_from_google = self.google_auth_provider.verify_credentials(credentials)
+        try:
+            user_info_from_google = self.google_auth_provider.verify_credentials(credentials)
+        except GoogleAuthNotConfigured:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="La connexion Google n'est pas disponible.",
+            )
+        except InvalidGoogleCredentials:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Connexion Google invalide ou e-mail non vérifié.",
+            )
         
         user = await self.user_repository.get_by_google_id(user_info_from_google.google_id)
         
@@ -131,22 +189,21 @@ class AuthService:
                 hashed_password=None,
                 provider=AuthProvider.google,
                 is_active=True,
+                email_verified_at=utcnow(),
             )
-            user = await self.user_repository.create(user) 
-            
+            user = await self.user_repository.create(user)
+
         if user.google_id is None:
             user.google_id = user_info_from_google.google_id
             user.provider = AuthProvider.google
             user = await self.user_repository.update(user)
-            
-        if not user.is_active: 
+
+        if not user.is_active:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Votre compte est désactivé.")
-        
+
+        # Google only signs in verified addresses (see GoogleAuthProvider).
+        if user.email_verified_at is None:
+            user.email_verified_at = utcnow()
+            user = await self.user_repository.update(user)
+
         return  self.__create_session(user)
-            
-        
-        
-        
-        
-        
-        

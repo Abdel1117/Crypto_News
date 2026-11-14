@@ -7,6 +7,7 @@ import {
   formatCompactFiat,
   formatSignedPercent,
 } from "@/app/utils/Format/FrFormat/FrFormat";
+import { trendColor as trend } from "@/app/components/Simulation/usePortfolio";
 
 interface MarketView {
   total_market_cap: number;
@@ -17,9 +18,6 @@ interface MarketView {
 }
 
 type Stat = { label: string; value: string; chg: string; color: string };
-
-const trend = (v: number) =>
-  v > 0 ? "var(--n-up)" : v < 0 ? "var(--n-down)" : "var(--n-neutral-400)";
 
 export default function MarketStats() {
   const { currency } = useCurrency();

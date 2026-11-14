@@ -5,13 +5,13 @@ import Link from "next/link";
 import { StatusScreen } from "./ui/StatusScreen/StatusScreen";
 import { ArrowsClockwiseIcon } from "./ui/NocturneIcons/NocturneIcons";
 
-export default function Error({
+export default function ErrorPage({
   error,
   reset,
-}: {
+}: Readonly<{
   error: Error & { digest?: string };
   reset: () => void;
-}) {
+}>) {
   useEffect(() => {
     console.error(error);
   }, [error]);

@@ -17,6 +17,9 @@ def _default_sqlite_url() -> str:
 
 
 def get_database_url() -> str:
+    # An explicit URL wins (e.g. to run migrations against a copy of a database).
+    if settings.DATABASE_URL:
+        return settings.DATABASE_URL
     if settings.DB_NAME and settings.DB_USER and settings.DB_PASSWORD:
         return (
             f"postgresql+asyncpg://{settings.DB_USER}:{settings.DB_PASSWORD}"

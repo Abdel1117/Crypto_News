@@ -34,12 +34,12 @@ export default function CookieBanner() {
   }
 
   return (
-    <div
-      role="dialog"
+    <dialog
+      open
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-text"
-      className="fixed inset-x-3 bottom-3 z-[75] flex flex-col gap-4 p-4 rounded-[14px] bg-(--n-surface) lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[460px] lg:p-5"
+      className="fixed inset-x-3 bottom-3 z-[75] w-auto flex flex-col gap-4 p-4 rounded-[14px] bg-(--n-surface) text-inherit lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[460px] lg:p-5"
       style={{ boxShadow: "var(--n-shadow-md)" }}
     >
       <div className="flex gap-3">
@@ -92,6 +92,6 @@ export default function CookieBanner() {
           Tout accepter
         </button>
       </div>
-    </div>
+    </dialog>
   );
 }

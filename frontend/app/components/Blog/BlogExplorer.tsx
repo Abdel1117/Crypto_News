@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import type { Article } from "@/app/(public)/blog/data";
+import type { ArticleSummary } from "@/app/lib/api/blog";
 import { HeroCard } from "@/app/ui/HeroCard/HeroCard";
 import { ListCard } from "@/app/ui/ListCard/ListCard";
 import { SmallCard } from "@/app/ui/SmallCard/SmallCard";
 import { SectionHeader } from "@/app/ui/SectionHeader/SectionHeader";
+import ForYouRow from "./ForYouRow";
 
 const ALL = "Tout";
 
@@ -13,16 +14,34 @@ const RULE =
   "linear-gradient(to right, transparent, var(--n-divider) 48px, var(--n-divider) calc(100% - 48px), transparent) no-repeat bottom / 100% 1px";
 
 interface BlogExplorerProps {
-  articles: Article[];
+  articles: ArticleSummary[];
   categories: string[];
+}
+
+function ArticleGrid({ articles }: Readonly<{ articles: ArticleSummary[] }>) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {articles.map((a) => (
+        <SmallCard key={a.id} article={a} />
+      ))}
+    </div>
+  );
 }
 
 /** Category filter + article lists of the blog page. */
 export default function BlogExplorer({
   articles,
   categories,
-}: BlogExplorerProps) {
+}: Readonly<BlogExplorerProps>) {
   const [category, setCategory] = useState(ALL);
+
+  if (articles.length === 0) {
+    return (
+      <p className="m-0 text-[15px] text-(--n-neutral-400)">
+        Aucun article publié pour le moment. Revenez bientôt !
+      </p>
+    );
+  }
 
   const filtered =
     category === ALL
@@ -34,9 +53,8 @@ export default function BlogExplorer({
 
   return (
     <>
-      <div
-        className="flex gap-1.5 overflow-x-auto pb-1 -mx-5 px-5 lg:mx-0 lg:px-0 lg:flex-wrap"
-        role="group"
+      <fieldset
+        className="flex gap-1.5 overflow-x-auto pb-1 -mx-5 px-5 lg:mx-0 lg:px-0 lg:flex-wrap min-w-0"
         aria-label="Filtrer par catégorie"
       >
         {[ALL, ...categories].map((c) => (
@@ -50,12 +68,16 @@ export default function BlogExplorer({
             {c}
           </button>
         ))}
-      </div>
+      </fieldset>
 
       {category === ALL ? (
         <>
           <section
-            className="grid gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10 mt-8 lg:mt-10"
+            className={`grid gap-6 mt-8 lg:mt-10 ${
+              headlines.length > 0
+                ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10"
+                : ""
+            }`}
             aria-label="À la une"
           >
             <HeroCard
@@ -63,29 +85,33 @@ export default function BlogExplorer({
               showExcerpt
               className="min-h-[340px] lg:min-h-[460px]"
             />
-            <div className="flex flex-col">
-              <span className="n-eyebrow mb-1">À la une</span>
-              {headlines.map((a, i) => (
-                <div
-                  key={a.id}
-                  style={
-                    i < headlines.length - 1 ? { background: RULE } : undefined
-                  }
-                >
-                  <ListCard article={a} index={i} />
-                </div>
-              ))}
-            </div>
+            {headlines.length > 0 && (
+              <div className="flex flex-col">
+                <span className="n-eyebrow mb-1">À la une</span>
+                {headlines.map((a, i) => (
+                  <div
+                    key={a.id}
+                    style={
+                      i < headlines.length - 1
+                        ? { background: RULE }
+                        : undefined
+                    }
+                  >
+                    <ListCard article={a} index={i} />
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
 
-          <section className="mt-12 lg:mt-16">
-            <SectionHeader title="Derniers articles" count={latest.length} />
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {latest.map((a) => (
-                <SmallCard key={a.id} article={a} />
-              ))}
-            </div>
-          </section>
+          <ForYouRow />
+
+          {latest.length > 0 && (
+            <section className="mt-12 lg:mt-16">
+              <SectionHeader title="Derniers articles" count={latest.length} />
+              <ArticleGrid articles={latest} />
+            </section>
+          )}
         </>
       ) : (
         <section className="mt-8 lg:mt-10" aria-live="polite">
@@ -95,11 +121,7 @@ export default function BlogExplorer({
               Aucun article dans cette catégorie pour le moment.
             </p>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {filtered.map((a) => (
-                <SmallCard key={a.id} article={a} />
-              ))}
-            </div>
+            <ArticleGrid articles={filtered} />
           )}
         </section>
       )}

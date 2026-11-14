@@ -1,9 +1,15 @@
 import time
 import httpx
 from app.core.config import settings
+from app.interface.market_client import AbstractMarketClient
 from typing import Optional, List, Dict
 
 _CACHE_TTL = 30  # seconds — matches the markets WS poll interval
+# Keys come from request parameters (search text, coin id...), so the cache is
+# capped: past this size, entries too old to serve as a stale fallback go first,
+# then the oldest ones.
+_CACHE_MAX_ENTRIES = 500
+_STALE_MAX_AGE = 600  # seconds
 _cache: Dict[str, tuple[float, object]] = {}
 
 
@@ -24,7 +30,15 @@ def _cache_get_stale(key: str):
 
 
 def _cache_set(key: str, value) -> None:
-    _cache[key] = (time.monotonic(), value)
+    now = time.monotonic()
+    if key not in _cache and len(_cache) >= _CACHE_MAX_ENTRIES:
+        expired = [k for k, (stored_at, _) in _cache.items() if now - stored_at > _STALE_MAX_AGE]
+        for old_key in expired:
+            del _cache[old_key]
+        while len(_cache) >= _CACHE_MAX_ENTRIES:
+            del _cache[next(iter(_cache))]  # dicts keep insertion order: oldest first
+    _cache.pop(key, None)  # re-insert so refreshed entries count as newest
+    _cache[key] = (now, value)
 
 
 def clear_cache() -> None:
@@ -32,7 +46,7 @@ def clear_cache() -> None:
     _cache.clear()
 
 
-class CoinGeckoClient:
+class CoinGeckoClient(AbstractMarketClient):
 
     BASE_URL = "https://api.coingecko.com/api/v3"
 
@@ -126,10 +140,10 @@ class CoinGeckoClient:
     async def fetch_ohlc(
         self,
         currency: str,
-        selectedTimeFrame: str,
-        cryptoId: str,
+        selected_time_frame: str,
+        crypto_id: str,
     ) -> List[Dict]:
-        key = _cache_key("fetch_ohlc", currency, selectedTimeFrame, cryptoId)
+        key = _cache_key("fetch_ohlc", currency, selected_time_frame, crypto_id)
         cached = _cache_get_fresh(key)
         if cached is not None:
             return cached
@@ -137,10 +151,10 @@ class CoinGeckoClient:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/coins/{cryptoId}/ohlc",
+                    f"{self.BASE_URL}/coins/{crypto_id}/ohlc",
                     params={
                         "vs_currency": currency,
-                        "days": selectedTimeFrame,
+                        "days": selected_time_frame,
                     },
                     headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
                 )
@@ -179,6 +193,12 @@ class CoinGeckoClient:
         return data
 
     async def fetch_search(self, query: str) -> List[Dict]:
+        # Cached like the other calls: search runs on every keystroke in the UI.
+        key = _cache_key("fetch_search", query.strip().lower())
+        cached = _cache_get_fresh(key)
+        if cached is not None:
+            return cached
+
         async with httpx.AsyncClient() as client:
             response = await client.get(
                 f"{self.BASE_URL}/search",
@@ -186,4 +206,22 @@ class CoinGeckoClient:
                 headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
             )
             response.raise_for_status()
-            return response.json().get("coins", [])
+            coins = response.json().get("coins", [])
+
+        _cache_set(key, coins)
+        return coins
+
+    async def fetch_simple_prices(self, ids: str, currencies: str) -> Dict[str, Dict]:
+        """Prices of several coins in several currencies, in a single call.
+
+        Never cached, and no stale fallback unlike the calls above: a price alert
+        must not fire on an old price. Errors are left to the caller.
+        """
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.BASE_URL}/simple/price",
+                params={"ids": ids, "vs_currencies": currencies},
+                headers={"x-cg-demo-api-key": settings.API_KEY_COINGECKO},
+            )
+            response.raise_for_status()
+            return response.json()

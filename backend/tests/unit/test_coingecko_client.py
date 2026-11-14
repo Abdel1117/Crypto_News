@@ -30,6 +30,34 @@ def client():
     return CoinGeckoClient()
 
 
+class TestFetchSimplePrices:
+    async def test_asks_for_the_coins_and_currencies(self, client):
+        expected = {"bitcoin": {"eur": 60000, "usd": 65000}}
+        mock_cm, mock_http = make_mock_http_client(expected)
+        with patch("httpx.AsyncClient", return_value=mock_cm):
+            result = await client.fetch_simple_prices("bitcoin", "eur,usd")
+        assert result == expected
+        assert mock_http.get.call_args[0][0].endswith("/simple/price")
+        assert mock_http.get.call_args[1]["params"] == {"ids": "bitcoin", "vs_currencies": "eur,usd"}
+
+    async def test_never_answers_from_the_cache(self, client):
+        mock_cm, mock_http = make_mock_http_client({"bitcoin": {"eur": 1}})
+        with patch("httpx.AsyncClient", return_value=mock_cm):
+            await client.fetch_simple_prices("bitcoin", "eur")
+            await client.fetch_simple_prices("bitcoin", "eur")
+        assert mock_http.get.await_count == 2
+
+    async def test_an_error_is_never_hidden_by_an_older_price(self, client):
+        """Unlike the other calls: an alert must not fire on a stale price."""
+        ok_cm, _ = make_mock_http_client({"bitcoin": {"eur": 1}})
+        failing_cm, _ = make_mock_http_client({}, status_code=429)
+        with patch("httpx.AsyncClient", return_value=ok_cm):
+            await client.fetch_simple_prices("bitcoin", "eur")
+        with patch("httpx.AsyncClient", return_value=failing_cm):
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.fetch_simple_prices("bitcoin", "eur")
+
+
 class TestFetchMarkets:
     async def test_returns_json_response(self, client):
         expected = [{"id": "bitcoin"}]
@@ -139,3 +167,28 @@ class TestFetchSearch:
             await client.fetch_search("ethereum")
         params = mock_http.get.call_args[1]["params"]
         assert params["query"] == "ethereum"
+
+
+class TestCacheBound:
+    def test_cache_never_grows_past_its_cap(self, monkeypatch):
+        from app.clients import coingecko_client as cg
+
+        monkeypatch.setattr(cg, "_CACHE_MAX_ENTRIES", 3)
+        cg.clear_cache()
+        for i in range(10):
+            cg._cache_set(f"k{i}", i)
+
+        assert len(cg._cache) == 3
+        assert list(cg._cache) == ["k7", "k8", "k9"]  # oldest went first
+
+    def test_refreshing_a_key_keeps_it(self, monkeypatch):
+        from app.clients import coingecko_client as cg
+
+        monkeypatch.setattr(cg, "_CACHE_MAX_ENTRIES", 2)
+        cg.clear_cache()
+        cg._cache_set("a", 1)
+        cg._cache_set("b", 2)
+        cg._cache_set("a", 3)  # refresh: "a" becomes the newest
+        cg._cache_set("c", 4)
+
+        assert set(cg._cache) == {"a", "c"}

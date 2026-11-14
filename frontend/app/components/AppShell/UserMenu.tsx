@@ -10,6 +10,7 @@ import {
   CaretUpDownIcon,
   MoonIcon,
   SignOutIcon,
+  StarIcon,
   SunIcon,
   UserIcon,
 } from "@/app/ui/NocturneIcons/NocturneIcons";
@@ -30,6 +31,11 @@ function ThemeMenuItem() {
       {theme === "light" ? "Mode sombre" : "Mode clair"}
     </button>
   );
+}
+
+function accountHint(isAuthenticated: boolean, onProfile: boolean): string {
+  if (!isAuthenticated) return "Se connecter";
+  return onProfile ? "Profil" : "Voir le profil";
 }
 
 /** Bottom-of-sidebar account block: profile, theme and logout in a menu. */
@@ -84,6 +90,17 @@ export default function UserMenu() {
               Mon profil
             </Link>
           )}
+          {isAuthenticated && (
+            <Link
+              href="/blog/favoris"
+              role="menuitem"
+              className="n-menu-item"
+              onClick={() => setOpen(false)}
+            >
+              <StarIcon size={16} />
+              Mes favoris
+            </Link>
+          )}
           <ThemeMenuItem />
           {isAuthenticated ? (
             <button
@@ -130,11 +147,7 @@ export default function UserMenu() {
           <span
             className={`text-xs ${onProfile ? "text-(--n-accent-300)" : "text-(--n-neutral-500)"}`}
           >
-            {!isAuthenticated
-              ? "Se connecter"
-              : onProfile
-                ? "Profil"
-                : "Voir le profil"}
+            {accountHint(isAuthenticated, onProfile)}
           </span>
         </span>
         <CaretUpDownIcon size={14} className="ml-auto text-(--n-neutral-500)" />

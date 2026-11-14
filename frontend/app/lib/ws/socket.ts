@@ -11,6 +11,11 @@ const listeners = new Map<string, Set<MessageHandler>>();
 const openHandlers = new Set<() => void>();
 const RECONNECT_DELAY = 3_000;
 
+/** Connection logs help in development but are noise in visitors' consoles. */
+function debug(...args: unknown[]) {
+  if (process.env.NODE_ENV !== "production") console.log(...args);
+}
+
 function getUrl() {
   const base = process.env.NEXT_PUBLIC_WS_BACK_END ?? "ws://localhost:4000";
   return `${base}/markets/ws`;
@@ -24,7 +29,7 @@ export function connect() {
   ws = new WebSocket(getUrl());
 
   ws.onopen = () => {
-    console.log("[ws] connected");
+    debug("[ws] connected");
     openHandlers.forEach((fn) => fn());
   };
 
@@ -41,7 +46,7 @@ export function connect() {
   };
 
   ws.onclose = () => {
-    console.log("[ws] disconnected — reconnecting…");
+    debug("[ws] disconnected — reconnecting…");
     scheduleReconnect();
   };
 
@@ -98,6 +103,11 @@ export function disconnect() {
     clearTimeout(reconnectTimer);
     reconnectTimer = null;
   }
-  ws?.close();
+  if (ws) {
+    // Detach first: closing fires onclose, which would schedule a reconnect.
+    ws.onclose = null;
+    ws.onerror = null;
+    ws.close();
+  }
   ws = null;
 }

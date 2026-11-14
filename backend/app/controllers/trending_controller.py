@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends
 from app.services.trending_service import TrendingService
 from app.clients.coingecko_client import CoinGeckoClient
@@ -11,5 +13,5 @@ def get_trending_service():
 
 
 @router.get("")
-async def get_trending(service: TrendingService = Depends(get_trending_service)):
+async def get_trending(service: Annotated[TrendingService, Depends(get_trending_service)]):
     return await service.get_trending_coins()

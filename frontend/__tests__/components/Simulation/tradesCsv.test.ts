@@ -45,3 +45,30 @@ describe("tradesToCsv", () => {
     expect(line).toContain(";Vente;");
   });
 });
+
+describe("formula injection", () => {
+  const trade = (coinName: string, coinSymbol = "x") => ({
+    ...trades[0],
+    coinName,
+    coinSymbol,
+  });
+
+  it.each(["=HYPERLINK(\"http://evil\")", "+1+1", "-2+3", "@SUM(A1)"])(
+    "makes a coin name starting with a formula character plain text: %s",
+    (name) => {
+      const line = tradesToCsv([trade(name)], "eur", 1).split("\n")[1];
+      const cells = line.split(";");
+      expect(cells[2].replace(/^"|"$/g, "").startsWith("'")).toBe(true);
+    },
+  );
+
+  it("also protects the symbol", () => {
+    const line = tradesToCsv([trade("Coin", "=cmd")], "eur", 1).split("\n")[1];
+    expect(line.split(";")[3]).toBe("'=CMD");
+  });
+
+  it("leaves ordinary names unchanged", () => {
+    const line = tradesToCsv([trade("Bitcoin")], "eur", 1).split("\n")[1];
+    expect(line.split(";")[2]).toBe("Bitcoin");
+  });
+});

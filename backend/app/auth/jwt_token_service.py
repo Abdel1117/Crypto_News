@@ -10,16 +10,24 @@ from app.core.jwt_config import (
     TOKEN_TYPE_ACCESS,
     TOKEN_TYPE_REFRESH,
 )
+from app.interface.token_service import AbstractTokenService
 from app.schemas.token import TokenPayload
 
 
-class JWTTokenService:
+class JWTTokenService(AbstractTokenService):
     def __init__(self, secret_key: str = JWT_SECRET_KEY, algorithm: str = JWT_ALGORITHM):
         self.secret_key = secret_key
         self.algorithm = algorithm
 
     def _create_token(
-        self, user_id: str, email: str, token_type: str, expires_delta: timedelta, full_name: str | None = None
+        self,
+        user_id: str,
+        email: str,
+        token_type: str,
+        expires_delta: timedelta,
+        full_name: str | None = None,
+        token_version: int = 0,
+        role: str = "user",
     ) -> str:
         now = datetime.now(timezone.utc)
         expires = now + expires_delta
@@ -28,16 +36,38 @@ class JWTTokenService:
             "email": email,
             "full_name": full_name,
             "token_type": token_type,
+            # Matches User.token_version; logout increments it to end all sessions.
+            "ver": token_version,
+            # For the UI only (which menus to show): routes check the role in the DB.
+            "role": role,
             "iat": int(now.timestamp()),
             "exp": int(expires.timestamp()),
         }
         return jwt.encode(payload, self.secret_key, algorithm=self.algorithm)
 
-    def create_access_token(self, user_id: str, email: str, full_name: str | None = None) -> str:
-        return self._create_token(user_id, email, TOKEN_TYPE_ACCESS, ACCESS_TOKEN_EXPIRE_DELTA, full_name)
+    def create_access_token(
+        self,
+        user_id: str,
+        email: str,
+        full_name: str | None = None,
+        token_version: int = 0,
+        role: str = "user",
+    ) -> str:
+        return self._create_token(
+            user_id, email, TOKEN_TYPE_ACCESS, ACCESS_TOKEN_EXPIRE_DELTA, full_name, token_version, role
+        )
 
-    def create_refresh_token(self, user_id: str, email: str, full_name: str | None = None) -> str:
-        return self._create_token(user_id, email, TOKEN_TYPE_REFRESH, REFRESH_TOKEN_EXPIRE_DELTA, full_name)
+    def create_refresh_token(
+        self,
+        user_id: str,
+        email: str,
+        full_name: str | None = None,
+        token_version: int = 0,
+        role: str = "user",
+    ) -> str:
+        return self._create_token(
+            user_id, email, TOKEN_TYPE_REFRESH, REFRESH_TOKEN_EXPIRE_DELTA, full_name, token_version, role
+        )
 
     def verify_token(self, token: str) -> TokenPayload:
         try:

@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { send, onOpen } from "@/app/lib/ws/socket";
 
 export type Currency = "eur" | "usd";
@@ -14,7 +22,7 @@ const CurrencyContext = createContext<CurrencyContextInterface | null>(null);
 
 const DEFAULT_CURRENCY: Currency = "eur";
 
-export function CurrencyProvider({ children }: { children: React.ReactNode }) {
+export function CurrencyProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [currency, setCurrency] = useState<Currency>(DEFAULT_CURRENCY);
   const currencyRef = useRef(currency);
 
@@ -34,15 +42,19 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     return onOpen(() => send({ currency: currencyRef.current }));
   }, []);
 
-  const handleSetCurrency = (value: Currency) => {
+  const handleSetCurrency = useCallback((value: Currency) => {
     setCurrency(value);
     localStorage.setItem("currency", value);
-  };
+  }, []);
+
+  // Same object until the currency changes, so consumers don't re-render for nothing.
+  const value = useMemo(
+    () => ({ currency, setCurrency: handleSetCurrency }),
+    [currency, handleSetCurrency],
+  );
 
   return (
-    <CurrencyContext.Provider
-      value={{ currency, setCurrency: handleSetCurrency }}
-    >
+    <CurrencyContext.Provider value={value}>
       {children}
     </CurrencyContext.Provider>
   );

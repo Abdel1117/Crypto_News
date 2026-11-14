@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
@@ -8,7 +10,10 @@ from app.schemas.token import TokenPayload
 from app.models.user import User
 from app.core.jwt_config import TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
 from app.enums.auth_provider import AuthProvider
-from app.interface.protocol.GoogleAuthProvider import GoogleUserInfo
+from app.interface.google_auth_provider import GoogleUserInfo
+from app.clients.google_auth_provider import GoogleAuthNotConfigured, InvalidGoogleCredentials
+from jose import JWTError
+from pydantic import ValidationError
 
 USER_ID = 1
 EMAIL = "test@example.com"
@@ -280,11 +285,62 @@ class TestGoogleAuth:
         mock_repo.get_by_google_id.return_value = User(
             id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=GOOGLE_ID,
             provider=AuthProvider.google, is_active=True,
+            email_verified_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
 
         await service.google_auth(GOOGLE_CREDENTIALS)
 
         mock_repo.update.assert_not_called()
+
+    async def test_new_google_account_counts_as_confirmed(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        mock_repo.get_by_google_id.return_value = None
+        mock_repo.get_by_email.return_value = None
+        mock_repo.create.side_effect = lambda user: user
+
+        await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert mock_repo.create.call_args.args[0].email_verified_at is not None
+
+    async def test_linking_google_confirms_a_local_account(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        local_user = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=None,
+            hashed_password="hashed_password", provider=AuthProvider.local, is_active=True,
+        )
+        mock_repo.get_by_google_id.return_value = None
+        mock_repo.get_by_email.return_value = local_user
+        mock_repo.update.side_effect = lambda user: user
+
+        await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert local_user.email_verified_at is not None
+
+    async def test_a_disabled_account_isnt_touched(self, service, mock_repo, mock_google_provider):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        disabled = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=GOOGLE_ID,
+            provider=AuthProvider.google, is_active=False,
+        )
+        mock_repo.get_by_google_id.return_value = disabled
+
+        with pytest.raises(HTTPException):
+            await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert disabled.email_verified_at is None
+        mock_repo.update.assert_not_called()
+
+    async def test_password_registration_stays_unconfirmed(self, service, mock_repo):
+        mock_repo.get_by_email.return_value = None
+        mock_repo.create.side_effect = lambda user: user
+
+        user = await service.register_user(
+            AuthRegistrationRequest(
+                fullname=FULL_NAME, email=EMAIL, password="password123", provider=AuthProvider.local
+            )
+        )
+
+        assert user.email_verified_at is None
 
     async def test_raises_403_when_user_inactive(self, service, mock_repo, mock_google_provider):
         mock_google_provider.verify_credentials.return_value = self._google_user_info()
@@ -321,3 +377,132 @@ class TestGoogleAuth:
         await service.google_auth(GOOGLE_CREDENTIALS)
 
         mock_google_provider.verify_credentials.assert_called_once_with(GOOGLE_CREDENTIALS)
+
+
+def payload(token_type=TOKEN_TYPE_REFRESH, ver=0):
+    return TokenPayload(
+        sub=str(USER_ID), email=EMAIL, full_name=FULL_NAME,
+        token_type=token_type, ver=ver, exp=9999999999, iat=1000000000,
+    )
+
+
+class TestRegistrationPassword:
+    def test_password_is_required(self):
+        with pytest.raises(ValidationError):
+            AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=None, provider=AuthProvider.local)
+
+    def test_rejects_password_longer_than_bcrypt_limit(self):
+        with pytest.raises(ValidationError):
+            AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password="é" * 40, provider=AuthProvider.local)
+
+    def test_accepts_72_byte_password(self):
+        AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password="a" * 72, provider=AuthProvider.local)
+
+
+class TestLoginTiming:
+    async def test_unknown_email_still_checks_a_hash(self, service, mock_repo, mock_hasher):
+        mock_repo.get_by_email.return_value = None
+
+        with pytest.raises(HTTPException):
+            await service.authenticate_user(EMAIL, PASSWORD)
+
+        mock_hasher.verify.assert_called_once()
+
+    async def test_google_only_account_cannot_log_in_with_password(self, service, mock_repo, mock_hasher):
+        mock_repo.get_by_email.return_value = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, hashed_password=None, is_active=True,
+        )
+        with pytest.raises(HTTPException) as exc:
+            await service.authenticate_user(EMAIL, PASSWORD)
+        assert exc.value.status_code == 401
+
+
+class TestTokenVersion:
+    async def test_tokens_carry_the_user_version(self, service, mock_repo, mock_token_service, active_user):
+        active_user.token_version = 3
+        mock_repo.get_by_email.return_value = active_user
+
+        await service.login(EMAIL, PASSWORD)
+
+        assert mock_token_service.create_access_token.call_args.args[3] == 3
+        assert mock_token_service.create_refresh_token.call_args.args[3] == 3
+
+    async def test_refresh_rejects_a_revoked_token(self, service, mock_repo, mock_token_service, active_user):
+        active_user.token_version = 1
+        mock_token_service.verify_token.return_value = payload(ver=0)
+        mock_repo.get_by_email.return_value = active_user
+
+        with pytest.raises(HTTPException) as exc:
+            await service.refresh_access_token("old_refresh_token")
+        assert exc.value.status_code == 401
+
+    async def test_refresh_accepts_the_current_version(self, service, mock_repo, mock_token_service, active_user):
+        active_user.token_version = 2
+        mock_token_service.verify_token.return_value = payload(ver=2)
+        mock_repo.get_by_email.return_value = active_user
+
+        result = await service.refresh_access_token("refresh_token")
+        assert result.access_token == "mocked_access_token"
+
+
+class TestLogout:
+    async def test_bumps_the_token_version(self, service, mock_repo, mock_token_service, active_user):
+        mock_token_service.verify_token.return_value = payload(ver=0)
+        mock_repo.get_by_email.return_value = active_user
+
+        await service.logout("refresh_token")
+
+        assert active_user.token_version == 1
+        mock_repo.update.assert_awaited_once_with(active_user)
+
+    @pytest.mark.parametrize("token", [None, ""])
+    async def test_ignores_a_missing_cookie(self, service, mock_repo, token):
+        await service.logout(token)
+        mock_repo.update.assert_not_called()
+
+    async def test_ignores_an_invalid_token(self, service, mock_repo, mock_token_service):
+        mock_token_service.verify_token.side_effect = JWTError("bad")
+        await service.logout("garbage")
+        mock_repo.update.assert_not_called()
+
+    async def test_ignores_an_access_token(self, service, mock_repo, mock_token_service, active_user):
+        mock_token_service.verify_token.return_value = payload(TOKEN_TYPE_ACCESS)
+        mock_repo.get_by_email.return_value = active_user
+        await service.logout("access_token")
+        mock_repo.update.assert_not_called()
+
+    async def test_ignores_an_already_revoked_token(self, service, mock_repo, mock_token_service, active_user):
+        active_user.token_version = 5
+        mock_token_service.verify_token.return_value = payload(ver=4)
+        mock_repo.get_by_email.return_value = active_user
+        await service.logout("old")
+        assert active_user.token_version == 5
+        mock_repo.update.assert_not_called()
+
+
+class TestGoogleAuthErrors:
+    async def test_invalid_credentials_give_401(self, service, mock_google_provider):
+        mock_google_provider.verify_credentials.side_effect = InvalidGoogleCredentials("bad")
+        with pytest.raises(HTTPException) as exc:
+            await service.google_auth(GOOGLE_CREDENTIALS)
+        assert exc.value.status_code == 401
+
+    async def test_missing_configuration_gives_503(self, service, mock_google_provider):
+        mock_google_provider.verify_credentials.side_effect = GoogleAuthNotConfigured("no id")
+        with pytest.raises(HTTPException) as exc:
+            await service.google_auth(GOOGLE_CREDENTIALS)
+        assert exc.value.status_code == 503
+
+
+class TestRoleClaim:
+    @pytest.mark.parametrize("role,claim", [("editor", "editor"), (None, "user")])
+    async def test_tokens_carry_the_user_role(
+        self, service, mock_repo, mock_token_service, active_user, role, claim
+    ):
+        active_user.role = role
+        mock_repo.get_by_email.return_value = active_user
+
+        await service.login(EMAIL, PASSWORD)
+
+        assert mock_token_service.create_access_token.call_args.kwargs["role"] == claim
+        assert mock_token_service.create_refresh_token.call_args.kwargs["role"] == claim

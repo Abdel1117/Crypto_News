@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.jwt_config import REFRESH_TOKEN_EXPIRE_DELTA
@@ -6,10 +6,13 @@ from app.db.session import get_session
 from app.dependencies.auth import get_current_user
 from app.models.user import User
 from app.repositories.users.user_sql_repo import SQLUserRepository
+from app.schemas.alerts import EmailTokenIn, EmailVerificationOut
 from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationResponse, LoginRequest, AuthRegistrationRequestGoogle
 from app.clients.google_auth_provider import  GoogleAuthProvider
 from app.schemas.token import AccessTokenResponse
 from app.services.auth_service import AuthService
+from app.services.email.smtp_email_sender import build_email_sender
+from app.services.email.verification_service import EmailVerificationService
 from app.auth.jwt_token_service import JWTTokenService
 import os 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,7 +30,21 @@ def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthServic
     )
 
 
-def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
+def get_verification_service(session: AsyncSession = Depends(get_session)) -> EmailVerificationService:
+    return EmailVerificationService(SQLUserRepository(session), build_email_sender())
+
+
+def _cookie_path(request: Request) -> str:
+    """Path of the refresh cookie, as the browser sees the auth routes.
+
+    Locally the API is served at the root, so this is "/auth". In production
+    nginx serves it under "/api" and uvicorn runs with --root-path /api, so
+    this becomes "/api/auth" and the browser sends the cookie to the refresh call.
+    """
+    return request.scope.get("root_path", "").rstrip("/") + "/auth"
+
+
+def _set_refresh_cookie(request: Request, response: Response, refresh_token: str) -> None:
     response.set_cookie(
         key=REFRESH_COOKIE,
         value=refresh_token,
@@ -35,43 +52,11 @@ def _set_refresh_cookie(response: Response, refresh_token: str) -> None:
         samesite="strict",
         secure=_IS_PROD,
         max_age=REFRESH_MAX_AGE,
-        path="/auth",
+        path=_cookie_path(request),
     )
 
 
-@router.post(
-    "/register",
-    response_model=AuthRegistrationResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-async def register_user(
-    registration_data: AuthRegistrationRequest,
-    auth_service: AuthService = Depends(get_auth_service),
-) -> AuthRegistrationResponse:
-    return await auth_service.register_user(registration_data)
-
-
-@router.post("/google", 
-             response_model=AccessTokenResponse,
-             status_code=status.HTTP_201_CREATED
-             )
-async def register_user_google(
-        credentials : AuthRegistrationRequestGoogle,
-        auth_service : AuthService = Depends(get_auth_service),
-        
-) -> AccessTokenResponse: 
-    return await auth_service.google_auth(credentials)
-
-
-
-@router.post("/login", response_model=AccessTokenResponse)
-async def login(
-    login_data: LoginRequest,
-    response: Response,
-    auth_service: AuthService = Depends(get_auth_service),
-) -> AccessTokenResponse:
-    token_pair = await auth_service.login(login_data.email, login_data.password)
-    _set_refresh_cookie(response, token_pair.refresh_token)
+def _access_response(token_pair) -> AccessTokenResponse:
     return AccessTokenResponse(
         access_token=token_pair.access_token,
         token_type=token_pair.token_type,
@@ -79,8 +64,46 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=AccessTokenResponse)
+# The return annotations double as response models: FastAPI uses them to
+# validate and filter what each route sends back.
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register_user(
+    registration_data: AuthRegistrationRequest,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> AuthRegistrationResponse:
+    return await auth_service.register_user(registration_data)
+
+
+@router.post("/google", status_code=status.HTTP_201_CREATED)
+async def register_user_google(
+        credentials : AuthRegistrationRequestGoogle,
+        request: Request,
+        response: Response,
+        auth_service : AuthService = Depends(get_auth_service),
+) -> AccessTokenResponse:
+    token_pair = await auth_service.google_auth(credentials)
+    # Same session as a password login: without this cookie, Google users
+    # lose their session on reload and when the access token expires.
+    _set_refresh_cookie(request, response, token_pair.refresh_token)
+    return _access_response(token_pair)
+
+
+
+@router.post("/login")
+async def login(
+    login_data: LoginRequest,
+    request: Request,
+    response: Response,
+    auth_service: AuthService = Depends(get_auth_service),
+) -> AccessTokenResponse:
+    token_pair = await auth_service.login(login_data.email, login_data.password)
+    _set_refresh_cookie(request, response, token_pair.refresh_token)
+    return _access_response(token_pair)
+
+
+@router.post("/refresh")
 async def refresh_token(
+    request: Request,
     response: Response,
     refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE),
     auth_service: AuthService = Depends(get_auth_service),
@@ -93,19 +116,47 @@ async def refresh_token(
         )
 
     token_pair = await auth_service.refresh_access_token(refresh_token)
-    _set_refresh_cookie(response, token_pair.refresh_token)
-    return AccessTokenResponse(
-        access_token=token_pair.access_token,
-        token_type=token_pair.token_type,
-        expires_in=token_pair.expires_in,
-    )
+    _set_refresh_cookie(request, response, token_pair.refresh_token)
+    return _access_response(token_pair)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
-async def logout(response: Response) -> None:
-    response.delete_cookie(key=REFRESH_COOKIE, path="/auth")
+async def logout(
+    request: Request,
+    response: Response,
+    refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> None:
+    # Revokes every token of this user, so a copied cookie stops working too.
+    await auth_service.logout(refresh_token)
+    response.delete_cookie(
+        key=REFRESH_COOKIE,
+        path=_cookie_path(request),
+        httponly=True,
+        samesite="strict",
+        secure=_IS_PROD,
+    )
 
 
-@router.get("/me", response_model=AuthRegistrationResponse)
+@router.get("/me")
 async def get_me(current_user: User = Depends(get_current_user)) -> AuthRegistrationResponse:
     return current_user
+
+
+@router.post("/email-verification", status_code=status.HTTP_202_ACCEPTED)
+async def send_email_verification(
+    current_user: User = Depends(get_current_user),
+    service: EmailVerificationService = Depends(get_verification_service),
+) -> EmailVerificationOut:
+    sent = await service.send_link(current_user)
+    return EmailVerificationOut(email_verified=not sent)
+
+
+# Public: the link can be opened on a device where the user isn't logged in.
+@router.post("/email-verification/confirm")
+async def confirm_email_verification(
+    data: EmailTokenIn,
+    service: EmailVerificationService = Depends(get_verification_service),
+) -> EmailVerificationOut:
+    await service.confirm(data.token)
+    return EmailVerificationOut(email_verified=True)

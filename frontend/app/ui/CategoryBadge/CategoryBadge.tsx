@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { categoryHue } from "@/app/(public)/blog/data";
+import { categoryHue } from "@/app/components/Blog/categories";
 
 /** Style that tints an element (cover, label) with a category's hue. */
 export const categoryStyle = (category: string) =>
@@ -9,10 +9,10 @@ export const categoryStyle = (category: string) =>
 export function CategoryBadge({
   category,
   onCover = false,
-}: {
+}: Readonly<{
   category: string;
   onCover?: boolean;
-}) {
+}>) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[0.08em] uppercase ${

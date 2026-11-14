@@ -23,6 +23,10 @@ class TokenPayload(BaseModel):
     email: str
     full_name: str | None = None
     token_type: str
+    # Tokens issued before versioning have no "ver" claim: treat them as version 0.
+    ver: int = 0
+    # Tokens issued before roles existed have no "role" claim.
+    role: str = "user"
     exp: int
     iat: int
 

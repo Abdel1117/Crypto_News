@@ -1,8 +1,10 @@
-from app.clients.market_client import MarketClient
+from collections.abc import Iterable
+
+from app.interface.market_client import AbstractMarketClient
 
 
 class MarketService:
-    def __init__(self, client: MarketClient):
+    def __init__(self, client: AbstractMarketClient):
         self.client = client
 
     async def get_top_markets(
@@ -42,6 +44,38 @@ class MarketService:
             "volume_24h": coin["total_volume"],
         }
 
+    async def get_prices(self, currency: str, coin_ids: list[str]) -> dict[str, float]:
+        """Current price of each coin, in one CoinGecko call per 250 coins.
+
+        Coins CoinGecko doesn't know (or without a price) are left out.
+        """
+        ids = sorted(set(coin_ids))
+        prices: dict[str, float] = {}
+        for start in range(0, len(ids), 250):
+            chunk = ids[start : start + 250]
+            data = await self.client.fetch_markets(
+                currency, "market_cap_desc", len(chunk), 1, False, ids=",".join(chunk)
+            )
+            for coin in data:
+                if coin.get("current_price") is not None:
+                    prices[coin["id"]] = coin["current_price"]
+        return prices
+
+    async def get_live_prices(
+        self, coin_ids: Iterable[str], currencies: Iterable[str]
+    ) -> dict[str, dict[str, float]]:
+        """coin id → currency → price, never cached; one CoinGecko call per 250 coins.
+
+        Coins CoinGecko doesn't know are left out.
+        """
+        ids = sorted(set(coin_ids))
+        vs_currencies = ",".join(sorted(set(currencies)))
+        prices: dict[str, dict[str, float]] = {}
+        for start in range(0, len(ids), 250):
+            chunk = ",".join(ids[start : start + 250])
+            prices.update(await self.client.fetch_simple_prices(chunk, vs_currencies))
+        return prices
+
     async def get_market_view(self, currency: str):
         data = await self.client.fetch_markets_view(currency)
         return {
@@ -51,20 +85,20 @@ class MarketService:
                 "btc", None
             ),
             "market_cap_change_percentage_24h": data["data"].get(
-                f"market_cap_change_percentage_24h_usd", None
+                "market_cap_change_percentage_24h_usd", None
             ),
             "volume_change_percentage_24h": data["data"].get(
-                f"volume_change_percentage_24h_usd", None
+                "volume_change_percentage_24h_usd", None
             ),
         }
 
     async def get_ohlc(
         self,
         currency: str,
-        selectedTimeFrame: str,
-        cryptoId: str,
+        selected_time_frame: str,
+        crypto_id: str,
     ):
-        data = await self.client.fetch_ohlc(currency, selectedTimeFrame, cryptoId)
+        data = await self.client.fetch_ohlc(currency, selected_time_frame, crypto_id)
         return data
 
     async def get_exchange_rate(
@@ -89,7 +123,6 @@ class MarketService:
     async def get_top_gainers_losers(
         self,
         currency: str,
-        duration: str,
         price_change_percentage: str,
         top_coins: str,
     ):

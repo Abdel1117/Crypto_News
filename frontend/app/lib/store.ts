@@ -10,6 +10,7 @@ import simulationReducer from "./features/simulation/simulationSlice"
 import authReducer from "./features/auth/authSlice"
 import exchangeRateReducer from "./features/exchangeRate/exchangeRateSlice"
 import chatReducer from "./features/chat/chatSlice"
+import simulationProReducer from "./features/simulationPro/simulationProSlice"
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     simulation: simulationReducer,
     exchangeRate: exchangeRateReducer,
     chat: chatReducer,
+    simulationPro: simulationProReducer,
   },
   devTools: process.env.NODE_ENV !== "production"
     ? {
@@ -36,6 +38,7 @@ export const store = configureStore({
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;
 
 if (process.env.NODE_ENV !== "production") {
   store.subscribe(() => {

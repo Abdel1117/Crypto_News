@@ -40,8 +40,13 @@ export function formatFiatPrice(value: number, currency: Currency): string {
  */
 export function formatSignedPercent(value: number, decimals = 2): string {
   if (!Number.isFinite(value)) return "—";
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  return sign + nf(Math.abs(value), decimals, decimals) + NNBSP + "%";
+  return signPrefix(value) + nf(Math.abs(value), decimals, decimals) + NNBSP + "%";
+}
+
+/** "+" for a positive value, a true minus "−" for a negative one, "" for zero. */
+export function signPrefix(value: number): string {
+  if (value > 0) return "+";
+  return value < 0 ? "−" : "";
 }
 
 /**

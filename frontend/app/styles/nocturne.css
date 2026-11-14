@@ -7,6 +7,7 @@ html:not(.dark) { background: #f4f4f9; }
 
 /* Light theme (the design system is dark-first; this mirrors its ramps). */
 html:not(.dark) .nocturne {
+  --n-cat-l: 0.5; /* blog category lightness, see .n-cat */
   --n-bg: #f4f4f9;
   --n-surface: #ffffff;
   --n-text: #1b1d29;
@@ -72,6 +73,7 @@ html .nocturne .n-force-dark {
 }
 
 .nocturne {
+  --n-cat-l: 0.8; /* blog category lightness, see .n-cat */
   --n-section: #262a60;
   --n-section-glow: #353b80;
   --n-radius-md: 8px;
@@ -349,6 +351,10 @@ html .nocturne .n-force-dark {
   color: var(--n-text);
   background: transparent;
   border: 0;
+  transition:
+    color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
 }
 @media (min-width: 1024px) {
   .nocturne .n-seg-btn {
@@ -415,6 +421,13 @@ html .nocturne .n-force-dark {
 .nocturne .n-tab-link[aria-current="page"] {
   color: var(--n-accent-300);
 }
+/* Six tabs: on the narrowest phones, "Dashboard" and "Simulation" would touch. */
+@media (max-width: 359px) {
+  .nocturne .n-tab-link {
+    font-size: 10px;
+    letter-spacing: -0.02em;
+  }
+}
 
 .n-menu {
   position: absolute;
@@ -477,9 +490,7 @@ html .nocturne .n-force-dark {
   background-color: color-mix(in srgb, var(--n-text) 4%, transparent);
 }
 
-/* — blog categories: one hue per category (--cat-h), theme-aware lightness — */
-.nocturne { --n-cat-l: 0.8; }
-html:not(.dark) .nocturne { --n-cat-l: 0.5; }
+/* — blog categories: one hue per category (--cat-h), theme-aware lightness (--n-cat-l, set with the theme tokens above) — */
 .n-cat { color: oklch(var(--n-cat-l) 0.12 var(--cat-h, 289)); }
 .n-cover {
   background:
@@ -520,3 +531,89 @@ html:not(.dark) .nocturne { --n-cat-l: 0.5; }
 @media (prefers-reduced-motion: reduce) {
   .n-chat-dots span { animation: none; }
 }
+
+/* — blog article body (Markdown) — */
+.n-prose {
+  font-size: 16px;
+  line-height: 1.75;
+  color: color-mix(in srgb, var(--n-text) 88%, transparent);
+  overflow-wrap: break-word;
+}
+@media (min-width: 1024px) {
+  .n-prose {
+    font-size: 17px;
+  }
+}
+.n-prose > :first-child { margin-top: 0; }
+.n-prose > :last-child { margin-bottom: 0; }
+.n-prose p,
+.n-prose ul,
+.n-prose ol,
+.n-prose blockquote,
+.n-prose pre,
+.n-prose table {
+  margin: 0 0 1.15em;
+}
+.n-prose h2,
+.n-prose h3,
+.n-prose h4 {
+  color: var(--n-text);
+  line-height: 1.25;
+  margin: 1.8em 0 0.6em;
+}
+.n-prose h2 { font-size: 1.45em; }
+.n-prose h3 { font-size: 1.2em; }
+.n-prose h4 { font-size: 1em; }
+.n-prose strong { color: var(--n-text); font-weight: 600; }
+.n-prose ul,
+.n-prose ol { padding-left: 1.4em; }
+.n-prose li + li { margin-top: 0.35em; }
+.n-prose li::marker { color: var(--n-accent); }
+.n-prose blockquote {
+  padding: 2px 0 2px 18px;
+  border-left: 2px solid var(--n-accent);
+  color: var(--n-neutral-300);
+  font-style: italic;
+}
+.n-prose code {
+  font-size: 0.88em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--n-text) 8%, transparent);
+}
+.n-prose pre {
+  overflow-x: auto;
+  padding: 14px 16px;
+  border-radius: var(--n-radius-md);
+  background: var(--n-surface);
+  box-shadow: var(--n-shadow-sm);
+}
+.n-prose pre code {
+  padding: 0;
+  background: none;
+}
+.n-prose hr {
+  height: 1px;
+  margin: 2.2em 0;
+  border: 0;
+  background: linear-gradient(to right, transparent, var(--n-divider) 48px, var(--n-divider) calc(100% - 48px), transparent);
+}
+.n-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--n-radius-md);
+}
+.n-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  display: block;
+  overflow-x: auto;
+}
+.n-prose th,
+.n-prose td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--n-divider);
+}
+.n-prose th { color: var(--n-text); font-weight: 500; }
