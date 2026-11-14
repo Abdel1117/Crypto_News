@@ -3,7 +3,7 @@ from jose import JWTError
 
 from app.core.jwt_config import ACCESS_TOKEN_EXPIRE_DELTA, TOKEN_TYPE_REFRESH
 from app.models.user import User
-from app.repositories.users.user_repository import UserRepositoryProtocol
+from app.interface.user_repository import AbstractUserRepository
 from app.clients.google_auth_provider import (
     GoogleAuthNotConfigured,
     GoogleAuthProvider,
@@ -13,7 +13,8 @@ from app.schemas.auth import AuthRegistrationRequest, AuthRegistrationRequestGoo
 from app.enums.auth_provider import  AuthProvider
 from app.enums.user_role import UserRole
 from app.schemas.token import TokenPair
-from app.auth.token_service import TokenServiceProtocol
+from app.interface.token_service import AbstractTokenService
+from app.interface.password_hasher import AbstractPasswordHasher
 from app.utils.dates import utcnow
 from app.utils.security import PasswordHasher, dummy_password_hash
 
@@ -29,9 +30,9 @@ class AuthService:
     def __init__(
         self,
         google_auth_provider : GoogleAuthProvider,
-        user_repository: UserRepositoryProtocol,
-        token_service: TokenServiceProtocol | None = None,
-        password_hasher: PasswordHasher | None = None,
+        user_repository: AbstractUserRepository,
+        token_service: AbstractTokenService | None = None,
+        password_hasher: AbstractPasswordHasher | None = None,
     ) -> None:
         self.google_auth_provider = google_auth_provider
         self.user_repository = user_repository

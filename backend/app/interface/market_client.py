@@ -1,7 +1,9 @@
-from typing import Protocol, Optional, List, Dict
+from abc import ABC, abstractmethod
+from typing import Dict, List, Optional
 
 
-class MarketClient(Protocol):
+class AbstractMarketClient(ABC):
+    @abstractmethod
     async def fetch_markets(
         self,
         currency: str,
@@ -11,10 +13,13 @@ class MarketClient(Protocol):
         ids: Optional[str] = None,
     ) -> List[Dict]: ...
 
+    @abstractmethod
     async def fetch_symbols(self, include_platform: bool) -> List[Dict]: ...
 
+    @abstractmethod
     async def fetch_markets_view(self, currency: str) -> List[Dict]: ...
 
+    @abstractmethod
     async def fetch_ohlc(
         self,
         currency: str,
@@ -22,6 +27,8 @@ class MarketClient(Protocol):
         crypto_id: str,
     ) -> List[Dict]: ...
 
+    @abstractmethod
     async def fetch_search(self, query: str) -> List[Dict]: ...
 
+    @abstractmethod
     async def fetch_simple_prices(self, ids: str, currencies: str) -> Dict[str, Dict]: ...

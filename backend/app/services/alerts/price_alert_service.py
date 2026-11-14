@@ -19,7 +19,7 @@ from app.models.price_alert import PriceAlert
 from app.models.user import User
 from app.repositories.alerts.price_alert_sql_repo import SQLPriceAlertRepository
 from app.schemas.alerts import AlertCreate, AlertOut, AlertsOverview
-from app.services.email.email_sender import IEmailSender
+from app.interface.email_sender import AbstractEmailSender
 from app.services.email.messages import format_price, price_alert_email
 from app.services.market_service import MarketService
 from app.utils.dates import as_utc, utcnow
@@ -56,7 +56,7 @@ class PriceAlertService:
         self,
         repo: SQLPriceAlertRepository,
         market: MarketService,
-        sender: IEmailSender | None,
+        sender: AbstractEmailSender | None,
     ) -> None:
         self.repo = repo
         self.market = market

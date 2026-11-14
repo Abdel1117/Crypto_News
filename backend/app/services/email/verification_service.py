@@ -11,8 +11,8 @@ from fastapi import HTTPException, status
 
 from app.auth.email_tokens import PURPOSE_CONFIRM_EMAIL, read_email_token
 from app.models.user import User
-from app.repositories.users.user_repository import UserRepositoryProtocol
-from app.services.email.email_sender import IEmailSender
+from app.interface.user_repository import AbstractUserRepository
+from app.interface.email_sender import AbstractEmailSender
 from app.services.email.messages import confirmation_email
 from app.utils.dates import as_utc, utcnow
 
@@ -24,7 +24,7 @@ RESEND_COOLDOWN = timedelta(minutes=5)
 
 
 class EmailVerificationService:
-    def __init__(self, users: UserRepositoryProtocol, sender: IEmailSender | None) -> None:
+    def __init__(self, users: AbstractUserRepository, sender: AbstractEmailSender | None) -> None:
         self.users = users
         self.sender = sender
 
