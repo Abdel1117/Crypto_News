@@ -45,6 +45,23 @@ describe("fetchJson", () => {
     await expect(fetchJson("http://api/x")).rejects.toThrow("Not found");
   });
 
+  it("reads the first message of a validation error list", async () => {
+    mockFetch({
+      ok: false,
+      text: JSON.stringify({
+        detail: [{ type: "value_error", msg: "Value error, Mot de passe trop long." }],
+      }),
+    });
+
+    await expect(fetchJson("http://api/x")).rejects.toThrow("Mot de passe trop long.");
+  });
+
+  it("falls back to a generic error when the detail is unreadable", async () => {
+    mockFetch({ ok: false, text: JSON.stringify({ detail: [{ foo: "bar" }] }) });
+
+    await expect(fetchJson("http://api/x")).rejects.toThrow(/Erreur 400/);
+  });
+
   it("falls back to a generic error when the body has no message/detail", async () => {
     mockFetch({ ok: false, text: "" });
 
