@@ -16,8 +16,10 @@ vi.mock("@/app/hooks/useRegistration", () => ({
   }),
 }));
 
+const mockLogin = vi.hoisted(() => vi.fn());
+
 vi.mock("@/app/hooks/useLogin", () => ({
-  useLogin: () => ({ login: vi.fn(), loading: false, result: null }),
+  useLogin: () => ({ login: mockLogin, loading: false, result: null }),
 }));
 
 vi.mock("@/app/hooks/useGoogleLogin", () => ({
@@ -155,11 +157,33 @@ describe("Login page", () => {
       fireEvent.click(screen.getByRole("button", { name: /s’inscrire/i }));
     };
 
-    it("goes back to the login tab with the success notice", async () => {
+    it("signs in and goes to the dashboard", async () => {
+      mockRegister.mockResolvedValue({ success: true, message: "Compte créé." });
+      mockLogin.mockResolvedValue({ success: true, message: "ok" });
+      renderLogin();
+
+      fireEvent.click(screen.getByRole("button", { name: /^Inscription$/ }));
+      fireEvent.change(screen.getByLabelText(/adresse e-mail/i), {
+        target: { value: "new@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText("Mot de passe"), {
+        target: { value: "password123" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /s’inscrire/i }));
+
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/dashboard"));
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: "new@example.com",
+        password: "password123",
+      });
+    });
+
+    it("goes back to the login tab with the success notice when sign-in fails", async () => {
       mockRegister.mockResolvedValue({
         success: true,
         message: "Compte créé.",
       });
+      mockLogin.mockResolvedValue({ success: false, message: "Erreur" });
       renderLogin();
 
       submitRegistration();
@@ -167,6 +191,7 @@ describe("Login page", () => {
       await waitFor(() => expect(screen.getByText("Bon retour")).toBeTruthy());
       expect(screen.getByRole("status").textContent).toBe("Compte créé.");
       expect(screen.queryByLabelText(/nom complet/i)).toBeNull();
+      expect(mockPush).not.toHaveBeenCalled();
     });
 
     it("stays on the tab and shows the notice when it fails", async () => {

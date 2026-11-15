@@ -32,9 +32,13 @@ async def coingecko_error_handler(request: Request, exc: httpx.HTTPStatusError):
     if exc.response.status_code == 429:
         return JSONResponse(
             status_code=503,
-            content={"detail": "Market data provider is rate-limited, please retry shortly."},
+            content={
+                "detail": "Market data provider is rate-limited, please retry shortly."
+            },
         )
-    return JSONResponse(status_code=502, content={"detail": "Upstream market data error."})
+    return JSONResponse(
+        status_code=502, content={"detail": "Upstream market data error."}
+    )
 
 
 app.add_middleware(
@@ -89,4 +93,6 @@ app.include_router(api_router)
 # itself, from the shared volume; this mount serves them in development.
 # Python < 3.13 doesn't know .webp: it would be sent as application/octet-stream.
 mimetypes.add_type("image/webp", ".webp")
-app.mount("/media", StaticFiles(directory=settings.MEDIA_DIR, check_dir=False), name="media")
+app.mount(
+    "/media", StaticFiles(directory=settings.MEDIA_DIR, check_dir=False), name="media"
+)

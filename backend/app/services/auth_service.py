@@ -196,6 +196,11 @@ class AuthService:
         if user.google_id is None:
             user.google_id = user_info_from_google.google_id
             user.provider = AuthProvider.google
+            if user.hashed_password:
+                # Nobody proved they owned this email when the password was set.
+                # Google just did, so drop the password and end existing sessions.
+                user.hashed_password = None
+                user.token_version = (user.token_version or 0) + 1
             user = await self.user_repository.update(user)
 
         if not user.is_active:

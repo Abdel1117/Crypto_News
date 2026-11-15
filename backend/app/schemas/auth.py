@@ -12,7 +12,8 @@ class AuthRegistrationRequest(BaseModel):
     full_name: constr(strip_whitespace=True, min_length=2, max_length=100) = Field(alias="fullname")
     email: EmailStr
     password: constr(min_length=8)
-    provider : AuthProvider
+    # The signup form doesn't send it: password registration is always local.
+    provider: AuthProvider = AuthProvider.local
     model_config = {"populate_by_name": True}
 
     @field_validator("password")

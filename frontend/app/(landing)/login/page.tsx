@@ -147,7 +147,8 @@ export default function Login() {
   const mainRef = useLandingMotion<HTMLElement>(loginFormIntro);
 
   const isLogin = activeTab === "Connexion";
-  const loading = isLogin ? loginLoading || googleLoading : registerLoading;
+  // Signing up also logs in, so every request counts on both tabs.
+  const loading = loginLoading || googleLoading || registerLoading;
 
   const onChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,12 +174,24 @@ export default function Login() {
       };
       const result = await register(data);
       const message = result?.message ?? "";
-      if (result.success) {
-        setFormData((prev) => ({ ...prev, fullname: "", confirmPassword: "" }));
-        switchTab("Connexion", message);
-      } else {
+      if (!result.success) {
         setNotice(message);
+        return;
       }
+      // The account exists: sign in with the same credentials right away.
+      signingInHere.current = true;
+      const session = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (session.success) {
+        router.push(nextPathFromLocation() ?? "/dashboard");
+        return;
+      }
+      // Sign-in failed: the account is still there, let them log in by hand.
+      signingInHere.current = false;
+      setFormData((prev) => ({ ...prev, fullname: "", confirmPassword: "" }));
+      switchTab("Connexion", message);
       return;
     }
 
