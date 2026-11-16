@@ -1,6 +1,8 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 import app.main as main
 from app.core.config import settings
@@ -47,3 +49,24 @@ class TestPriceAlertLoopStartup:
         configure(monkeypatch, interval=0)
         await started()
         assert main._background_tasks == set()
+
+
+class TestApiDocs:
+    """The docs and the OpenAPI schema list every route: development only."""
+
+    PATHS = ("/docs", "/redoc", "/openapi.json")
+
+    def client(self, env: str) -> TestClient:
+        return TestClient(FastAPI(**main.api_docs_settings(env)))
+
+    @pytest.mark.parametrize("env", ["production", "prod", "staging", ""])
+    def test_hidden_outside_development(self, env):
+        client = self.client(env)
+        assert [client.get(path).status_code for path in self.PATHS] == [404, 404, 404]
+
+    def test_served_in_development(self):
+        client = self.client("development")
+        assert [client.get(path).status_code for path in self.PATHS] == [200, 200, 200]
+
+    def test_the_app_uses_its_environment(self):
+        assert main.app.docs_url == ("/docs" if settings.ENV == "development" else None)

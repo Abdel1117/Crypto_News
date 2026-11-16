@@ -94,8 +94,9 @@ function jsonLd(article: ArticleDetail): string {
     articleSection: article.category,
     ...(article.cover_image && { image: coverUrl(article.cover_image) }),
   };
-  // "<" escaped: the text can't close the <script> tag.
-  return JSON.stringify(data).replaceAll("<", String.raw`<`);
+  // "<" written as its JSON escape (backslash, u003c): the text can't close
+  // the <script> tag, and JSON.parse still reads it as "<".
+  return JSON.stringify(data).replaceAll("<", String.raw`\u003c`);
 }
 
 export default async function ArticlePage({ params }: Props) {

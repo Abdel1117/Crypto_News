@@ -1,6 +1,8 @@
-export const ThemeScript = () => {
+/** `nonce`: the request's, so the Content-Security-Policy lets this script run. */
+export const ThemeScript = ({ nonce }: Readonly<{ nonce?: string }>) => {
   return (
     <script
+      nonce={nonce}
       dangerouslySetInnerHTML={{
         __html: `
           (function() {

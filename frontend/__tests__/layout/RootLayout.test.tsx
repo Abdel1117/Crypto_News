@@ -5,8 +5,13 @@ import { render, screen } from "@testing-library/react";
 vi.mock("next/font/google", () => ({
   Inter: () => ({ variable: "font-inter-var" }),
 }));
+vi.mock("next/headers", () => ({
+  headers: async () => new Headers({ "x-nonce": "nonce-for-this-request" }),
+}));
 vi.mock("../../app/components/ThemeScript/ThemeScript", () => ({
-  ThemeScript: () => <script data-testid="theme-script" />,
+  ThemeScript: ({ nonce }: { nonce?: string }) => (
+    <script data-testid="theme-script" data-nonce={nonce} />
+  ),
 }));
 vi.mock("../../app/providers/root-providers", () => ({
   Providers: ({ children }: { children: React.ReactNode }) => (
@@ -29,12 +34,8 @@ vi.mock("../../app/components/CookieBanner/CookieBanner", () => ({
 import RootLayout from "../../app/layout";
 
 describe("RootLayout", () => {
-  it("renders the providers, top loader and page children", () => {
-    render(
-      <RootLayout>
-        <main>page content</main>
-      </RootLayout>,
-    );
+  it("renders the providers, top loader and page children", async () => {
+    render(await RootLayout({ children: <main>page content</main> }));
 
     expect(screen.getByTestId("providers")).toBeTruthy();
     expect(screen.getByTestId("top-loader")).toBeTruthy();
@@ -42,11 +43,15 @@ describe("RootLayout", () => {
     expect(screen.getByText("page content")).toBeTruthy();
   });
 
-  it("puts the whole site in the Nocturne theme with its font", () => {
+  it("gives the theme script the request's nonce, for the Content-Security-Policy", async () => {
+    render(await RootLayout({ children: <main /> }));
+    const script = document.querySelector('[data-testid="theme-script"]');
+    expect(script?.getAttribute("data-nonce")).toBe("nonce-for-this-request");
+  });
+
+  it("puts the whole site in the Nocturne theme with its font", async () => {
     const { container } = render(
-      <RootLayout>
-        <main>page content</main>
-      </RootLayout>,
+      await RootLayout({ children: <main>page content</main> }),
     );
     const body = container.querySelector("body") ?? document.body;
     const html = container.closest("html") ?? document.documentElement;
