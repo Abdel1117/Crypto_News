@@ -23,7 +23,20 @@ check_jwt_secret(os.getenv("ENV"), JWT_SECRET_KEY)
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+
+
+def api_docs_settings(env: str) -> dict:
+    """Where FastAPI serves its interactive docs and its OpenAPI schema.
+
+    They list every route and parameter of the API, so they are only served in
+    development. Any other value of ENV (a typo included) keeps them off.
+    """
+    if env == "development":
+        return {}
+    return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+
+
+app = FastAPI(**api_docs_settings(settings.ENV))
 _background_tasks: set[asyncio.Task] = set()
 
 

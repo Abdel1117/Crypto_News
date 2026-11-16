@@ -94,6 +94,17 @@ describe("ArticlePage", () => {
     await expect(ArticlePage(params("brouillon"))).rejects.toThrow("NEXT_NOT_FOUND");
   });
 
+  it("keeps a title from closing the structured-data script (stored XSS)", async () => {
+    const title = "Avant </script><script>alert(1)</script> après";
+    api({ article: { ...ARTICLE, title } });
+    const { container } = renderWithAuth(await ArticlePage(params()));
+    const script = container.querySelector('script[type="application/ld+json"]');
+    const source = script?.innerHTML ?? "";
+
+    expect(source).not.toContain("<");
+    expect(JSON.parse(source).headline).toBe(title);
+  });
+
   it("renders the cover, the author and the Markdown body", async () => {
     renderWithAuth(await ArticlePage(params()));
     expect(screen.getByRole("heading", { level: 1, name: "Bitcoin et les ETF" })).toBeTruthy();
