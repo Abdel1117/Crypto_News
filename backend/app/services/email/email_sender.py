@@ -1,6 +1,5 @@
 import re
 from dataclasses import dataclass, field
-from typing import Protocol
 
 
 def single_line(value: str) -> str:
@@ -15,7 +14,3 @@ class EmailMessage:
     html_body: str
     text_body: str | None = None
     headers: dict[str, str] = field(default_factory=dict)
-
-
-class IEmailSender(Protocol):
-    async def send(self, message: EmailMessage) -> None: ...

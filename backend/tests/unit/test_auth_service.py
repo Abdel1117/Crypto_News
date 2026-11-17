@@ -10,7 +10,7 @@ from app.schemas.token import TokenPayload
 from app.models.user import User
 from app.core.jwt_config import TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH
 from app.enums.auth_provider import AuthProvider
-from app.interface.protocol.GoogleAuthProvider import GoogleUserInfo
+from app.interface.google_auth_provider import GoogleUserInfo
 from app.clients.google_auth_provider import GoogleAuthNotConfigured, InvalidGoogleCredentials
 from jose import JWTError
 from pydantic import ValidationError
@@ -280,17 +280,41 @@ class TestGoogleAuth:
         assert updated_user.google_id == GOOGLE_ID
         assert updated_user.provider == AuthProvider.google
 
+    async def test_linking_drops_the_password_and_ends_sessions(
+        self, service, mock_repo, mock_google_provider, mock_token_service
+    ):
+        mock_google_provider.verify_credentials.return_value = self._google_user_info()
+        local_user = User(
+            id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=None,
+            hashed_password="hashed_password", provider=AuthProvider.local,
+            is_active=True, token_version=2,
+        )
+        mock_repo.get_by_google_id.return_value = None
+        mock_repo.get_by_email.return_value = local_user
+        mock_repo.update.side_effect = lambda user: user
+
+        await service.google_auth(GOOGLE_CREDENTIALS)
+
+        assert local_user.hashed_password is None
+        assert local_user.token_version == 3
+        assert mock_token_service.create_access_token.call_args.args[3] == 3
+        assert mock_token_service.create_refresh_token.call_args.args[3] == 3
+
     async def test_does_not_relink_when_google_id_already_set(self, service, mock_repo, mock_google_provider):
         mock_google_provider.verify_credentials.return_value = self._google_user_info()
-        mock_repo.get_by_google_id.return_value = User(
+        linked_user = User(
             id=USER_ID, full_name=FULL_NAME, email=EMAIL, google_id=GOOGLE_ID,
+            hashed_password="hashed_password", token_version=2,
             provider=AuthProvider.google, is_active=True,
             email_verified_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
+        mock_repo.get_by_google_id.return_value = linked_user
 
         await service.google_auth(GOOGLE_CREDENTIALS)
 
         mock_repo.update.assert_not_called()
+        assert linked_user.hashed_password == "hashed_password"
+        assert linked_user.token_version == 2
 
     async def test_new_google_account_counts_as_confirmed(self, service, mock_repo, mock_google_provider):
         mock_google_provider.verify_credentials.return_value = self._google_user_info()
@@ -384,6 +408,12 @@ def payload(token_type=TOKEN_TYPE_REFRESH, ver=0):
         sub=str(USER_ID), email=EMAIL, full_name=FULL_NAME,
         token_type=token_type, ver=ver, exp=9999999999, iat=1000000000,
     )
+
+
+class TestRegistrationProvider:
+    def test_provider_is_optional_and_local_by_default(self):
+        request = AuthRegistrationRequest(fullname=FULL_NAME, email=EMAIL, password=PASSWORD)
+        assert request.provider == AuthProvider.local
 
 
 class TestRegistrationPassword:

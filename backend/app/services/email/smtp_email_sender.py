@@ -3,10 +3,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 from app.core.config import settings
+from app.interface.email_sender import AbstractEmailSender
 from app.services.email.email_sender import EmailMessage
 
 
-class SmtpEmailSender:
+class SmtpEmailSender(AbstractEmailSender):
     def __init__(
         self, host: str, port: int, username: str, password: str, sender: str = ""
     ) -> None:

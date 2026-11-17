@@ -1,7 +1,7 @@
 import os
 from google.auth.transport import requests
 from google.oauth2 import id_token
-from app.interface.protocol.GoogleAuthProvider import GoogleAuthProviderProtocol, GoogleUserInfo
+from app.interface.google_auth_provider import AbstractGoogleAuthProvider, GoogleUserInfo
 
 
 class GoogleAuthNotConfigured(ValueError):
@@ -12,7 +12,7 @@ class InvalidGoogleCredentials(ValueError):
     """The Google ID token is invalid, expired, or its email is not verified."""
 
 
-class GoogleAuthProvider(GoogleAuthProviderProtocol):
+class GoogleAuthProvider(AbstractGoogleAuthProvider):
     def __init__(self, client_id: str | None = None) -> None:
         self.client_id = client_id or os.getenv("GOOGLE_CLIENT_ID")
 

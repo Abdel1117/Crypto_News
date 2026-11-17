@@ -1,8 +1,16 @@
-/** The API's own error text: `message` first, then FastAPI's `detail`. */
-function apiErrorMessage(data: unknown): string | null | undefined {
+/**
+ * The API's own error text: `message` first, then FastAPI's `detail`, which
+ * is a string or a list of validation errors.
+ */
+function apiErrorMessage(data: unknown): string | null {
   if (typeof data !== "object" || data === null) return null;
-  if ("message" in data) return (data as { message?: string }).message;
-  if ("detail" in data) return (data as { detail?: string }).detail;
+  if ("message" in data && typeof data.message === "string") return data.message;
+  if (!("detail" in data)) return null;
+  const detail = data.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail) && typeof detail[0]?.msg === "string") {
+    return detail[0].msg.replace(/^Value error, /, "");
+  }
   return null;
 }
 

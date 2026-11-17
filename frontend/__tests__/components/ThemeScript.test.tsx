@@ -19,4 +19,9 @@ describe("ThemeScript", () => {
 
     expect(script?.innerHTML).toContain("root.setAttribute('data-motion', '')");
   });
+
+  it("carries the nonce it is given", () => {
+    const { container } = render(<ThemeScript nonce="abc123" />);
+    expect(container.querySelector("script")?.nonce).toBe("abc123");
+  });
 });

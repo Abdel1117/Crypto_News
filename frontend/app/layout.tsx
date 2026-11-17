@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import "./styles/nocturne.css";
 import { inter } from "./styles/fonts";
@@ -52,15 +53,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Set by proxy.ts for this request. Reading it also renders every page on
+  // request, which a nonce needs: a page built in advance couldn't carry it.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="fr" className="light" suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <ThemeScript nonce={nonce} />
         <style
           dangerouslySetInnerHTML={{
             __html: `

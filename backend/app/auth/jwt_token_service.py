@@ -10,10 +10,11 @@ from app.core.jwt_config import (
     TOKEN_TYPE_ACCESS,
     TOKEN_TYPE_REFRESH,
 )
+from app.interface.token_service import AbstractTokenService
 from app.schemas.token import TokenPayload
 
 
-class JWTTokenService:
+class JWTTokenService(AbstractTokenService):
     def __init__(self, secret_key: str = JWT_SECRET_KEY, algorithm: str = JWT_ALGORITHM):
         self.secret_key = secret_key
         self.algorithm = algorithm
