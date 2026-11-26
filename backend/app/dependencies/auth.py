@@ -50,7 +50,7 @@ def has_role(user: User, *roles: UserRole) -> bool:
 def require_roles(*roles: UserRole, detail: str = "Accès réservé à l'équipe éditoriale."):
     """Dependency: the logged-in user, if their role (read from the DB) is one of `roles`."""
 
-    async def dependency(user: User = Depends(get_current_user)) -> User:
+    def dependency(user: User = Depends(get_current_user)) -> User:
         if not has_role(user, *roles):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
         return user

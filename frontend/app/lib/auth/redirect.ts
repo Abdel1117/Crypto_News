@@ -8,7 +8,7 @@ export function safeNextPath(search: string): string | null {
   const next = new URLSearchParams(search).get("next");
   if (!next?.startsWith("/")) return null;
   if (next.startsWith("//") || next.includes("\\")) return null;
-  if ([...next].some((c) => c.charCodeAt(0) < 32)) return null;
+  if ([...next].some((c) => c.codePointAt(0)! < 32)) return null;
   return next;
 }
 

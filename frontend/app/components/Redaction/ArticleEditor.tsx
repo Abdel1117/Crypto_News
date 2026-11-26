@@ -216,7 +216,8 @@ export default function ArticleEditor({
       noValidate
       onSubmit={(e) => {
         e.preventDefault();
-        save(status);
+        // save() turns its own failures into serverError: nothing to await.
+        void save(status);
       }}
     >
       <div className="flex flex-wrap items-center gap-2.5">
