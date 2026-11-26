@@ -19,7 +19,9 @@ class TestHash:
     def test_two_hashes_of_same_password_differ(self, hasher):
         # bcrypt uses a random salt — same input must never produce the same hash
         plain = "password123"
-        assert hasher.hash(plain) != hasher.hash(plain)
+        first = hasher.hash(plain)
+        second = hasher.hash(plain)
+        assert first != second
 
 
 class TestVerify:

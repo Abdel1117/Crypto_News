@@ -13,20 +13,20 @@ def user_with(role):
 
 class TestRequireRoles:
     @pytest.mark.parametrize("role", ["editor", "admin", UserRole.editor])
-    async def test_editors_and_admins_pass(self, role):
+    def test_editors_and_admins_pass(self, role):
         user = user_with(role)
-        assert await require_editor(user) is user
+        assert require_editor(user) is user
 
-    async def test_readers_are_refused(self):
+    def test_readers_are_refused(self):
         with pytest.raises(HTTPException) as exc:
-            await require_editor(user_with("user"))
+            require_editor(user_with("user"))
         assert exc.value.status_code == 403
 
-    async def test_editors_are_not_admins(self):
+    def test_editors_are_not_admins(self):
         with pytest.raises(HTTPException) as exc:
-            await require_admin(user_with("editor"))
+            require_admin(user_with("editor"))
         assert exc.value.status_code == 403
-        assert await require_admin(user_with("admin"))
+        assert require_admin(user_with("admin"))
 
     def test_has_role_compares_plain_text_and_enum(self):
         assert has_role(user_with("admin"), UserRole.admin)

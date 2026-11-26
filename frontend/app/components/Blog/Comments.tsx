@@ -188,7 +188,7 @@ export default function Comments({
   return (
     <section aria-labelledby="comments-title" className="flex flex-col gap-5">
       <h2 id="comments-title" className="m-0 text-xl flex items-baseline gap-2.5">
-        Commentaires
+        Commentaires{" "}
         <span className="text-[13px] text-(--n-neutral-500) n-tnum">{total}</span>
       </h2>
 
