@@ -44,14 +44,20 @@ type Coin = { id: string; name: string };
 vi.mock("@/app/components/Dashboard/Favorites", () => ({
   default: ({
     coins,
+    unavailableIds,
     selectedId,
     onSelect,
   }: {
     coins: Coin[];
+    unavailableIds?: string[];
     selectedId: string;
     onSelect: (id: string) => void;
   }) => (
-    <section data-testid="favorites" data-selected={selectedId}>
+    <section
+      data-testid="favorites"
+      data-selected={selectedId}
+      data-unavailable={(unavailableIds ?? []).join(",")}
+    >
       {coins.map((c) => (
         <button key={c.id} type="button" onClick={() => onSelect(c.id)}>
           fav-{c.id}
@@ -93,7 +99,11 @@ const ethereum = { id: "ethereum", name: "Ethereum", symbol: "eth", image: "" };
 const solana = { id: "solana", name: "Solana", symbol: "sol", image: "" };
 
 const baseState = {
-  prices: { coins: [bitcoin, ethereum], loading: false },
+  prices: {
+    coins: [bitcoin, ethereum],
+    loading: false,
+    marketCoinStatus: {} as Record<string, "loading" | "failed">,
+  },
   symbols: { symbols: [] as { id: string }[] },
   topGainersLosers: { topGainers: [solana], topLosers: [] },
   trending: { coins: [] },
@@ -155,6 +165,17 @@ describe("DashboardPage", () => {
       type: "prices/getMarketCoin",
       payload: "ethereum",
     });
+  });
+
+  it("tells Favorites which prices could not be loaded", () => {
+    withState({
+      prices: {
+        ...baseState.prices,
+        marketCoinStatus: { cardano: "failed", pepe: "loading" },
+      },
+    });
+    render(<DashboardPage />);
+    expect(screen.getByTestId("favorites").dataset.unavailable).toBe("cardano");
   });
 
   it("shows the selected coin in the chart", () => {

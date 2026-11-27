@@ -20,7 +20,7 @@ import MoversTable from "@/app/components/Dashboard/MoversTable";
 export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const { currency } = useCurrency();
-  const { coins } = useAppSelector((state) => state.prices);
+  const { coins, marketCoinStatus } = useAppSelector((state) => state.prices);
   const { symbols } = useAppSelector((state) => state.symbols);
   const { topGainers, topLosers } = useAppSelector(
     (state) => state.topGainersLosers,
@@ -93,6 +93,13 @@ export default function DashboardPage() {
   const watchlistCoins: CoinSummary[] = watchlistIds
     .map((id) => priceMap[id] ?? symbolMap[id])
     .filter((coin) => coin !== undefined);
+  const unavailableIds = useMemo(
+    () =>
+      Object.keys(marketCoinStatus).filter(
+        (id) => marketCoinStatus[id] === "failed",
+      ),
+    [marketCoinStatus],
+  );
 
   const selectedCoin: CoinSummary | undefined =
     priceMap[selectedSymbol] ??
@@ -120,6 +127,7 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-[22px] lg:gap-6 min-w-0">
       <Favorites
         coins={watchlistCoins}
+        unavailableIds={unavailableIds}
         selectedId={selectedSymbol}
         onSelect={handleSymbolChange}
       />

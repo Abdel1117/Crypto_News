@@ -15,25 +15,50 @@ import { useAppSearch } from "../AppShell/SearchContext";
 
 interface FavoritesProps {
   coins: CoinSummary[];
+  /** Coins whose price could not be loaded: shown as "—" instead of a loader. */
+  unavailableIds?: readonly string[];
   selectedId: string;
   onSelect: (id: string) => void;
 }
 
-function Price({ coin }: { coin: CoinSummary }) {
-  const { currency } = useCurrency();
-  return typeof coin.price === "number"
-    ? formatFiatPrice(coin.price, currency)
-    : "—";
+interface ValueProps {
+  coin: CoinSummary;
+  unavailable: boolean;
 }
 
-function Change({ coin }: { coin: CoinSummary }) {
-  return typeof coin.change_24h === "number"
-    ? formatSignedPercent(coin.change_24h)
-    : "—";
+/** Placeholder sized in em so it follows the font size of the value it stands for. */
+function ValueSkeleton({ width }: Readonly<{ width: string }>) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`n-skeleton inline-block h-[0.9em] align-middle ${width}`}
+    />
+  );
+}
+
+function Price({ coin, unavailable }: Readonly<ValueProps>) {
+  const { currency } = useCurrency();
+  if (typeof coin.price === "number") {
+    return formatFiatPrice(coin.price, currency);
+  }
+  return unavailable ? "—" : <ValueSkeleton width="w-[4.5em]" />;
+}
+
+function Change({ coin, unavailable }: Readonly<ValueProps>) {
+  if (typeof coin.change_24h === "number") {
+    return formatSignedPercent(coin.change_24h);
+  }
+  // A known price with no 24 h change is real missing data, not a pending load.
+  return typeof coin.price === "number" || unavailable ? (
+    "—"
+  ) : (
+    <ValueSkeleton width="w-[3.5em]" />
+  );
 }
 
 export default function Favorites({
   coins,
+  unavailableIds = [],
   selectedId,
   onSelect,
 }: Readonly<FavoritesProps>) {
@@ -85,6 +110,7 @@ export default function Favorites({
           <ul className="hidden lg:grid lg:grid-cols-2 xl:grid-cols-4 gap-3 m-0 p-0 list-none">
             {coins.map((coin) => {
               const selected = coin.id === selectedId;
+              const unavailable = unavailableIds.includes(coin.id);
               return (
                 <li
                   key={coin.id}
@@ -119,11 +145,11 @@ export default function Favorites({
                     </span>
                     <span className="n-tnum flex flex-col gap-1">
                       <span className="text-[22px] font-medium tracking-[-0.01em] whitespace-nowrap">
-                        <Price coin={coin} />
+                        <Price coin={coin} unavailable={unavailable} />
                       </span>
                       <span className="flex gap-1.5 text-[13px]">
                         <span style={{ color: trend(coin.change_24h) }}>
-                          <Change coin={coin} />
+                          <Change coin={coin} unavailable={unavailable} />
                         </span>
                         <span className="text-(--n-neutral-500)">24 h</span>
                       </span>
@@ -152,6 +178,7 @@ export default function Favorites({
           >
             {coins.map((coin) => {
               const selected = coin.id === selectedId;
+              const unavailable = unavailableIds.includes(coin.id);
               return (
                 <li key={coin.id}>
                   <button
@@ -185,13 +212,13 @@ export default function Favorites({
                     </span>
                     <span className="n-tnum flex flex-col items-end leading-[1.3]">
                       <span className="text-sm font-medium whitespace-nowrap">
-                        <Price coin={coin} />
+                        <Price coin={coin} unavailable={unavailable} />
                       </span>
                       <span
                         className="text-xs"
                         style={{ color: trend(coin.change_24h) }}
                       >
-                        <Change coin={coin} />
+                        <Change coin={coin} unavailable={unavailable} />
                       </span>
                     </span>
                   </button>

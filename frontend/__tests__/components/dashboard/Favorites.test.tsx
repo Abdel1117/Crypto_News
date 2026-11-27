@@ -110,6 +110,35 @@ describe("Favorites", () => {
     expect(openSearch).toHaveBeenCalled();
   });
 
+  it("shows a loader instead of a dash while a price is loading", () => {
+    const { container } = render(
+      <AppSearchContext.Provider value={{ openSearch: vi.fn() }}>
+        <Favorites
+          coins={[{ id: "pepe", name: "Pepe", symbol: "pepe" }]}
+          selectedId=""
+          onSelect={vi.fn()}
+        />
+      </AppSearchContext.Provider>,
+    );
+    expect(container.querySelectorAll(".n-skeleton").length).toBeGreaterThan(0);
+    expect(screen.queryByText("—")).toBeNull();
+  });
+
+  it("shows a dash when the price could not be loaded", () => {
+    const { container } = render(
+      <AppSearchContext.Provider value={{ openSearch: vi.fn() }}>
+        <Favorites
+          coins={[{ id: "pepe", name: "Pepe", symbol: "pepe" }]}
+          unavailableIds={["pepe"]}
+          selectedId=""
+          onSelect={vi.fn()}
+        />
+      </AppSearchContext.Provider>,
+    );
+    expect(container.querySelectorAll(".n-skeleton").length).toBe(0);
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
+  });
+
   it("invites to add favourites when there are none", () => {
     const { openSearch } = renderFavorites({ coins: [] });
     fireEvent.click(
