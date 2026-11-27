@@ -26,7 +26,7 @@ function makeStore() {
 describe("pricesSlice reducers", () => {
   it("replaces the coin list and clears loading", () => {
     const state = pricesReducer(
-      { coins: [], loading: true, connected: false },
+      { coins: [], loading: true, connected: false, marketCoinStatus: {} },
       setCoins([{ id: "btc" } as any]),
     );
     expect(state.coins).toEqual([{ id: "btc" }]);
@@ -35,7 +35,7 @@ describe("pricesSlice reducers", () => {
 
   it("adds a new coin", () => {
     const state = pricesReducer(
-      { coins: [], loading: false, connected: false },
+      { coins: [], loading: false, connected: false, marketCoinStatus: {} },
       addOrUpdateCoin({ id: "btc" } as any),
     );
     expect(state.coins).toEqual([{ id: "btc" }]);
@@ -43,14 +43,14 @@ describe("pricesSlice reducers", () => {
 
   it("updates an existing coin in place", () => {
     const state = pricesReducer(
-      { coins: [{ id: "btc", price: 1 } as any], loading: false, connected: false },
+      { coins: [{ id: "btc", price: 1 } as any], loading: false, connected: false, marketCoinStatus: {} },
       addOrUpdateCoin({ id: "btc", price: 2 } as any),
     );
     expect(state.coins).toEqual([{ id: "btc", price: 2 }]);
   });
 
   it("sets the loading and connected flags", () => {
-    let state = pricesReducer({ coins: [], loading: false, connected: false }, setLoading(true));
+    let state = pricesReducer({ coins: [], loading: false, connected: false, marketCoinStatus: {} }, setLoading(true));
     expect(state.loading).toBe(true);
     state = pricesReducer(state, setConnected(true));
     expect(state.connected).toBe(true);
@@ -97,5 +97,47 @@ describe("pricesSlice thunks", () => {
     await store.dispatch(getMarketCoin({ currency: "usd", cryptoId: "eth" }) as any);
 
     expect(store.getState().prices.coins).toEqual([]);
+  });
+});
+
+describe("pricesSlice per-coin fetch status", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("marks a coin as loading while getMarketCoin is in flight", () => {
+    vi.mocked(fetchMarketCoin).mockReturnValue(new Promise(() => {}));
+    const store = makeStore();
+
+    store.dispatch(getMarketCoin({ currency: "usd", cryptoId: "eth" }));
+
+    expect(store.getState().prices.marketCoinStatus).toEqual({ eth: "loading" });
+  });
+
+  it("clears the status once the coin is loaded", async () => {
+    vi.mocked(fetchMarketCoin).mockResolvedValue({ id: "eth" });
+    const store = makeStore();
+
+    await store.dispatch(getMarketCoin({ currency: "usd", cryptoId: "eth" }));
+
+    expect(store.getState().prices.marketCoinStatus).toEqual({});
+  });
+
+  it("marks a coin as failed when the api call fails", async () => {
+    vi.mocked(fetchMarketCoin).mockRejectedValue(new Error("429"));
+    const store = makeStore();
+
+    await store.dispatch(getMarketCoin({ currency: "usd", cryptoId: "eth" }));
+
+    expect(store.getState().prices.marketCoinStatus).toEqual({ eth: "failed" });
+  });
+
+  it("marks a coin as failed when the payload is malformed", async () => {
+    vi.mocked(fetchMarketCoin).mockResolvedValue({});
+    const store = makeStore();
+
+    await store.dispatch(getMarketCoin({ currency: "usd", cryptoId: "eth" }));
+
+    expect(store.getState().prices.marketCoinStatus).toEqual({ eth: "failed" });
   });
 });

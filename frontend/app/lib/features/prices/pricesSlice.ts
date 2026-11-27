@@ -4,16 +4,22 @@ import { CryptoMarketData } from "@/app/types/Crypto/Crypto"
 
 
 
+export type MarketCoinStatus = "loading" | "failed"
+
 interface PriceState {
   coins: CryptoMarketData[]
   loading: boolean
   connected: boolean
+  // Fetch status of coins loaded one by one with getMarketCoin (watchlist coins
+  // outside the WS feed). No entry means loaded or never requested.
+  marketCoinStatus: Record<string, MarketCoinStatus>
 }
 
 const initialState: PriceState = {
   coins: [],
   loading: false,
   connected: false,
+  marketCoinStatus: {},
 }
 
 const priceSlice = createSlice({
@@ -51,7 +57,11 @@ const priceSlice = createSlice({
       .addCase(getPrices.rejected, (state) => {
         state.loading = false
       })
+      .addCase(getMarketCoin.pending, (state, action) => {
+        state.marketCoinStatus[action.meta.arg.cryptoId] = "loading"
+      })
       .addCase(getMarketCoin.fulfilled, (state, action) => {
+        const { cryptoId } = action.meta.arg
         if (
           action.payload &&
           typeof action.payload === "object" &&
@@ -64,7 +74,13 @@ const priceSlice = createSlice({
           } else {
             state.coins.push(coin)
           }
+          delete state.marketCoinStatus[cryptoId]
+        } else {
+          state.marketCoinStatus[cryptoId] = "failed"
         }
+      })
+      .addCase(getMarketCoin.rejected, (state, action) => {
+        state.marketCoinStatus[action.meta.arg.cryptoId] = "failed"
       })
   }
 })
